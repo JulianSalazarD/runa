@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "runa.schema.json",
+  "title": "Runa Document",
+  "description": "Schema for .runa document files. Version field drives migration; parsers must reject documents with unsupported versions.",
+  "type": "object",
+  "required": ["version", "id", "created_at", "updated_at", "blocks"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version (MAJOR.MINOR). Parsers must check this field first. Breaking changes bump MAJOR. MINOR additions are backwards-compatible.",
+      "pattern": "^\\d+\\.\\d+$",
+      "enum": ["0.1"]
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique document identifier (UUID v4). Immutable after creation."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of document creation. Immutable after creation."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of last modification. Updated on every save."
+    },
+    "blocks": {
+      "type": "array",
+      "description": "Ordered list of content blocks. Order is significant — it matches the visual top-to-bottom layout.",
+      "items": {
+        "$ref": "#/$defs/Block"
+      }
+    }
+  },
+
+  "$defs": {
+    "Block": {
+      "description": "A content block. Discriminated by the 'type' field.",
+      "oneOf": [
+        { "$ref": "#/$defs/MarkdownBlock" },
+        { "$ref": "#/$defs/InkBlock" }
+      ]
+    },
+
+    "MarkdownBlock": {
+      "type": "object",
+      "description": "A block of raw Markdown text.",
+      "required": ["type", "id", "content"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "markdown",
+          "description": "Discriminator value for MarkdownBlock."
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique block identifier (UUID v4). Immutable after creation."
+        },
+        "content": {
+          "type": "string",
+          "description": "Raw Markdown content. Empty string is valid (new empty block)."
+        }
+      }
+    },
+
+    "InkBlock": {
+      "type": "object",
+      "description": "A block containing freehand ink strokes drawn on a canvas.",
+      "required": ["type", "id", "height", "strokes"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ink",
+          "description": "Discriminator value for InkBlock."
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique block identifier (UUID v4). Immutable after creation."
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Canvas height in logical pixels. Default 200.0. May be resized by the user."
+        },
+        "strokes": {
+          "type": "array",
+          "description": "List of ink strokes in draw order (painter's algorithm).",
+          "items": {
+            "$ref": "#/$defs/Stroke"
+          }
+        }
+      }
+    },
+
+    "Stroke": {
+      "type": "object",
+      "description": "A single continuous ink stroke.",
+      "required": ["id", "color", "width", "tool", "points"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique stroke identifier (UUID v4)."
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{8}$",
+          "description": "Stroke color in #RRGGBBAA format (red, green, blue, alpha). Example: #000000FF = opaque black."
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Base stroke width in logical pixels before pressure scaling."
+        },
+        "tool": {
+          "type": "string",
+          "enum": ["pen", "pencil", "marker", "eraser"],
+          "description": "Tool that produced this stroke. Affects rendering style."
+        },
+        "points": {
+          "type": "array",
+          "description": "Ordered sequence of input points. At least one point is required.",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/StrokePoint"
+          }
+        }
+      }
+    },
+
+    "StrokePoint": {
+      "type": "object",
+      "description": "A single sampled input point within a stroke.",
+      "required": ["x", "y", "pressure", "timestamp"],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate in logical pixels relative to the InkBlock canvas origin."
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate in logical pixels relative to the InkBlock canvas origin."
+        },
+        "pressure": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Stylus or touch pressure normalised to [0.0, 1.0]. Use 0.5 when the device does not report pressure."
+        },
+        "timestamp": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Milliseconds since Unix epoch when this point was sampled."
+        }
+      }
+    }
+  }
+}

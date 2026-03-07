@@ -27,7 +27,7 @@
 
 ## 2. Formato `.runa`
 
-- [ ] Diseñar schema JSON del formato `.runa`:
+- [x] Diseñar schema JSON del formato `.runa`:
   ```json
   {
     "version": "0.1",
@@ -37,15 +37,15 @@
     "blocks": [ ... ]
   }
   ```
-- [ ] Definir schema de cada tipo de bloque en JSON:
-  - [ ] `MarkdownBlock`: `{ "type": "markdown", "id": "", "content": "" }`
-  - [ ] `InkBlock`: `{ "type": "ink", "id": "", "strokes": [], "height": 200.0 }`
-- [ ] Definir schema de un trazo de tinta (`Stroke`):
-  - [ ] Lista de puntos `{ "x", "y", "pressure", "timestamp" }`
-  - [ ] Propiedades del trazo: `color`, `width`, `tool`
-- [ ] Documentar el schema con comentarios / JSON Schema formal (`runa.schema.json`)
-- [ ] Definir política de versionado: campo `version` en el root, migración futura explícita
-- [ ] Escribir tests de validación del schema con documentos de ejemplo
+- [x] Definir schema de cada tipo de bloque en JSON:
+  - [x] `MarkdownBlock`: `{ "type": "markdown", "id": "", "content": "" }`
+  - [x] `InkBlock`: `{ "type": "ink", "id": "", "strokes": [], "height": 200.0 }`
+- [x] Definir schema de un trazo de tinta (`Stroke`):
+  - [x] Lista de puntos `{ "x", "y", "pressure", "timestamp" }`
+  - [x] Propiedades del trazo: `color` (#RRGGBBAA), `width`, `tool` (pen/pencil/marker/eraser)
+- [x] Documentar el schema con comentarios / JSON Schema formal (`docs/runa.schema.json`)
+- [x] Definir política de versionado: campo `version` en el root, migración futura explícita
+- [x] Escribir tests de validación del schema con documentos de ejemplo (38 tests, `test/domain/schema_validation_test.dart`)
 
 ---
 
