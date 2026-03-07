@@ -51,17 +51,17 @@
 
 ## 3. Modelo de datos
 
-- [ ] `Block` — sealed class base con `id` y `type`
-  - [ ] `MarkdownBlock extends Block` — campo `content: String`
-  - [ ] `InkBlock extends Block` — campos `strokes: List<Stroke>`, `height: double`
-- [ ] `Stroke` — value object con `points`, `color`, `width`, `tool`
-- [ ] `StrokePoint` — value object con `x`, `y`, `pressure`, `timestamp`
-- [ ] `Document` — value object con `id`, `version`, `createdAt`, `updatedAt`, `blocks`
-- [ ] Generar `copyWith`, `==`, `hashCode`, `toJson`/`fromJson` con `freezed`
-- [ ] Tests unitarios de cada modelo:
-  - [ ] Serialización a JSON y deserialización (round-trip)
-  - [ ] `copyWith` correcto
-  - [ ] Igualdad estructural
+- [x] `Block` — sealed class con discriminador `type` vía `@Freezed(unionKey: 'type')`
+  - [x] `MarkdownBlock` — campo `content: String`
+  - [x] `InkBlock` — campos `strokes: List<Stroke>`, `height: double`
+- [x] `Stroke` — value object con `points`, `color` (#RRGGBBAA), `width`, `tool` (`StrokeTool` enum)
+- [x] `StrokePoint` — value object con `x`, `y`, `pressure`, `timestamp`
+- [x] `Document` — value object con `id`, `version`, `createdAt`, `updatedAt`, `blocks`
+- [x] Generar `copyWith`, `==`, `hashCode`, `toJson`/`fromJson` con `freezed` + `json_serializable`
+- [x] Tests unitarios de cada modelo (100 tests pasando):
+  - [x] Serialización a JSON y deserialización (round-trip)
+  - [x] `copyWith` correcto
+  - [x] Igualdad estructural
 
 ---
 
