@@ -6,3 +6,6 @@
 //   - DefaultDirectoryService
 //   - Generated code: *.g.dart, *.freezed.dart
 library;
+
+export 'repositories/local_document_repository.dart';
+export 'services/default_directory_service.dart';

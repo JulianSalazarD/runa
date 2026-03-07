@@ -67,30 +67,36 @@
 
 ## 4. Persistencia local
 
-- [ ] `DocumentRepository` — interfaz abstracta:
-  - [ ] `Future<Document> load(String path)`
-  - [ ] `Future<void> save(Document doc, String path)`
-  - [ ] `Future<List<String>> listDocuments(String directory)`
-- [ ] `LocalDocumentRepository` — implementación con `dart:io`:
-  - [ ] Leer archivo `.runa` → parsear JSON → `Document`
-  - [ ] `Document` → serializar JSON → escribir archivo `.runa`
-  - [ ] Manejar errores: archivo no encontrado, JSON inválido, versión incompatible
-- [ ] Tests de integración de persistencia:
-  - [ ] Guardar y releer un documento con múltiples bloques
-  - [ ] Documento con `InkBlock` con trazos reales
-  - [ ] Archivo corrupto → error controlado
+- [x] `DocumentRepository` — interfaz abstracta (`abstract interface class`):
+  - [x] `Future<Document> load(String path)`
+  - [x] `Future<void> save(Document doc, String path)`
+  - [x] `Future<List<String>> listDocuments(String directory)`
+  - [x] Excepciones selladas: `DocumentNotFoundException`, `DocumentParseException`, `DocumentVersionException`
+- [x] `LocalDocumentRepository` — implementación con `dart:io`:
+  - [x] Leer archivo `.runa` → parsear JSON → `Document`
+  - [x] `Document` → serializar JSON pretty-printed → escribir archivo `.runa`
+  - [x] Manejar errores: archivo no encontrado, JSON inválido, versión incompatible
+- [x] Tests de integración de persistencia (26 tests):
+  - [x] Guardar y releer un documento con múltiples bloques
+  - [x] Documento con `InkBlock` con trazos reales
+  - [x] Archivo corrupto → error controlado
+  - [x] Versión desconocida → `DocumentVersionException` con detalle
+  - [x] `listDocuments`: filtrado `.runa`, orden alfabético, paths absolutos
 
 ---
 
 ## 5. Directorio por defecto `~/Runa/`
 
-- [ ] `DefaultDirectoryService`:
-  - [ ] Resolver `~/Runa/` usando `path_provider` + `path`
-  - [ ] Crear el directorio si no existe al primer arranque
-  - [ ] Exponer `Future<Directory> getDefaultDirectory()`
-- [ ] Tests:
-  - [ ] El directorio se crea si no existía
-  - [ ] El path devuelto es correcto en cada plataforma
+- [x] `DefaultDirectoryService`:
+  - [x] Resolver `~/Runa/` usando `path` + `Platform.environment` (Linux: `$HOME`, Windows: `%USERPROFILE%`)
+  - [x] Crear el directorio si no existe al primer arranque (`dir.create(recursive: true)`)
+  - [x] Exponer `Future<Directory> getDefaultDirectory()`
+  - [x] `homeOverride` para testabilidad sin tocar el home real
+- [x] Tests (10 tests en `test/data/default_directory_service_test.dart`):
+  - [x] El directorio se crea si no existía
+  - [x] El path devuelto es correcto (`<home>/Runa`, absoluto)
+  - [x] Idempotencia (llamar dos veces no lanza)
+  - [x] Integración con `LocalDocumentRepository`
 
 ---
 
@@ -98,11 +104,11 @@
 
 Al finalizar esta fase, el proyecto debe:
 
-- [ ] Compilar sin errores en Linux (objetivo primario)
-- [ ] Tener tests unitarios e integración pasando (`flutter test`)
-- [ ] Ser capaz de crear, guardar y cargar un `.runa` con `MarkdownBlock` e `InkBlock` via código (sin UI)
-- [ ] Tener un `main.dart` mínimo que ejercite el ciclo completo como smoke test
-- [ ] Tener `runa.schema.json` documentado en `/docs/`
+- [x] Compilar sin errores en Linux (objetivo primario)
+- [x] Tener tests unitarios e integración pasando (`flutter test`) — 137 tests
+- [x] Ser capaz de crear, guardar y cargar un `.runa` con `MarkdownBlock` e `InkBlock` via código (sin UI)
+- [x] Tener un `main.dart` mínimo que ejercite el ciclo completo como smoke test
+- [x] Tener `runa.schema.json` documentado en `/docs/`
 
 ---
 
