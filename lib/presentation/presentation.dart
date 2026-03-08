@@ -9,6 +9,8 @@ library;
 export 'editor/block_chrome.dart';
 export 'editor/block_widget.dart';
 export 'editor/document_editor.dart';
+export 'editor/markdown_editor_widget.dart';
+export 'editor/markdown_preview_widget.dart';
 export 'home/document_editor_placeholder.dart';
 export 'home/home_screen.dart';
 export 'home/sidebar/file_sidebar_widget.dart';

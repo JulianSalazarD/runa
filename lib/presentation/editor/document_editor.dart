@@ -215,7 +215,10 @@ class _BlockList extends StatelessWidget {
           isSelected: editorState.selectedBlockId == block.id,
           onTap: () => notifier.setSelectedBlock(block.id),
           onDelete: () => notifier.removeBlock(block.id),
-          child: BlockWidget(block: block),
+          child: BlockWidget(
+            block: block,
+            onUpdate: notifier.updateBlock,
+          ),
         );
       },
     );

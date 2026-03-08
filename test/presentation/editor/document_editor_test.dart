@@ -161,12 +161,13 @@ void main() {
       expect(find.textContaining('Sin bloques'), findsOneWidget);
     });
 
-    testWidgets('shows placeholder text for empty markdown content',
+    testWidgets('shows editor for empty markdown content (edit mode)',
         (tester) async {
       final blocks = [const Block.markdown(id: 'b1', content: '')];
       await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
 
-      expect(find.text('Escribe aquí…'), findsOneWidget);
+      // Empty blocks start in edit mode — a TextField is rendered.
+      expect(find.byType(TextField), findsOneWidget);
     });
   });
 
