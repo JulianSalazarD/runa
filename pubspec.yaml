@@ -19,9 +19,10 @@ dependencies:
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
 
-  # File system
+  # File system & platform dialogs
   path_provider: ^2.1.4
   path: ^1.9.0
+  file_picker: ^8.1.7
 
   # Utilities
   uuid: ^4.5.1

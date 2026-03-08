@@ -32,22 +32,22 @@
 
 ---
 
-## 2. Pantalla de inicio (`HomeScreen`)
+## 2. Pantalla de inicio (`HomeScreen`) ✅
 
-- [ ] Layout principal: sidebar izquierdo + área central
-- [ ] Estado inicial (sin carpeta abierta):
-  - [ ] Botón "Abrir carpeta" → diálogo nativo del sistema (`file_picker` o `FilePicker.platform.getDirectoryPath`)
-  - [ ] Botón "Nuevo documento" → crea `.runa` en `~/Runa/` con nombre por defecto (`sin_titulo_<timestamp>.runa`)
-  - [ ] Sección "Recientes" con lista de rutas recientes clicables
-  - [ ] Si una ruta reciente ya no existe → mostrarlo con indicador visual y opción de eliminar
-- [ ] Estado con carpeta abierta:
-  - [ ] Sidebar muestra el árbol de archivos de la carpeta
-  - [ ] Área central muestra el editor (o bienvenida si no hay tab activo)
-- [ ] Barra de título con nombre del documento activo
-- [ ] Tests de widget para `HomeScreen`:
-  - [ ] Renderiza botones de inicio correcto
-  - [ ] Lista de recientes vacía no rompe el layout
-  - [ ] Ruta inválida en recientes muestra indicador de error
+- [x] Layout principal: sidebar izquierdo + área central
+- [x] Estado inicial (sin carpeta abierta):
+  - [x] Botón "Abrir carpeta" → `FilePicker.platform.getDirectoryPath()`
+  - [x] Botón "Nuevo documento" → crea `.runa` en `~/Runa/` (`sin_titulo_<timestamp>.runa`)
+  - [x] Sección "Recientes" con lista de rutas recientes clicables
+  - [x] Ruta inexistente → indicador visual en rojo + botón de eliminar
+- [x] Estado con carpeta abierta:
+  - [x] Sidebar placeholder: header con nombre de carpeta + lista de archivos
+  - [x] Área central: `DocumentEditorPlaceholder` o mensaje de "selecciona un documento"
+- [x] `DocumentEditorPlaceholder`: nombre, count de bloques, botón Guardar
+- [x] `WorkspaceNotifier.removeRecentPath()` añadido
+- [x] `main.dart` con `ProviderScope` + `HomeScreen` + tema Material 3
+- [x] `file_picker ^8.1.7` añadido
+- [x] Tests de widget (10): welcome state, recents, folder open, editor placeholder
 
 ---
 

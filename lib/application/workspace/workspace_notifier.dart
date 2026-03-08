@@ -126,4 +126,12 @@ class WorkspaceNotifier extends _$WorkspaceNotifier {
   Future<void> createSubdirectory(String parent, String name) async {
     await _fs.createDirectory(p.join(parent, name));
   }
+
+  /// Removes [path] from the recents list (both service and state).
+  Future<void> removeRecentPath(String path) async {
+    await _recents.remove(path);
+    state = state.copyWith(
+      recentPaths: state.recentPaths.where((r) => r != path).toList(),
+    );
+  }
 }
