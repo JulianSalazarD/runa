@@ -16,8 +16,8 @@ Document _doc({
   return Document(
     version: '0.1',
     id: id,
-    createdAt: DateTime.utc(2024, 1, 1),
-    updatedAt: DateTime.utc(2024, 1, 1),
+    createdAt: DateTime.utc(2024, 1),
+    updatedAt: DateTime.utc(2024, 1),
     blocks: blocks,
   );
 }
@@ -181,7 +181,7 @@ void main() {
 
     test('save overwrites an existing file', () async {
       final p = path('overwrite');
-      await repo.save(_doc(id: '00000000-0000-0000-0000-000000000001'), p);
+      await repo.save(_doc(), p);
       await repo.save(_doc(id: '00000000-0000-0000-0000-000000000002'), p);
       final loaded = await repo.load(p);
       expect(loaded.id, '00000000-0000-0000-0000-000000000002');
@@ -268,7 +268,7 @@ void main() {
 
   group('load — DocumentVersionException', () {
     Map<String, dynamic> baseJson({required String? version}) => {
-          if (version != null) 'version': version,
+          'version': ?version,
           'id': '00000000-0000-0000-0000-000000000001',
           'created_at': '2024-01-01T00:00:00.000Z',
           'updated_at': '2024-01-01T00:00:00.000Z',
@@ -333,7 +333,7 @@ void main() {
     });
 
     test('returns paths of .runa files', () async {
-      await repo.save(_doc(id: '00000000-0000-0000-0000-000000000001'), path('a'));
+      await repo.save(_doc(), path('a'));
       await repo.save(_doc(id: '00000000-0000-0000-0000-000000000002'), path('b'));
       final paths = await repo.listDocuments(tempDir.path);
       expect(paths.length, 2);
@@ -352,7 +352,7 @@ void main() {
 
     test('results are sorted alphabetically', () async {
       await repo.save(_doc(id: '00000000-0000-0000-0000-000000000003'), path('gamma'));
-      await repo.save(_doc(id: '00000000-0000-0000-0000-000000000001'), path('alpha'));
+      await repo.save(_doc(), path('alpha'));
       await repo.save(_doc(id: '00000000-0000-0000-0000-000000000002'), path('beta'));
       final paths = await repo.listDocuments(tempDir.path);
       final names = paths.map((p) => p.split('/').last).toList();

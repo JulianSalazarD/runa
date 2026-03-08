@@ -167,7 +167,7 @@ void main() {
 
   group('Block — pattern matching', () {
     test('switch on MarkdownBlock extracts content', () {
-      final Block block = _markdownBlock;
+      const Block block = _markdownBlock;
       final result = switch (block) {
         MarkdownBlock(:final content) => content,
         InkBlock() => 'ink',
@@ -176,7 +176,7 @@ void main() {
     });
 
     test('switch on InkBlock extracts strokes count', () {
-      final Block block = _inkBlock;
+      const Block block = _inkBlock;
       final result = switch (block) {
         MarkdownBlock() => -1,
         InkBlock(:final strokes) => strokes.length,

@@ -7,6 +7,8 @@
 //   - No direct Flutter widget dependencies
 library;
 
+export 'editor/editor_notifier.dart';
+export 'editor/editor_state.dart';
 export 'providers.dart';
 export 'services/file_system_service.dart';
 export 'services/recent_entry.dart';

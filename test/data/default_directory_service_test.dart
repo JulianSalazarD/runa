@@ -82,20 +82,20 @@ void main() {
   group('integration with LocalDocumentRepository', () {
     test('default directory can be used to list documents', () async {
       final dir = await service.getDefaultDirectory();
-      final repo = const LocalDocumentRepository();
+      const repo = LocalDocumentRepository();
       final docs = await repo.listDocuments(dir.path);
       expect(docs, isEmpty); // fresh directory
     });
 
     test('documents saved to default directory are listed', () async {
       final dir = await service.getDefaultDirectory();
-      final repo = const LocalDocumentRepository();
+      const repo = LocalDocumentRepository();
 
       final doc = Document(
         version: '0.1',
         id: '00000000-0000-0000-0000-000000000001',
-        createdAt: DateTime.utc(2024, 1, 1),
-        updatedAt: DateTime.utc(2024, 1, 1),
+        createdAt: DateTime.utc(2024, 1),
+        updatedAt: DateTime.utc(2024, 1),
         blocks: const [],
       );
       await repo.save(doc, p.join(dir.path, 'my_notes.runa'));

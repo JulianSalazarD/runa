@@ -9,11 +9,11 @@ Cada documento es un archivo `.runa` compuesto de bloques de Markdown, escritura
 
 > Base técnica antes de features visibles.
 
-- [ ] Estructura del proyecto Flutter + arquitectura de bloques
-- [ ] Definir formato `.runa` (JSON con schema versionado)
-- [ ] Modelo de datos: `Document`, `Block` (sealed class), `InkBlock`, `MarkdownBlock`
-- [ ] Persistencia local básica (leer/escribir `.runa`)
-- [ ] Directorio por defecto: `~/Runa/`
+- [X] Estructura del proyecto Flutter + arquitectura de bloques
+- [X] Definir formato `.runa` (JSON con schema versionado)
+- [X] Modelo de datos: `Document`, `Block` (sealed class), `InkBlock`, `MarkdownBlock`
+- [X] Persistencia local básica (leer/escribir `.runa`)
+- [X] Directorio por defecto: `~/Runa/`
 
 ---
 
@@ -21,13 +21,13 @@ Cada documento es un archivo `.runa` compuesto de bloques de Markdown, escritura
 
 > La pantalla de inicio y el sistema de archivos.
 
-- [ ] Pantalla de inicio
-  - [ ] Abrir carpeta del sistema → listar `.runa` en sidebar
-  - [ ] Crear nuevo archivo `.runa` en carpeta abierta o ruta por defecto
-  - [ ] Crear subcarpetas en ruta por defecto
-  - [ ] Archivos recientes
-- [ ] Sidebar con árbol de archivos
-- [ ] Navegación entre documentos abiertos (tabs)
+- [X] Pantalla de inicio
+  - [X] Abrir carpeta del sistema → listar `.runa` en sidebar
+  - [X] Crear nuevo archivo `.runa` en carpeta abierta o ruta por defecto
+  - [X] Crear subcarpetas en ruta por defecto
+  - [X] Archivos recientes
+- [X] Sidebar con árbol de archivos
+- [X] Navegación entre documentos abiertos (tabs)
 
 ---
 
@@ -134,13 +134,13 @@ Cada documento es un archivo `.runa` compuesto de bloques de Markdown, escritura
 ## Resumen de versiones
 
 | Versión | Contenido                          |
-|---------|------------------------------------|
-| `v0.1`  | Fundamentos y formato `.runa`      |
-| `v0.2`  | Home + navegación de archivos      |
-| `v0.3`  | Editor: MarkdownBlock + InkBlock   |
-| `v0.4`  | Reordenar, insertar, redimensionar |
-| `v0.5`  | PDF e imágenes anotables           |
-| `v0.6`  | Math, GFM completo, export PDF     |
-| `v0.7`  | Rust core + OCR                    |
-| `v1.0`  | Sistema de plugins                 |
-| `v1.x`  | Typst, Jupyter, LLM                |
+| -------- | ---------------------------------- |
+| `v0.1` | Fundamentos y formato `.runa`    |
+| `v0.2` | Home + navegación de archivos     |
+| `v0.3` | Editor: MarkdownBlock + InkBlock   |
+| `v0.4` | Reordenar, insertar, redimensionar |
+| `v0.5` | PDF e imágenes anotables          |
+| `v0.6` | Math, GFM completo, export PDF     |
+| `v0.7` | Rust core + OCR                    |
+| `v1.0` | Sistema de plugins                 |
+| `v1.x` | Typst, Jupyter, LLM                |

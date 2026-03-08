@@ -8,8 +8,8 @@ Document _buildDocument({List<Block> blocks = const []}) {
   return Document(
     version: '0.1',
     id: '00000000-0000-0000-0000-000000000001',
-    createdAt: DateTime.utc(2024, 1, 1),
-    updatedAt: DateTime.utc(2024, 1, 1),
+    createdAt: DateTime.utc(2024, 1),
+    updatedAt: DateTime.utc(2024, 1),
     blocks: blocks,
   );
 }
@@ -101,7 +101,7 @@ void main() {
 
       expect(doc.version, '0.1');
       expect(doc.id, '00000000-0000-0000-0000-000000000001');
-      expect(doc.createdAt, DateTime.utc(2024, 1, 1));
+      expect(doc.createdAt, DateTime.utc(2024, 1));
       expect(doc.blocks, isEmpty);
     });
 
@@ -160,8 +160,8 @@ void main() {
   group('Document — copyWith', () {
     test('copyWith changes updatedAt only', () {
       final original = _buildDocument();
-      final updated = original.copyWith(updatedAt: DateTime.utc(2024, 6, 1));
-      expect(updated.updatedAt, DateTime.utc(2024, 6, 1));
+      final updated = original.copyWith(updatedAt: DateTime.utc(2024, 6));
+      expect(updated.updatedAt, DateTime.utc(2024, 6));
       expect(updated.createdAt, original.createdAt);
       expect(updated.id, original.id);
       expect(updated.blocks, original.blocks);

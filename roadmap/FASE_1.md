@@ -135,11 +135,11 @@
 
 > El editor real se implementa en Fase 2. Aquí solo necesitamos un placeholder funcional.
 
-- [ ] `DocumentEditorPlaceholder`:
-  - [ ] Muestra el nombre del documento abierto
-  - [ ] Muestra el número de bloques que contiene
-  - [ ] Botón "Guardar" que hace `DocumentRepository.save()` (sin cambios reales)
-- [ ] Asegurarse de que la navegación carga y muestra el documento correcto
+- [X] `DocumentEditorPlaceholder`:
+  - [X] Muestra el nombre del documento abierto
+  - [X] Muestra el número de bloques que contiene
+  - [X] Botón "Guardar" que hace `DocumentRepository.save()` (sin cambios reales)
+- [X] Asegurarse de que la navegación carga y muestra el documento correcto
 
 ---
 
@@ -147,14 +147,14 @@
 
 Al finalizar esta fase, la app debe:
 
-- [ ] Compilar y ejecutar en Linux (ventana nativa)
-- [ ] Permitir abrir una carpeta del sistema y ver su árbol de `.runa`
-- [ ] Crear un nuevo documento `.runa` vacío desde la UI
-- [ ] Crear subcarpetas desde la UI
-- [ ] Abrir múltiples documentos en tabs y navegar entre ellos
-- [ ] Mostrar archivos recientes y reabrirlos con un click
-- [ ] Cerrar un tab con confirmación si hay cambios pendientes
-- [ ] Todos los tests pasando (`flutter test`)
+- [X] Compilar y ejecutar en Linux (ventana nativa)
+- [X] Permitir abrir una carpeta del sistema y ver su árbol de `.runa`
+- [X] Crear un nuevo documento `.runa` vacío desde la UI
+- [X] Crear subcarpetas desde la UI
+- [X] Abrir múltiples documentos en tabs y navegar entre ellos
+- [X] Mostrar archivos recientes y reabrirlos con un click
+- [X] Cerrar un tab con confirmación si hay cambios pendientes
+- [X] Todos los tests pasando (`flutter test`)
 
 ---
 
