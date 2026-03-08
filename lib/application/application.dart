@@ -1,7 +1,15 @@
 // Application layer: business logic and use cases.
 //
 // Contains:
-//   - Use cases (CreateDocument, OpenDocument, SaveDocument, etc.)
-//   - Riverpod providers that orchestrate domain + data
+//   - WorkspaceState + WorkspaceNotifier (Riverpod)
+//   - Service interfaces (FileSystemService, RecentFilesService)
+//   - Provider definitions that wire domain interfaces to data implementations
 //   - No direct Flutter widget dependencies
 library;
+
+export 'providers.dart';
+export 'services/file_system_service.dart';
+export 'services/recent_files_service.dart';
+export 'workspace/opened_document.dart';
+export 'workspace/workspace_notifier.dart';
+export 'workspace/workspace_state.dart';
