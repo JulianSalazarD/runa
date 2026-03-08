@@ -11,6 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+roadmap/
+
 
 # IntelliJ related
 *.iml
@@ -45,4 +47,3 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-roadmap/

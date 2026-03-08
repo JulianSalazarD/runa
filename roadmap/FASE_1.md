@@ -7,111 +7,110 @@
 
 ## 1. Infraestructura de estado (Application layer) ✅
 
-- [x] `WorkspaceState` — estado global del workspace:
-  - [x] `openedDirectory: Directory?` — carpeta activa en el sidebar
-  - [x] `openedDocuments: List<OpenedDocument>` — documentos en tabs
-  - [x] `activeDocumentId: String?` — tab activo
-  - [x] `recentPaths: List<String>` — historial de rutas recientes
-- [x] `WorkspaceNotifier` (Riverpod `Notifier`):
-  - [x] `openDirectory(String path)` — carga árbol de archivos
-  - [x] `openDocument(String path)` — abre un `.runa` y lo añade a tabs
-  - [x] `closeDocument(String id)` — cierra un tab
-  - [x] `setActiveDocument(String id)`
-  - [x] `createDocument(String directory, String name)` — crea `.runa` en blanco y lo abre
-  - [x] `createSubdirectory(String parent, String name)`
-- [x] `RecentFilesService`:
-  - [x] Persistir `recentPaths` en JSON local (`runa_recents.json`)
-  - [x] Limitar a 20 entradas; deduplicar
-- [x] `FileSystemService`:
-  - [x] `listRunaFiles(String directory)` — lista `.runa` recursivamente
-  - [x] `watchDirectory(String directory)` — stream de cambios con `dart:io`
-  - [x] `createDirectory(String path)`
-- [x] Tests unitarios de `WorkspaceNotifier` con fakes del repositorio (45 tests)
-- [x] Tests de `RecentFilesService` (añadir, deduplicar, cap 20, persistencia) (12 tests)
-- [x] Tests de `FileSystemService` (listar, crear, watch) (10 tests)
+- [X] `WorkspaceState` — estado global del workspace:
+  - [X] `openedDirectory: Directory?` — carpeta activa en el sidebar
+  - [X] `openedDocuments: List<OpenedDocument>` — documentos en tabs
+  - [X] `activeDocumentId: String?` — tab activo
+  - [X] `recentPaths: List<String>` — historial de rutas recientes
+- [X] `WorkspaceNotifier` (Riverpod `Notifier`):
+  - [X] `openDirectory(String path)` — carga árbol de archivos
+  - [X] `openDocument(String path)` — abre un `.runa` y lo añade a tabs
+  - [X] `closeDocument(String id)` — cierra un tab
+  - [X] `setActiveDocument(String id)`
+  - [X] `createDocument(String directory, String name)` — crea `.runa` en blanco y lo abre
+  - [X] `createSubdirectory(String parent, String name)`
+- [X] `RecentFilesService`:
+  - [X] Persistir `recentPaths` en JSON local (`runa_recents.json`)
+  - [X] Limitar a 20 entradas; deduplicar
+- [X] `FileSystemService`:
+  - [X] `listRunaFiles(String directory)` — lista `.runa` recursivamente
+  - [X] `watchDirectory(String directory)` — stream de cambios con `dart:io`
+  - [X] `createDirectory(String path)`
+- [X] Tests unitarios de `WorkspaceNotifier` con fakes del repositorio (45 tests)
+- [X] Tests de `RecentFilesService` (añadir, deduplicar, cap 20, persistencia) (12 tests)
+- [X] Tests de `FileSystemService` (listar, crear, watch) (10 tests)
 
 ---
 
 ## 2. Pantalla de inicio (`HomeScreen`) ✅
 
-- [x] Layout principal: sidebar izquierdo + área central
-- [x] Estado inicial (sin carpeta abierta):
-  - [x] Botón "Abrir carpeta" → `FilePicker.platform.getDirectoryPath()`
-  - [x] Botón "Nuevo documento" → crea `.runa` en `~/Runa/` (`sin_titulo_<timestamp>.runa`)
-  - [x] Sección "Recientes" con lista de rutas recientes clicables
-  - [x] Ruta inexistente → indicador visual en rojo + botón de eliminar
-- [x] Estado con carpeta abierta:
-  - [x] Sidebar placeholder: header con nombre de carpeta + lista de archivos
-  - [x] Área central: `DocumentEditorPlaceholder` o mensaje de "selecciona un documento"
-- [x] `DocumentEditorPlaceholder`: nombre, count de bloques, botón Guardar
-- [x] `WorkspaceNotifier.removeRecentPath()` añadido
-- [x] `main.dart` con `ProviderScope` + `HomeScreen` + tema Material 3
-- [x] `file_picker ^8.1.7` añadido
-- [x] Tests de widget (10): welcome state, recents, folder open, editor placeholder
+- [X] Layout principal: sidebar izquierdo + área central
+- [X] Estado inicial (sin carpeta abierta):
+  - [X] Botón "Abrir carpeta" → `FilePicker.platform.getDirectoryPath()`
+  - [X] Botón "Nuevo documento" → crea `.runa` en `~/Runa/` (`sin_titulo_<timestamp>.runa`)
+  - [X] Sección "Recientes" con lista de rutas recientes clicables
+  - [X] Ruta inexistente → indicador visual en rojo + botón de eliminar
+- [X] Estado con carpeta abierta:
+  - [X] Sidebar placeholder: header con nombre de carpeta + lista de archivos
+  - [X] Área central: `DocumentEditorPlaceholder` o mensaje de "selecciona un documento"
+- [X] `DocumentEditorPlaceholder`: nombre, count de bloques, botón Guardar
+- [X] `WorkspaceNotifier.removeRecentPath()` añadido
+- [X] `main.dart` con `ProviderScope` + `HomeScreen` + tema Material 3
+- [X] `file_picker ^8.1.7` añadido
+- [X] Tests de widget (10): welcome state, recents, folder open, editor placeholder
 
 ---
 
 ## 3. Sidebar — árbol de archivos ✅
 
-- [x] `FileSidebarWidget`:
-  - [x] Muestra nombre de la carpeta raíz abierta en el header
-  - [x] Lista archivos `.runa` y subcarpetas en árbol expandible (flat-list con depth)
-  - [x] Icono diferenciado: `folder`/`folder_open` para carpetas, `description_outlined` para archivos
-  - [x] Resalta el archivo del tab activo (`ListTile.selected`)
-  - [x] Click en archivo → `WorkspaceNotifier.openDocument(path)`
-  - [x] Ordenar: carpetas primero, luego archivos; ambos alfabéticamente
-- [x] Menú contextual (click derecho con `onSecondaryTapDown`):
-  - [x] Sobre archivo: "Abrir", "Renombrar", "Eliminar"
-  - [x] Sobre carpeta: "Nuevo documento aquí", "Nueva subcarpeta", "Renombrar", "Eliminar"
-- [x] Botón "+" en el header con `MenuAnchor`: "Nuevo documento" y "Nueva subcarpeta"
-- [x] Watch del directorio (`watchDirectory` recursive) → recarga automática
-- [x] `FileSystemService` extendido: `listDirectory`, `renameEntry`, `deleteFile`, `deleteDirectory`
-- [x] `WorkspaceNotifier` extendido: `renameDocument`, `deleteDocument`, `deleteDirectory`
-- [x] Tests de widget (12): listing, icons, tapping, expand/collapse, highlighting, nested indent
-- [x] Tests unitarios notifier (13 nuevos): removeRecentPath, renameDocument, deleteDocument, deleteDirectory
+- [X] `FileSidebarWidget`:
+  - [X] Muestra nombre de la carpeta raíz abierta en el header
+  - [X] Lista archivos `.runa` y subcarpetas en árbol expandible (flat-list con depth)
+  - [X] Icono diferenciado: `folder`/`folder_open` para carpetas, `description_outlined` para archivos
+  - [X] Resalta el archivo del tab activo (`ListTile.selected`)
+  - [X] Click en archivo → `WorkspaceNotifier.openDocument(path)`
+  - [X] Ordenar: carpetas primero, luego archivos; ambos alfabéticamente
+- [X] Menú contextual (click derecho con `onSecondaryTapDown`):
+  - [X] Sobre archivo: "Abrir", "Renombrar", "Eliminar"
+  - [X] Sobre carpeta: "Nuevo documento aquí", "Nueva subcarpeta", "Renombrar", "Eliminar"
+- [X] Botón "+" en el header con `MenuAnchor`: "Nuevo documento" y "Nueva subcarpeta"
+- [X] Watch del directorio (`watchDirectory` recursive) → recarga automática
+- [X] `FileSystemService` extendido: `listDirectory`, `renameEntry`, `deleteFile`, `deleteDirectory`
+- [X] `WorkspaceNotifier` extendido: `renameDocument`, `deleteDocument`, `deleteDirectory`
+- [X] Tests de widget (12): listing, icons, tapping, expand/collapse, highlighting, nested indent
+- [X] Tests unitarios notifier (13 nuevos): removeRecentPath, renameDocument, deleteDocument, deleteDirectory
 
 ---
 
 ## 4. Crear nuevo documento
 
-- [ ] Flujo "Nuevo documento":
-  - [ ] Si hay carpeta abierta → preguntar nombre (dialog inline o text field en sidebar)
-  - [ ] Si no hay carpeta abierta → guardar en `~/Runa/` con nombre por defecto
-  - [ ] Validación: nombre no vacío, no contiene caracteres inválidos, no existe ya un archivo con ese nombre
-  - [ ] Crear documento vacío (sin bloques) con `DocumentRepository.save()`
-  - [ ] Abrir el documento recién creado en un nuevo tab
-- [ ] Flujo "Nueva subcarpeta":
-  - [ ] Dialog inline con text field para el nombre
-  - [ ] Validación equivalente a la de documentos
-  - [ ] Crear directorio con `dart:io`
-- [ ] Tests:
-  - [ ] Creación exitosa → documento aparece en sidebar y tab activo
-  - [ ] Nombre duplicado → error mostrado sin crear el archivo
-  - [ ] Nombre vacío → botón de confirmar deshabilitado
+- [X] Flujo "Nuevo documento":
+  - [X] Si hay carpeta abierta → preguntar nombre (dialog inline o text field en sidebar)
+  - [X] Si no hay carpeta abierta → guardar en `~/Runa/` con nombre por defecto
+  - [X] Validación: nombre no vacío, no contiene caracteres inválidos, no existe ya un archivo con ese nombre
+  - [X] Crear documento vacío (sin bloques) con `DocumentRepository.save()`
+  - [X] Abrir el documento recién creado en un nuevo tab
+- [X] Flujo "Nueva subcarpeta":
+  - [X] Dialog inline con text field para el nombre
+  - [X] Validación equivalente a la de documentos
+  - [X] Crear directorio con `dart:io`
+- [X] Tests:
+  - [X] Creación exitosa → documento aparece en sidebar y tab activo
+  - [X] Nombre duplicado → error mostrado sin crear el archivo
+  - [X] Nombre vacío → botón de confirmar deshabilitado
 
 ---
 
 ## 5. Navegación entre documentos (tabs)
 
-- [ ] `DocumentTabBar`:
-  - [ ] Muestra un tab por documento abierto con nombre del archivo
-  - [ ] Tab activo resaltado visualmente
-  - [ ] Botón "×" en cada tab para cerrarlo
-  - [ ] Si hay cambios sin guardar → indicador (punto o asterisco en el nombre)
-  - [ ] Scroll horizontal si hay muchos tabs
-- [ ] Comportamiento al cerrar tab:
-  - [ ] Sin cambios → cierra directamente
-  - [ ] Con cambios → dialog de confirmación: "Guardar", "Descartar", "Cancelar"
-- [ ] Keyboard shortcuts (registrar con `Shortcuts` + `Actions`):
-  - [ ] `Ctrl+W` → cerrar tab activo
-  - [ ] `Ctrl+Tab` / `Ctrl+Shift+Tab` → navegar entre tabs
-  - [ ] `Ctrl+N` → nuevo documento
-  - [ ] `Ctrl+O` → abrir carpeta
-- [ ] Tests:
-  - [ ] Abrir dos documentos → dos tabs visibles
-  - [ ] Click en tab → cambia documento activo
-  - [ ] Cerrar tab sin cambios → desaparece directamente
-  - [ ] Cerrar tab con cambios → muestra dialog
+- [X] `DocumentTabBar`:
+  - [X] Muestra un tab por documento abierto con nombre del archivo
+  - [X] Tab activo resaltado visualmente
+  - [X] Botón "×" en cada tab para cerrarlo
+  - [X] Si hay cambios sin guardar → indicador (punto o asterisco en el nombre)
+  - [X] Scroll horizontal si hay muchos tabs
+- [X] Comportamiento al cerrar tab:
+  - [X] Sin cambios → cierra directamente
+  - [X] Con cambios → dialog de confirmación: "Guardar", "Descartar", "Cancelar"
+- [X] Keyboard shortcuts (registrar con `Shortcuts` + `Actions`):
+  - [X] `Ctrl+W` → cerrar tab activo
+  - [X] `Ctrl+Tab` / `Ctrl+Shift+Tab` → navegar entre tabs
+  - [X] `Ctrl+N` → nuevo documento
+  - [X] `Ctrl+O` → abrir carpeTests:
+    - [X] Abrir dos documentos → dos tabs visibles
+    - [X] Click en tab → cambia documento activo
+    - [X] Cerrar tab sin cambios → desaparece directamente
+    - [X] Cerrar tab con cambios → muestra dialog
 
 ---
 
@@ -161,10 +160,10 @@ Al finalizar esta fase, la app debe:
 
 ## Dependencias nuevas a añadir
 
-| Paquete | Uso |
-|---|---|
-| `file_picker` | Diálogo nativo para seleccionar carpeta |
-| `shared_preferences` | Persistir archivos recientes |
+| Paquete                | Uso                                      |
+| ---------------------- | ---------------------------------------- |
+| `file_picker`        | Diálogo nativo para seleccionar carpeta |
+| `shared_preferences` | Persistir archivos recientes             |
 
 ---
 
