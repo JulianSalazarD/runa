@@ -8,7 +8,7 @@ import 'package:runa/application/application.dart';
 import 'package:runa/data/data.dart';
 import 'package:runa/presentation/home/sidebar/name_input_dialog.dart';
 
-import 'document_editor_placeholder.dart';
+import '../editor/document_editor.dart';
 import 'sidebar/file_sidebar_widget.dart';
 import 'tabs/document_tab_bar.dart';
 import 'welcome_view.dart';
@@ -148,7 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const DocumentTabBar(),
               Expanded(
                 child: activeDoc != null
-                    ? DocumentEditorPlaceholder(opened: activeDoc)
+                    ? DocumentEditor(opened: activeDoc)
                     : const _EmptyEditorArea(),
               ),
             ],

@@ -31,6 +31,14 @@ class EditorNotifier extends _$EditorNotifier {
   // Load & save
   // -------------------------------------------------------------------------
 
+  /// Initialises state from an already-loaded [doc] without hitting disk.
+  ///
+  /// Call this from a widget's `initState` / `didUpdateWidget` when the
+  /// document is already available in memory (e.g. from [WorkspaceNotifier]).
+  void initFromDocument(Document doc, String path) {
+    state = state.copyWith(path: path, document: doc, isDirty: false);
+  }
+
   /// Loads the document at [path] from the repository and resets dirty state.
   Future<void> loadDocument(String path) async {
     final doc = await ref.read(documentRepositoryProvider).load(path);

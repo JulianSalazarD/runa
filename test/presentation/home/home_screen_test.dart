@@ -329,7 +329,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('my_notes'), findsWidgets);
-      expect(find.text('Sin bloques'), findsOneWidget);
+      expect(find.textContaining('Sin bloques'), findsOneWidget);
     });
 
     testWidgets('shows "Guardar" button', (tester) async {
