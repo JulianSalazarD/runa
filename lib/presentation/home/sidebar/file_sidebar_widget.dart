@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:runa/application/application.dart';
+import 'package:runa/presentation/home/sidebar/name_input_dialog.dart';
 
 // ---------------------------------------------------------------------------
 // Public widget
@@ -208,40 +209,71 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
   // -------------------------------------------------------------------------
 
   Future<void> _promptNewDocument(String directory) async {
-    final name = await _showNameDialog(
+    final entries =
+        await ref.read(fileSystemServiceProvider).listDirectory(directory);
+    final existingNames = entries
+        .where((e) => !e.isDirectory)
+        .map((e) => p.basenameWithoutExtension(e.path))
+        .toSet();
+    if (!mounted) return;
+
+    final name = await showNameInputDialog(
       context,
       title: 'Nuevo documento',
       hint: 'nombre_documento',
+      existingNames: existingNames,
     );
-    if (name == null || name.trim().isEmpty) return;
+    if (name == null || name.isEmpty) return;
     await ref
         .read(workspaceNotifierProvider.notifier)
-        .createDocument(directory, name.trim());
+        .createDocument(directory, name);
   }
 
   Future<void> _promptNewSubdirectory(String directory) async {
-    final name = await _showNameDialog(
+    final entries =
+        await ref.read(fileSystemServiceProvider).listDirectory(directory);
+    final existingNames = entries
+        .where((e) => e.isDirectory)
+        .map((e) => p.basename(e.path))
+        .toSet();
+    if (!mounted) return;
+
+    final name = await showNameInputDialog(
       context,
       title: 'Nueva subcarpeta',
       hint: 'nombre_carpeta',
+      existingNames: existingNames,
     );
-    if (name == null || name.trim().isEmpty) return;
+    if (name == null || name.isEmpty) return;
     await ref
         .read(workspaceNotifierProvider.notifier)
-        .createSubdirectory(directory, name.trim());
+        .createSubdirectory(directory, name);
   }
 
   Future<void> _promptRename(_SidebarItem item) async {
     final current = item.isDirectory
         ? p.basename(item.path)
         : p.basenameWithoutExtension(item.path);
-    final name = await _showNameDialog(
+    final entries = await ref
+        .read(fileSystemServiceProvider)
+        .listDirectory(p.dirname(item.path));
+    final existingNames = entries
+        .where((e) => e.isDirectory == item.isDirectory)
+        .map((e) => item.isDirectory
+            ? p.basename(e.path)
+            : p.basenameWithoutExtension(e.path))
+        .where((n) => n != current)
+        .toSet();
+    if (!mounted) return;
+
+    final name = await showNameInputDialog(
       context,
       title: 'Renombrar',
       hint: current,
       initial: current,
+      existingNames: existingNames,
     );
-    if (name == null || name.trim().isEmpty || name.trim() == current) return;
+    if (name == null || name.isEmpty || name == current) return;
 
     final ext = item.isDirectory ? '' : '.runa';
     final newPath = p.join(p.dirname(item.path), '${name.trim()}$ext');
@@ -351,28 +383,46 @@ class _SidebarHeader extends ConsumerWidget {
   }
 
   Future<void> _promptNewDocument(BuildContext context, WidgetRef ref) async {
-    final name = await _showNameDialog(
+    final entries =
+        await ref.read(fileSystemServiceProvider).listDirectory(directoryPath);
+    final existingNames = entries
+        .where((e) => !e.isDirectory)
+        .map((e) => p.basenameWithoutExtension(e.path))
+        .toSet();
+    if (!context.mounted) return;
+
+    final name = await showNameInputDialog(
       context,
       title: 'Nuevo documento',
       hint: 'nombre_documento',
+      existingNames: existingNames,
     );
-    if (name == null || name.trim().isEmpty) return;
+    if (name == null || name.isEmpty) return;
     await ref
         .read(workspaceNotifierProvider.notifier)
-        .createDocument(directoryPath, name.trim());
+        .createDocument(directoryPath, name);
   }
 
   Future<void> _promptNewSubdirectory(
       BuildContext context, WidgetRef ref) async {
-    final name = await _showNameDialog(
+    final entries =
+        await ref.read(fileSystemServiceProvider).listDirectory(directoryPath);
+    final existingNames = entries
+        .where((e) => e.isDirectory)
+        .map((e) => p.basename(e.path))
+        .toSet();
+    if (!context.mounted) return;
+
+    final name = await showNameInputDialog(
       context,
       title: 'Nueva subcarpeta',
       hint: 'nombre_carpeta',
+      existingNames: existingNames,
     );
-    if (name == null || name.trim().isEmpty) return;
+    if (name == null || name.isEmpty) return;
     await ref
         .read(workspaceNotifierProvider.notifier)
-        .createSubdirectory(directoryPath, name.trim());
+        .createSubdirectory(directoryPath, name);
   }
 }
 
@@ -440,37 +490,3 @@ class _SidebarItem {
   final int depth;
 }
 
-// ---------------------------------------------------------------------------
-// Shared dialog helper
-// ---------------------------------------------------------------------------
-
-Future<String?> _showNameDialog(
-  BuildContext context, {
-  required String title,
-  required String hint,
-  String? initial,
-}) {
-  final controller = TextEditingController(text: initial);
-  return showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(hintText: hint),
-        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, controller.text.trim()),
-          child: const Text('Aceptar'),
-        ),
-      ],
-    ),
-  );
-}

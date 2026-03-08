@@ -9,4 +9,5 @@ library;
 export 'home/document_editor_placeholder.dart';
 export 'home/home_screen.dart';
 export 'home/sidebar/file_sidebar_widget.dart';
+export 'home/sidebar/name_input_dialog.dart';
 export 'home/welcome_view.dart';
