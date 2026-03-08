@@ -40,6 +40,10 @@ class FakeRecentFilesService implements RecentFilesService {
   Future<List<String>> loadRecents() async => List.from(recents);
 
   @override
+  Future<List<RecentEntry>> loadRecentEntries() async =>
+      recents.map((p) => RecentEntry(path: p, openedAt: DateTime.utc(2024))).toList();
+
+  @override
   Future<void> addRecent(String path) async {
     recents.remove(path);
     recents.insert(0, path);

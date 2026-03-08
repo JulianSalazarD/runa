@@ -38,6 +38,10 @@ class FakeRecentFilesService implements RecentFilesService {
   Future<List<String>> loadRecents() async => List.from(recents);
 
   @override
+  Future<List<RecentEntry>> loadRecentEntries() async =>
+      recents.map((p) => RecentEntry(path: p, openedAt: DateTime.utc(2024))).toList();
+
+  @override
   Future<void> addRecent(String path) async {
     recents.remove(path);
     recents.insert(0, path);
@@ -181,6 +185,66 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Recientes'), findsNothing);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Recent files — Part 6 additions
+  // -------------------------------------------------------------------------
+
+  group('recent files — Part 6', () {
+    testWidgets('shows "Limpiar recientes" button when recents are non-empty',
+        (tester) async {
+      final fakeRecents = FakeRecentFilesService()
+        ..recents = ['/home/user/Runa/alpha.runa'];
+
+      await tester.pumpWidget(_appWith(fakeRecents: fakeRecents));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Limpiar recientes'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Limpiar recientes" hides the recents section',
+        (tester) async {
+      final fakeRecents = FakeRecentFilesService()
+        ..recents = ['/home/user/Runa/alpha.runa'];
+
+      await tester.pumpWidget(_appWith(fakeRecents: fakeRecents));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Limpiar recientes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recientes'), findsNothing);
+      expect(find.text('Limpiar recientes'), findsNothing);
+    });
+
+    testWidgets('shows at most 10 entries even with more recents',
+        (tester) async {
+      final fakeRecents = FakeRecentFilesService()
+        ..recents = List.generate(
+            12,
+            (i) =>
+                '/home/user/Runa/doc_${i.toString().padLeft(2, '0')}.runa');
+
+      await tester.pumpWidget(_appWith(fakeRecents: fakeRecents));
+      await tester.pumpAndSettle();
+
+      expect(find.text('doc_00'), findsOneWidget);
+      expect(find.text('doc_09'), findsOneWidget);
+      expect(find.text('doc_10'), findsNothing);
+      expect(find.text('doc_11'), findsNothing);
+    });
+
+    testWidgets('shows the file path in each recent entry row', (tester) async {
+      final fakeRecents = FakeRecentFilesService()
+        ..recents = ['/home/user/Runa/alpha.runa'];
+
+      await tester.pumpWidget(_appWith(fakeRecents: fakeRecents));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.textContaining('/home/user/Runa/alpha.runa'), findsOneWidget);
     });
   });
 

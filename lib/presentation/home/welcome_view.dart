@@ -14,7 +14,7 @@ class WelcomeView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recentPaths = ref.watch(workspaceNotifierProvider).recentPaths;
+    final entriesAsync = ref.watch(recentEntriesProvider);
 
     return SingleChildScrollView(
       child: Center(
@@ -46,24 +46,13 @@ class WelcomeView extends ConsumerWidget {
                   ),
                 ],
               ),
-              if (recentPaths.isNotEmpty) ...[
-                const SizedBox(height: 56),
-                SizedBox(
-                  width: 480,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Recientes',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      for (final path in recentPaths)
-                        RecentFileItem(path: path),
-                    ],
-                  ),
-                ),
-              ],
+              entriesAsync.when(
+                data: (entries) => entries.isEmpty
+                    ? const SizedBox.shrink()
+                    : _RecentSection(entries: entries.take(10).toList()),
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+              ),
             ],
           ),
         ),
@@ -86,18 +75,68 @@ class WelcomeView extends ConsumerWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Recent section (header + "Limpiar" button + list)
+// ---------------------------------------------------------------------------
+
+class _RecentSection extends ConsumerWidget {
+  const _RecentSection({required this.entries});
+
+  final List<RecentEntry> entries;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 56),
+        SizedBox(
+          width: 480,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Recientes',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => ref
+                        .read(workspaceNotifierProvider.notifier)
+                        .clearRecentPaths(),
+                    child: const Text('Limpiar recientes'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              for (final entry in entries) RecentEntryItem(entry: entry),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Individual recent-file row
+// ---------------------------------------------------------------------------
+
 /// A single row in the recent-files list.
 ///
 /// Shows a file-not-found indicator and a remove button when the file
 /// no longer exists on disk.
-class RecentFileItem extends ConsumerWidget {
-  const RecentFileItem({super.key, required this.path});
+class RecentEntryItem extends ConsumerWidget {
+  const RecentEntryItem({super.key, required this.entry});
 
-  final String path;
+  final RecentEntry entry;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final exists = File(path).existsSync();
+    final exists = File(entry.path).existsSync();
     final colorScheme = Theme.of(context).colorScheme;
 
     return ListTile(
@@ -106,27 +145,56 @@ class RecentFileItem extends ConsumerWidget {
         color: exists ? null : colorScheme.error,
       ),
       title: Text(
-        p.basenameWithoutExtension(path),
+        p.basenameWithoutExtension(entry.path),
         style: TextStyle(color: exists ? null : colorScheme.error),
       ),
-      subtitle: Text(
-        path,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.bodySmall,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            entry.path,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Text(
+            _formatDate(entry.openedAt),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.outline,
+                ),
+          ),
+        ],
       ),
+      isThreeLine: true,
       trailing: exists
           ? null
           : IconButton(
               tooltip: 'Eliminar de recientes',
               icon: const Icon(Icons.close),
-              onPressed: () =>
-                  ref.read(workspaceNotifierProvider.notifier).removeRecentPath(path),
+              onPressed: () => ref
+                  .read(workspaceNotifierProvider.notifier)
+                  .removeRecentPath(entry.path),
             ),
       onTap: exists
-          ? () =>
-              ref.read(workspaceNotifierProvider.notifier).openDocument(path)
+          ? () => ref
+              .read(workspaceNotifierProvider.notifier)
+              .openDocument(entry.path)
           : null,
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Date formatting helper
+// ---------------------------------------------------------------------------
+
+String _formatDate(DateTime dt) {
+  final local = dt.toLocal();
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final yesterday = today.subtract(const Duration(days: 1));
+  final date = DateTime(local.year, local.month, local.day);
+  if (date == today) return 'Hoy';
+  if (date == yesterday) return 'Ayer';
+  return '${local.day}/${local.month.toString().padLeft(2, '0')}/${local.year}';
 }

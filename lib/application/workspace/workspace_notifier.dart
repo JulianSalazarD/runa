@@ -146,6 +146,12 @@ class WorkspaceNotifier extends _$WorkspaceNotifier {
     );
   }
 
+  /// Clears all recent paths from both the persistent store and state.
+  Future<void> clearRecentPaths() async {
+    await _recents.clear();
+    state = state.copyWith(recentPaths: []);
+  }
+
   // -------------------------------------------------------------------------
   // Rename & delete
   // -------------------------------------------------------------------------

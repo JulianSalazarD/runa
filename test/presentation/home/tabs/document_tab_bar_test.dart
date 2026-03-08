@@ -35,6 +35,8 @@ class FakeRecentFilesService implements RecentFilesService {
   @override
   Future<List<String>> loadRecents() async => const [];
   @override
+  Future<List<RecentEntry>> loadRecentEntries() async => const [];
+  @override
   Future<void> addRecent(String path) async {}
   @override
   Future<void> remove(String path) async {}

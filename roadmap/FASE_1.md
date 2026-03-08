@@ -116,18 +116,18 @@
 
 ## 6. Archivos recientes
 
-- [ ] `RecentFilesWidget` en la `HomeScreen` (visible cuando no hay carpeta abierta):
-  - [ ] Lista los últimos 10 documentos abiertos con:
+- [X] `RecentFilesWidget` en la `HomeScreen` (visible cuando no hay carpeta abierta):
+  - [X] Lista los últimos 10 documentos abiertos con:
     - Nombre del archivo
     - Ruta completa (truncada si es larga)
     - Fecha de última apertura
-  - [ ] Click → abre el documento directamente (o muestra error si ya no existe)
-  - [ ] Botón "Limpiar recientes"
-- [ ] Actualizar lista de recientes cada vez que se abre un documento
-- [ ] Tests:
-  - [ ] Abrir documento lo añade a recientes
-  - [ ] Duplicados no se insertan (se mueve al tope)
-  - [ ] Archivo eliminado → mostrar estado de error al intentar abrir
+  - [X] Click → abre el documento directamente (o muestra error si ya no existe)
+  - [X] Botón "Limpiar recientes"
+- [X] Actualizar lista de recientes cada vez que se abre un documento
+- [X] Tests:
+  - [X] Abrir documento lo añade a recientes
+  - [X] Duplicados no se insertan (se mueve al tope)
+  - [X] Archivo eliminado → mostrar estado de error al intentar abrir
 
 ---
 

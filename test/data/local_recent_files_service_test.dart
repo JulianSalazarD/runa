@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runa/application/services/recent_entry.dart';
 import 'package:runa/data/data.dart';
 
 void main() {
@@ -113,6 +114,51 @@ void main() {
 
     test('clear on empty list does not throw', () async {
       await expectLater(svc.clear(), completes);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // loadRecentEntries
+  // -------------------------------------------------------------------------
+
+  group('loadRecentEntries', () {
+    test('returns empty list when no file exists', () async {
+      expect(await svc.loadRecentEntries(), isEmpty);
+    });
+
+    test('returns entries with paths and timestamps after addRecent', () async {
+      final before = DateTime.now().subtract(const Duration(seconds: 1));
+      await svc.addRecent('/a/doc.runa');
+      final entries = await svc.loadRecentEntries();
+      expect(entries.length, 1);
+      expect(entries.first.path, '/a/doc.runa');
+      expect(entries.first.openedAt.isAfter(before), isTrue);
+    });
+
+    test('returns entries in most-recent-first order', () async {
+      await svc.addRecent('/a/doc.runa');
+      await svc.addRecent('/b/doc.runa');
+      final entries = await svc.loadRecentEntries();
+      expect(entries.map((e) => e.path).toList(),
+          ['/b/doc.runa', '/a/doc.runa']);
+    });
+
+    test('backward compat: plain string entries get epoch timestamp', () async {
+      // Write old-format JSON (plain array of strings, not objects).
+      final file = File('${tempDir.path}/recents.json');
+      await file.writeAsString('["/a/old.runa"]');
+
+      final entries = await svc.loadRecentEntries();
+      expect(entries.length, 1);
+      expect(entries.first.path, '/a/old.runa');
+      expect(entries.first.openedAt,
+          DateTime.fromMillisecondsSinceEpoch(0));
+    });
+
+    test('returns empty list after clear()', () async {
+      await svc.addRecent('/a/doc.runa');
+      await svc.clear();
+      expect(await svc.loadRecentEntries(), isEmpty);
     });
   });
 }
