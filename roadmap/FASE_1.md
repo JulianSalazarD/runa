@@ -51,26 +51,24 @@
 
 ---
 
-## 3. Sidebar — árbol de archivos
+## 3. Sidebar — árbol de archivos ✅
 
-- [ ] `FileSidebarWidget`:
-  - [ ] Muestra nombre de la carpeta raíz abierta (con botón para cambiarla)
-  - [ ] Lista archivos `.runa` y subcarpetas en árbol expandible
-  - [ ] Icono diferenciado para carpetas y archivos `.runa`
-  - [ ] Resalta el archivo del tab activo
-  - [ ] Click en archivo → `WorkspaceNotifier.openDocument(path)`
-  - [ ] Ordenar: carpetas primero, luego archivos; ambos ordenados alfabéticamente
-- [ ] Menú contextual en item del árbol (click derecho):
-  - [ ] Sobre archivo: "Abrir", "Renombrar", "Eliminar"
-  - [ ] Sobre carpeta: "Nueva carpeta", "Nuevo documento aquí", "Renombrar", "Eliminar"
-- [ ] Botón "+" en el header del sidebar:
-  - [ ] "Nuevo documento" en la carpeta raíz abierta
-  - [ ] "Nueva subcarpeta"
-- [ ] Watch del directorio → sidebar se actualiza automáticamente al crear/eliminar/renombrar archivos externos
-- [ ] Tests de widget de `FileSidebarWidget`:
-  - [ ] Lista correctamente archivos y carpetas
-  - [ ] Click en archivo dispara `openDocument`
-  - [ ] Archivo activo resaltado
+- [x] `FileSidebarWidget`:
+  - [x] Muestra nombre de la carpeta raíz abierta en el header
+  - [x] Lista archivos `.runa` y subcarpetas en árbol expandible (flat-list con depth)
+  - [x] Icono diferenciado: `folder`/`folder_open` para carpetas, `description_outlined` para archivos
+  - [x] Resalta el archivo del tab activo (`ListTile.selected`)
+  - [x] Click en archivo → `WorkspaceNotifier.openDocument(path)`
+  - [x] Ordenar: carpetas primero, luego archivos; ambos alfabéticamente
+- [x] Menú contextual (click derecho con `onSecondaryTapDown`):
+  - [x] Sobre archivo: "Abrir", "Renombrar", "Eliminar"
+  - [x] Sobre carpeta: "Nuevo documento aquí", "Nueva subcarpeta", "Renombrar", "Eliminar"
+- [x] Botón "+" en el header con `MenuAnchor`: "Nuevo documento" y "Nueva subcarpeta"
+- [x] Watch del directorio (`watchDirectory` recursive) → recarga automática
+- [x] `FileSystemService` extendido: `listDirectory`, `renameEntry`, `deleteFile`, `deleteDirectory`
+- [x] `WorkspaceNotifier` extendido: `renameDocument`, `deleteDocument`, `deleteDirectory`
+- [x] Tests de widget (12): listing, icons, tapping, expand/collapse, highlighting, nested indent
+- [x] Tests unitarios notifier (13 nuevos): removeRecentPath, renameDocument, deleteDocument, deleteDirectory
 
 ---
 

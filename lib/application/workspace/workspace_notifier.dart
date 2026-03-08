@@ -134,4 +134,64 @@ class WorkspaceNotifier extends _$WorkspaceNotifier {
       recentPaths: state.recentPaths.where((r) => r != path).toList(),
     );
   }
+
+  // -------------------------------------------------------------------------
+  // Rename & delete
+  // -------------------------------------------------------------------------
+
+  /// Renames the document at [oldPath] to [newPath].
+  ///
+  /// Updates the open tab's path if the document was open, and refreshes
+  /// recents so the new path is stored instead of the old one.
+  Future<void> renameDocument(String oldPath, String newPath) async {
+    await _fs.renameEntry(oldPath, newPath);
+
+    final updatedDocs = state.openedDocuments.map((d) {
+      return d.path == oldPath ? d.copyWith(path: newPath) : d;
+    }).toList();
+    state = state.copyWith(openedDocuments: updatedDocs);
+
+    if (state.recentPaths.contains(oldPath)) {
+      await _recents.remove(oldPath);
+      await _recents.addRecent(newPath);
+      state = state.copyWith(recentPaths: await _recents.loadRecents());
+    }
+  }
+
+  /// Deletes the document at [path], closing its tab and removing from recents.
+  Future<void> deleteDocument(String path) async {
+    await _fs.deleteFile(path);
+
+    final openDoc =
+        state.openedDocuments.where((d) => d.path == path).firstOrNull;
+    if (openDoc != null) closeDocument(openDoc.document.id);
+
+    await removeRecentPath(path);
+  }
+
+  /// Deletes the directory at [path] and all its contents.
+  ///
+  /// Closes any open tabs whose documents live inside [path] and removes
+  /// their paths from recents.
+  Future<void> deleteDirectory(String path) async {
+    final prefix = '$path/';
+    final toClose = state.openedDocuments
+        .where((d) => d.path.startsWith(prefix) || d.path == path)
+        .toList();
+    for (final doc in toClose) {
+      closeDocument(doc.document.id);
+    }
+
+    final toRemove = state.recentPaths
+        .where((r) => r.startsWith(prefix) || r == path)
+        .toList();
+    for (final r in toRemove) {
+      await _recents.remove(r);
+    }
+    if (toRemove.isNotEmpty) {
+      state = state.copyWith(recentPaths: await _recents.loadRecents());
+    }
+
+    await _fs.deleteDirectory(path);
+  }
 }

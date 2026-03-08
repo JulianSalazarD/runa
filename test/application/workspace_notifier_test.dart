@@ -55,9 +55,15 @@ class FakeRecentFilesService implements RecentFilesService {
 
 class FakeFileSystemService implements FileSystemService {
   final List<String> createdDirectories = [];
+  final List<String> deletedFiles = [];
+  final List<String> deletedDirectories = [];
+  final Map<String, String> renames = {};
 
   @override
   Future<List<String>> listRunaFiles(String directory) async => const [];
+
+  @override
+  Future<List<DirectoryItem>> listDirectory(String path) async => const [];
 
   @override
   Stream<FileSystemEvent> watchDirectory(String directory) =>
@@ -66,6 +72,17 @@ class FakeFileSystemService implements FileSystemService {
   @override
   Future<void> createDirectory(String path) async =>
       createdDirectories.add(path);
+
+  @override
+  Future<void> renameEntry(String oldPath, String newPath) async =>
+      renames[oldPath] = newPath;
+
+  @override
+  Future<void> deleteFile(String path) async => deletedFiles.add(path);
+
+  @override
+  Future<void> deleteDirectory(String path) async =>
+      deletedDirectories.add(path);
 }
 
 // ---------------------------------------------------------------------------
@@ -320,6 +337,127 @@ void main() {
         () async {
       await notifier.createSubdirectory('/home/user/Runa', 'chapter_1');
       expect(fakeFs.createdDirectories, ['/home/user/Runa/chapter_1']);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // removeRecentPath
+  // -------------------------------------------------------------------------
+
+  group('removeRecentPath', () {
+    test('removes the path from state.recentPaths', () async {
+      fakeRecents.recents = [_pathA, _pathB];
+      await notifier.initialize();
+      await notifier.removeRecentPath(_pathA);
+      expect(state().recentPaths, [_pathB]);
+    });
+
+    test('no-op when path is not in recents', () async {
+      fakeRecents.recents = [_pathA];
+      await notifier.initialize();
+      await notifier.removeRecentPath(_pathB);
+      expect(state().recentPaths, [_pathA]);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // renameDocument
+  // -------------------------------------------------------------------------
+
+  group('renameDocument', () {
+    const newPathA = '/home/user/Runa/alpha_renamed.runa';
+
+    setUp(() => fakeRepo.seed(_pathA, _doc(_idA)));
+
+    test('calls FileSystemService.renameEntry with correct paths', () async {
+      await notifier.renameDocument(_pathA, newPathA);
+      expect(fakeFs.renames[_pathA], newPathA);
+    });
+
+    test('updates path in the open tab if document was open', () async {
+      await notifier.openDocument(_pathA);
+      await notifier.renameDocument(_pathA, newPathA);
+      expect(state().openedDocuments.first.path, newPathA);
+    });
+
+    test('does not change open tab path when document is not open', () async {
+      await notifier.renameDocument(_pathA, newPathA);
+      expect(state().openedDocuments, isEmpty);
+    });
+
+    test('updates recents when the renamed path was in recents', () async {
+      fakeRecents.recents = [_pathA];
+      await notifier.initialize();
+      fakeRepo.seed(newPathA, _doc(_idA));
+      await notifier.renameDocument(_pathA, newPathA);
+      expect(state().recentPaths, contains(newPathA));
+      expect(state().recentPaths, isNot(contains(_pathA)));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // deleteDocument
+  // -------------------------------------------------------------------------
+
+  group('deleteDocument', () {
+    setUp(() => fakeRepo.seed(_pathA, _doc(_idA)));
+
+    test('calls FileSystemService.deleteFile', () async {
+      await notifier.deleteDocument(_pathA);
+      expect(fakeFs.deletedFiles, contains(_pathA));
+    });
+
+    test('closes the open tab if document was open', () async {
+      await notifier.openDocument(_pathA);
+      expect(state().openedDocuments.length, 1);
+      await notifier.deleteDocument(_pathA);
+      expect(state().openedDocuments, isEmpty);
+    });
+
+    test('removes path from recents', () async {
+      fakeRecents.recents = [_pathA];
+      await notifier.initialize();
+      await notifier.deleteDocument(_pathA);
+      expect(state().recentPaths, isNot(contains(_pathA)));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // deleteDirectory
+  // -------------------------------------------------------------------------
+
+  group('deleteDirectory', () {
+    const dirPath = '/home/user/Runa/chapter';
+
+    setUp(() {
+      fakeRepo
+        ..seed(_pathA, _doc(_idA))
+        ..seed(_pathB, _doc(_idB));
+    });
+
+    test('calls FileSystemService.deleteDirectory', () async {
+      await notifier.deleteDirectory(dirPath);
+      expect(fakeFs.deletedDirectories, contains(dirPath));
+    });
+
+    test('closes tabs whose paths start with the directory prefix', () async {
+      const pathInDir = '$dirPath/note.runa';
+      fakeRepo.seed(pathInDir, _doc(_idA));
+      await notifier.openDocument(pathInDir);
+      expect(state().openedDocuments.length, 1);
+
+      await notifier.deleteDirectory(dirPath);
+      expect(state().openedDocuments, isEmpty);
+    });
+
+    test('removes recents that start with the directory prefix', () async {
+      const pathInDir = '$dirPath/note.runa';
+      fakeRecents.recents = [pathInDir, _pathA];
+      await notifier.initialize();
+
+      await notifier.deleteDirectory(dirPath);
+      expect(state().recentPaths, isNot(contains(pathInDir)));
+      expect(state().recentPaths, contains(_pathA));
     });
   });
 }

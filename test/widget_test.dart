@@ -36,11 +36,23 @@ class _FakeFileSystemService implements FileSystemService {
   Future<List<String>> listRunaFiles(String directory) async => const [];
 
   @override
+  Future<List<DirectoryItem>> listDirectory(String path) async => const [];
+
+  @override
   Stream<FileSystemEvent> watchDirectory(String directory) =>
       const Stream.empty();
 
   @override
   Future<void> createDirectory(String path) async {}
+
+  @override
+  Future<void> renameEntry(String oldPath, String newPath) async {}
+
+  @override
+  Future<void> deleteFile(String path) async {}
+
+  @override
+  Future<void> deleteDirectory(String path) async {}
 }
 
 void main() {

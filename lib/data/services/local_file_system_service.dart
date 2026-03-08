@@ -8,8 +8,6 @@ class LocalFileSystemService implements FileSystemService {
 
   static const _runaExtension = '.runa';
 
-  /// Lists all `.runa` files found recursively inside [directory],
-  /// sorted alphabetically by absolute path.
   @override
   Future<List<String>> listRunaFiles(String directory) async {
     final dir = Directory(directory);
@@ -25,14 +23,54 @@ class LocalFileSystemService implements FileSystemService {
     return paths;
   }
 
-  /// Returns a stream of file-system events for the top level of [directory].
-  /// Callers should cancel the subscription when the directory is closed.
+  @override
+  Future<List<DirectoryItem>> listDirectory(String path) async {
+    final dir = Directory(path);
+    if (!await dir.exists()) return const [];
+
+    final entities = await dir.list().toList();
+    final items = <DirectoryItem>[];
+
+    for (final entity in entities) {
+      if (entity is Directory) {
+        items.add(DirectoryItem(path: entity.path, isDirectory: true));
+      } else if (entity is File && entity.path.endsWith(_runaExtension)) {
+        items.add(DirectoryItem(path: entity.path, isDirectory: false));
+      }
+    }
+
+    // Folders first, then files; both sorted alphabetically.
+    items.sort((a, b) {
+      if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
+      return a.path.compareTo(b.path);
+    });
+
+    return items;
+  }
+
+  /// Watches [directory] and all its descendants for file-system changes.
   @override
   Stream<FileSystemEvent> watchDirectory(String directory) =>
-      Directory(directory).watch();
+      Directory(directory).watch(recursive: true);
 
-  /// Creates [path] and any missing intermediate directories.
   @override
   Future<void> createDirectory(String path) =>
       Directory(path).create(recursive: true);
+
+  @override
+  Future<void> renameEntry(String oldPath, String newPath) async {
+    final type = await FileSystemEntity.type(oldPath);
+    if (type == FileSystemEntityType.directory) {
+      await Directory(oldPath).rename(newPath);
+    } else {
+      await File(oldPath).rename(newPath);
+    }
+  }
+
+  @override
+  Future<void> deleteFile(String path) => File(path).delete();
+
+  @override
+  Future<void> deleteDirectory(String path) =>
+      Directory(path).delete(recursive: true);
 }
