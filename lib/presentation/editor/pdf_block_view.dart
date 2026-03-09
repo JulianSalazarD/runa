@@ -79,6 +79,11 @@ class _PdfBlockViewState extends State<PdfBlockView> {
   }
 
   Future<void> _loadPdf() async {
+    // documentPath starts as '' during the first build (before initFromDocument
+    // fires via addPostFrameCallback). Return early and wait for didUpdateWidget
+    // to retry with the real path, keeping the loading indicator visible.
+    if (widget.documentPath.isEmpty) return;
+
     final absolutePath =
         p.join(p.dirname(widget.documentPath), widget.block.path);
     try {
@@ -152,7 +157,7 @@ class _PdfBlockViewState extends State<PdfBlockView> {
     }
 
     if (_error != null) {
-      return _PdfErrorPlaceholder(path: widget.block.path);
+      return _PdfErrorPlaceholder(path: widget.block.path, error: _error!);
     }
 
     final doc = _pdf!;
@@ -311,21 +316,22 @@ class _PdfPageItem extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _PdfErrorPlaceholder extends StatelessWidget {
-  const _PdfErrorPlaceholder({required this.path});
+  const _PdfErrorPlaceholder({required this.path, required this.error});
 
   final String path;
+  final String error;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      height: 80,
-      alignment: Alignment.center,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.picture_as_pdf_outlined,
@@ -335,6 +341,13 @@ class _PdfErrorPlaceholder extends StatelessWidget {
             'No se pudo abrir: $path',
             style: TextStyle(fontSize: 11, color: colorScheme.outline),
             overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            error,
+            style: TextStyle(fontSize: 10, color: colorScheme.error),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
         ],
       ),

@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdfrx/pdfrx.dart';
 
 import 'package:runa/presentation/presentation.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // pdfrx requires a cache directory before opening any PDF.
+  final tempDir = await getTemporaryDirectory();
+  Pdfrx.getCacheDirectory = () => Future.value(tempDir.path);
+
   runApp(const ProviderScope(child: RunaApp()));
 }
 
