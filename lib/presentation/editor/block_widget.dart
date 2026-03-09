@@ -41,6 +41,15 @@ class BlockWidget extends StatelessWidget {
           autoFocus: autoFocus,
         ),
       final InkBlock b => _InkBlockView(block: b, onUpdate: onUpdate),
+      // Placeholders until Fase 3 widgets are implemented (Parts 4 & 5).
+      final ImageBlock b => _AssetBlockPlaceholder(
+          icon: Icons.image_outlined,
+          label: 'Imagen: ${b.path}',
+        ),
+      final PdfBlock b => _AssetBlockPlaceholder(
+          icon: Icons.picture_as_pdf_outlined,
+          label: 'PDF: ${b.path}',
+        ),
     };
   }
 }
@@ -190,6 +199,44 @@ class _InkBlockViewState extends State<_InkBlockView> {
           },
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Asset block placeholder (ImageBlock / PdfBlock — widgets added in Fase 3)
+// ---------------------------------------------------------------------------
+
+class _AssetBlockPlaceholder extends StatelessWidget {
+  const _AssetBlockPlaceholder({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      height: 80,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: colorScheme.outline),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(color: colorScheme.outline, fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

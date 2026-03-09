@@ -171,6 +171,8 @@ void main() {
       final result = switch (block) {
         MarkdownBlock(:final content) => content,
         InkBlock() => 'ink',
+        ImageBlock() => 'image',
+        PdfBlock() => 'pdf',
       };
       expect(result, '# Hello');
     });
@@ -180,6 +182,8 @@ void main() {
       final result = switch (block) {
         MarkdownBlock() => -1,
         InkBlock(:final strokes) => strokes.length,
+        ImageBlock() => -1,
+        PdfBlock() => -1,
       };
       expect(result, 1);
     });

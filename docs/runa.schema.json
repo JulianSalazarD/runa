@@ -4,15 +4,22 @@
   "title": "Runa Document",
   "description": "Schema for .runa document files. Version field drives migration; parsers must reject documents with unsupported versions.",
   "type": "object",
-  "required": ["version", "id", "created_at", "updated_at", "blocks"],
+  "required": [
+    "version",
+    "id",
+    "created_at",
+    "updated_at",
+    "blocks"
+  ],
   "additionalProperties": false,
-
   "properties": {
     "version": {
       "type": "string",
       "description": "Schema version (MAJOR.MINOR). Parsers must check this field first. Breaking changes bump MAJOR. MINOR additions are backwards-compatible.",
       "pattern": "^\\d+\\.\\d+$",
-      "enum": ["0.1"]
+      "enum": [
+        "0.1"
+      ]
     },
     "id": {
       "type": "string",
@@ -37,20 +44,32 @@
       }
     }
   },
-
   "$defs": {
     "Block": {
       "description": "A content block. Discriminated by the 'type' field.",
       "oneOf": [
-        { "$ref": "#/$defs/MarkdownBlock" },
-        { "$ref": "#/$defs/InkBlock" }
+        {
+          "$ref": "#/$defs/MarkdownBlock"
+        },
+        {
+          "$ref": "#/$defs/InkBlock"
+        },
+        {
+          "$ref": "#/$defs/ImageBlock"
+        },
+        {
+          "$ref": "#/$defs/PdfBlock"
+        }
       ]
     },
-
     "MarkdownBlock": {
       "type": "object",
       "description": "A block of raw Markdown text.",
-      "required": ["type", "id", "content"],
+      "required": [
+        "type",
+        "id",
+        "content"
+      ],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -68,11 +87,15 @@
         }
       }
     },
-
     "InkBlock": {
       "type": "object",
       "description": "A block containing freehand ink strokes drawn on a canvas.",
-      "required": ["type", "id", "height", "strokes"],
+      "required": [
+        "type",
+        "id",
+        "height",
+        "strokes"
+      ],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -98,11 +121,16 @@
         }
       }
     },
-
     "Stroke": {
       "type": "object",
       "description": "A single continuous ink stroke.",
-      "required": ["id", "color", "width", "tool", "points"],
+      "required": [
+        "id",
+        "color",
+        "width",
+        "tool",
+        "points"
+      ],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -122,7 +150,12 @@
         },
         "tool": {
           "type": "string",
-          "enum": ["pen", "pencil", "marker", "eraser"],
+          "enum": [
+            "pen",
+            "pencil",
+            "marker",
+            "eraser"
+          ],
           "description": "Tool that produced this stroke. Affects rendering style."
         },
         "points": {
@@ -135,11 +168,15 @@
         }
       }
     },
-
     "StrokePoint": {
       "type": "object",
       "description": "A single sampled input point within a stroke.",
-      "required": ["x", "y", "pressure", "timestamp"],
+      "required": [
+        "x",
+        "y",
+        "pressure",
+        "timestamp"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
@@ -160,6 +197,116 @@
           "type": "integer",
           "minimum": 0,
           "description": "Milliseconds since Unix epoch when this point was sampled."
+        }
+      }
+    },
+    "ImageBlock": {
+      "type": "object",
+      "description": "A block displaying an image with an optional ink annotation layer.",
+      "required": [
+        "type",
+        "id",
+        "path",
+        "naturalWidth",
+        "naturalHeight"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "image",
+          "description": "Discriminator value for ImageBlock."
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique block identifier (UUID v4)."
+        },
+        "path": {
+          "type": "string",
+          "description": "Relative path to the image asset from the .runa file (e.g. _assets/foto.png)."
+        },
+        "naturalWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Original image width in logical pixels. Used for stroke coordinate normalisation."
+        },
+        "naturalHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Original image height in logical pixels. Used for stroke coordinate normalisation."
+        },
+        "strokes": {
+          "type": "array",
+          "description": "Ink annotation strokes. Coordinates normalised to [0.0, 1.0] relative to naturalWidth x naturalHeight.",
+          "items": {
+            "$ref": "#/$defs/Stroke"
+          }
+        }
+      }
+    },
+    "PdfBlock": {
+      "type": "object",
+      "description": "A block displaying a PDF with per-page ink annotation layers.",
+      "required": [
+        "type",
+        "id",
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "pdf",
+          "description": "Discriminator value for PdfBlock."
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique block identifier (UUID v4)."
+        },
+        "path": {
+          "type": "string",
+          "description": "Relative path to the PDF asset from the .runa file (e.g. _assets/doc.pdf)."
+        },
+        "pages": {
+          "type": "array",
+          "description": "Per-page annotation data. Pages without annotations may be absent.",
+          "items": {
+            "$ref": "#/$defs/PdfPageAnnotation"
+          }
+        }
+      }
+    },
+    "PdfPageAnnotation": {
+      "type": "object",
+      "description": "Ink annotations for a single page of a PdfBlock.",
+      "required": [
+        "pageIndex",
+        "pageWidth",
+        "pageHeight"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pageIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Zero-based index of the PDF page."
+        },
+        "pageWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Page width in points (pt) as reported by the PDF renderer."
+        },
+        "pageHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Page height in points (pt) as reported by the PDF renderer."
+        },
+        "strokes": {
+          "type": "array",
+          "description": "Ink strokes on this page. Coordinates normalised to [0.0, 1.0] relative to pageWidth x pageHeight.",
+          "items": {
+            "$ref": "#/$defs/Stroke"
+          }
         }
       }
     }

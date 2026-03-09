@@ -7,6 +7,7 @@
 library;
 
 export 'models/block.dart';
+export 'models/pdf_page_annotation.dart';
 export 'models/document.dart';
 export 'models/stroke.dart';
 export 'models/stroke_point.dart';
