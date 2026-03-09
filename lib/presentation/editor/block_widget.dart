@@ -9,6 +9,7 @@ import 'ink_canvas_widget.dart';
 import 'ink_toolbar_widget.dart';
 import 'markdown_editor_widget.dart';
 import 'markdown_preview_widget.dart';
+import 'pdf_block_view.dart';
 
 /// Dispatches to the appropriate block renderer based on [block] type.
 ///
@@ -65,10 +66,11 @@ class BlockWidget extends StatelessWidget {
           isSelected: isSelected,
           onUpdate: onUpdate,
         ),
-      // Placeholder until Fase 3 Part 5 (PDF widget) is implemented.
-      final PdfBlock b => _AssetBlockPlaceholder(
-          icon: Icons.picture_as_pdf_outlined,
-          label: 'PDF: ${b.path}',
+      final PdfBlock b => PdfBlockView(
+          block: b,
+          documentPath: documentPath,
+          isSelected: isSelected,
+          onUpdate: onUpdate,
         ),
     };
   }
@@ -338,44 +340,6 @@ class _ImageErrorPlaceholder extends StatelessWidget {
             path,
             style: TextStyle(fontSize: 11, color: colorScheme.outline),
             overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Asset block placeholder (PdfBlock — widget added in Fase 3 Part 5)
-// ---------------------------------------------------------------------------
-
-class _AssetBlockPlaceholder extends StatelessWidget {
-  const _AssetBlockPlaceholder({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      height: 80,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: colorScheme.outline),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              label,
-              style: TextStyle(color: colorScheme.outline, fontSize: 13),
-              overflow: TextOverflow.ellipsis,
-            ),
           ),
         ],
       ),
