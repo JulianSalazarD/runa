@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runa/domain/domain.dart';
 
@@ -13,8 +15,19 @@ part 'editor_notifier.g.dart';
 /// [loadDocument] with the file path before making any mutations.
 @riverpod
 class EditorNotifier extends _$EditorNotifier {
+  static const _autosaveInterval = Duration(seconds: 30);
+  static const _messageDuration = Duration(seconds: 2);
+
+  Timer? _autosaveTimer;
+  Timer? _messageTimer;
+
   @override
   EditorState build(String documentId) {
+    _autosaveTimer = Timer.periodic(_autosaveInterval, (_) => _autosave());
+    ref.onDispose(() {
+      _autosaveTimer?.cancel();
+      _messageTimer?.cancel();
+    });
     return EditorState(
       path: '',
       document: Document(
@@ -56,6 +69,25 @@ class EditorNotifier extends _$EditorNotifier {
     ref
         .read(workspaceNotifierProvider.notifier)
         .markHasUnsavedChanges(documentId, value: false);
+  }
+
+  // -------------------------------------------------------------------------
+  // Autosave
+  // -------------------------------------------------------------------------
+
+  /// Exposed for testing: runs the autosave logic immediately.
+  Future<void> triggerAutosave() => _autosave();
+
+  Future<void> _autosave() async {
+    if (!state.isDirty) return;
+    await saveDocument();
+    _messageTimer?.cancel();
+    state = state.copyWith(autosaveMessage: true);
+    _messageTimer = Timer(_messageDuration, () {
+      try {
+        state = state.copyWith(autosaveMessage: false);
+      } catch (_) {}
+    });
   }
 
   // -------------------------------------------------------------------------

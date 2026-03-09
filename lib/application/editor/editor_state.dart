@@ -22,6 +22,9 @@ class EditorState with _$EditorState {
 
     /// Whether the in-memory state differs from the last save.
     @Default(false) bool isDirty,
+
+    /// Whether to show the "Guardado automáticamente" indicator briefly.
+    @Default(false) bool autosaveMessage,
   }) = _EditorState;
 
   /// Shorthand for [document.blocks].

@@ -244,7 +244,9 @@ void main() {
       await tester.tap(find.byType(TextField));
       await tester.pump();
 
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
 
       final state = editorState(container);
@@ -263,11 +265,13 @@ void main() {
       await tester.tap(find.text('Editar'));
       await tester.pump();
 
-      // Set text ending with newline, then press Enter.
+      // Set text ending with newline, then press Ctrl+Enter.
       await tester.enterText(find.byType(TextField), 'hola\n');
       await tester.pump();
 
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
 
       final state = editorState(container);
@@ -289,7 +293,9 @@ void main() {
       await tester.tap(find.byType(TextField).first);
       await tester.pump();
 
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
 
       final state = editorState(container);
@@ -307,7 +313,9 @@ void main() {
       await tester.tap(find.byType(TextField));
       await tester.pump();
 
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
 
       final state = editorState(container);

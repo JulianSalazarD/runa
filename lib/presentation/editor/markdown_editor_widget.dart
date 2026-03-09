@@ -76,6 +76,10 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
     if (event.logicalKey != LogicalKeyboardKey.enter) {
       return KeyEventResult.ignored;
     }
+    // Require Ctrl+Enter to create a new block (plain Enter just adds a newline).
+    if (!HardwareKeyboard.instance.isControlPressed) {
+      return KeyEventResult.ignored;
+    }
 
     final text = _controller.text;
     final selection = _controller.selection;

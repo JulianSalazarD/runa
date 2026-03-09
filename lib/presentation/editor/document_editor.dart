@@ -15,9 +15,6 @@ class _SaveIntent extends Intent {
   const _SaveIntent();
 }
 
-class _DeleteBlockIntent extends Intent {
-  const _DeleteBlockIntent();
-}
 
 /// Shows a confirmation dialog before deleting a block that has content.
 /// Deletes immediately (no dialog) when the block is empty.
@@ -116,8 +113,6 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     return Shortcuts(
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.keyS, control: true): _SaveIntent(),
-        SingleActivator(LogicalKeyboardKey.delete): _DeleteBlockIntent(),
-        SingleActivator(LogicalKeyboardKey.backspace): _DeleteBlockIntent(),
       },
       child: Actions(
         actions: {
@@ -127,21 +122,28 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
               return null;
             },
           ),
-          _DeleteBlockIntent: CallbackAction<_DeleteBlockIntent>(
-            onInvoke: (_) {
-              final selectedId = editorState.selectedBlockId;
-              if (selectedId == null) return null;
-              final matches =
-                  editorState.blocks.where((b) => b.id == selectedId);
-              if (matches.isEmpty) return null;
-              _confirmAndDeleteBlock(context, matches.first, notifier);
-              return null;
-            },
-          ),
         },
         child: Focus(
           focusNode: _editorFocusNode,
           autofocus: true,
+          // Delete/Backspace are handled here instead of Shortcuts so that the
+          // key is NOT consumed when a TextField (Markdown editor) has focus.
+          // Shortcuts.consumesKey is true by default and would swallow the key
+          // even when the action does nothing, breaking text editing.
+          onKeyEvent: (_, event) {
+            if (!_editorFocusNode.hasPrimaryFocus) return KeyEventResult.ignored;
+            if (event is! KeyDownEvent) return KeyEventResult.ignored;
+            if (event.logicalKey != LogicalKeyboardKey.delete &&
+                event.logicalKey != LogicalKeyboardKey.backspace) {
+              return KeyEventResult.ignored;
+            }
+            final selectedId = editorState.selectedBlockId;
+            if (selectedId == null) return KeyEventResult.ignored;
+            final matches = editorState.blocks.where((b) => b.id == selectedId);
+            if (matches.isEmpty) return KeyEventResult.ignored;
+            _confirmAndDeleteBlock(context, matches.first, notifier);
+            return KeyEventResult.handled;
+          },
           child: GestureDetector(
             // Tapping the canvas (outside any block) deselects and refocuses
             // the editor so Delete/Backspace shortcuts remain available.
@@ -156,10 +158,16 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                 _EditorToolbar(
                   path: widget.opened.path,
                   isDirty: editorState.isDirty,
+                  autosaveMessage: editorState.autosaveMessage,
                   onSave: notifier.saveDocument,
-                  onAddBlock: () => notifier.addBlock(
+                  onAddMarkdown: () => notifier.addBlock(
                     Block.markdown(id: _uuid.v4(), content: ''),
                   ),
+                  onAddInk: () => notifier.addBlock(
+                    Block.ink(id: _uuid.v4(), strokes: const [], height: 200.0),
+                  ),
+                  onGoHome: () =>
+                      ref.read(workspaceNotifierProvider.notifier).closeDirectory(),
                 ),
                 Expanded(
                   child: _BlockList(
@@ -184,20 +192,26 @@ class _EditorToolbar extends StatelessWidget {
   const _EditorToolbar({
     required this.path,
     required this.isDirty,
+    required this.autosaveMessage,
     required this.onSave,
-    required this.onAddBlock,
+    required this.onAddMarkdown,
+    required this.onAddInk,
+    required this.onGoHome,
   });
 
   final String path;
   final bool isDirty;
+  final bool autosaveMessage;
   final VoidCallback onSave;
-  final VoidCallback onAddBlock;
+  final VoidCallback onAddMarkdown;
+  final VoidCallback onAddInk;
+  final VoidCallback onGoHome;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor),
@@ -205,14 +219,34 @@ class _EditorToolbar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Menú principal',
+            onPressed: onGoHome,
+            iconSize: 20,
+          ),
           Expanded(
-            child: Text(
-              p.basenameWithoutExtension(path),
-              style: Theme.of(context).textTheme.titleMedium,
-              overflow: TextOverflow.ellipsis,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text(
+                p.basenameWithoutExtension(path),
+                style: Theme.of(context).textTheme.titleMedium,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-          if (isDirty)
+          if (autosaveMessage)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(
+                'Guardado automáticamente',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              ),
+            )
+          else if (isDirty)
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Text(
@@ -222,10 +256,23 @@ class _EditorToolbar extends StatelessWidget {
                 semanticsLabel: 'Cambios sin guardar',
               ),
             ),
-          IconButton(
+          PopupMenuButton<_InsertBlockType>(
             icon: const Icon(Icons.add),
             tooltip: 'Nuevo bloque al final',
-            onPressed: onAddBlock,
+            onSelected: (type) {
+              if (type == _InsertBlockType.markdown) onAddMarkdown();
+              if (type == _InsertBlockType.ink) onAddInk();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: _InsertBlockType.markdown,
+                child: Text('Texto (Markdown)'),
+              ),
+              PopupMenuItem(
+                value: _InsertBlockType.ink,
+                child: Text('Escritura a mano (Ink)'),
+              ),
+            ],
           ),
           TextButton(
             onPressed: onSave,

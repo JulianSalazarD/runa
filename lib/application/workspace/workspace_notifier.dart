@@ -63,11 +63,23 @@ class WorkspaceNotifier extends _$WorkspaceNotifier {
     state = state.copyWith(
       openedDocuments: [...state.openedDocuments, opened],
       activeDocumentId: document.id,
+      // Auto-open the file's directory if no directory is currently open.
+      openedDirectoryPath:
+          state.openedDirectoryPath ?? p.dirname(path),
     );
 
     await _recents.addRecent(path);
     final updatedRecents = await _recents.loadRecents();
     state = state.copyWith(recentPaths: updatedRecents);
+  }
+
+  /// Closes the current directory view and resets to the welcome screen.
+  void closeDirectory() {
+    state = state.copyWith(
+      openedDirectoryPath: null,
+      openedDocuments: [],
+      activeDocumentId: null,
+    );
   }
 
   /// Closes the tab whose document has [id].

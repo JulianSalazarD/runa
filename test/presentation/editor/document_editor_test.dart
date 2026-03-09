@@ -202,18 +202,32 @@ void main() {
       expect(find.text('●'), findsNothing);
     });
 
-    testWidgets('tapping "+" toolbar button inserts a block at the end',
+    testWidgets('tapping "+" toolbar button shows block-type popup',
+        (tester) async {
+      final blocks = [const Block.markdown(id: 'b1', content: 'primero')];
+      await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      await tester.tap(find.byTooltip('Nuevo bloque al final'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Texto (Markdown)'), findsOneWidget);
+      expect(find.text('Escritura a mano (Ink)'), findsOneWidget);
+    });
+
+    testWidgets('selecting "Texto (Markdown)" from toolbar inserts block at end',
         (tester) async {
       final blocks = [const Block.markdown(id: 'b1', content: 'primero')];
       final container =
           await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
 
-      await tester.tap(find.widgetWithIcon(IconButton, Icons.add));
-      await tester.pump();
+      await tester.tap(find.byTooltip('Nuevo bloque al final'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Texto (Markdown)'));
+      await tester.pumpAndSettle();
 
       final editorState = container.read(editorNotifierProvider(_docId));
       expect(editorState.blocks, hasLength(2));
-      expect(editorState.blocks.first.id, 'b1');
+      expect(editorState.blocks.last, isA<MarkdownBlock>());
     });
 
     testWidgets('tapping "Guardar" saves the document', (tester) async {

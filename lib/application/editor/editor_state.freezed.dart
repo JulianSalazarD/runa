@@ -29,6 +29,9 @@ mixin _$EditorState {
   /// Whether the in-memory state differs from the last save.
   bool get isDirty => throw _privateConstructorUsedError;
 
+  /// Whether to show the "Guardado automáticamente" indicator briefly.
+  bool get autosaveMessage => throw _privateConstructorUsedError;
+
   /// Create a copy of EditorState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,6 +51,7 @@ abstract class $EditorStateCopyWith<$Res> {
     Document document,
     String? selectedBlockId,
     bool isDirty,
+    bool autosaveMessage,
   });
 
   $DocumentCopyWith<$Res> get document;
@@ -72,6 +76,7 @@ class _$EditorStateCopyWithImpl<$Res, $Val extends EditorState>
     Object? document = null,
     Object? selectedBlockId = freezed,
     Object? isDirty = null,
+    Object? autosaveMessage = null,
   }) {
     return _then(
       _value.copyWith(
@@ -90,6 +95,10 @@ class _$EditorStateCopyWithImpl<$Res, $Val extends EditorState>
             isDirty: null == isDirty
                 ? _value.isDirty
                 : isDirty // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            autosaveMessage: null == autosaveMessage
+                ? _value.autosaveMessage
+                : autosaveMessage // ignore: cast_nullable_to_non_nullable
                       as bool,
           )
           as $Val,
@@ -121,6 +130,7 @@ abstract class _$$EditorStateImplCopyWith<$Res>
     Document document,
     String? selectedBlockId,
     bool isDirty,
+    bool autosaveMessage,
   });
 
   @override
@@ -145,6 +155,7 @@ class __$$EditorStateImplCopyWithImpl<$Res>
     Object? document = null,
     Object? selectedBlockId = freezed,
     Object? isDirty = null,
+    Object? autosaveMessage = null,
   }) {
     return _then(
       _$EditorStateImpl(
@@ -164,6 +175,10 @@ class __$$EditorStateImplCopyWithImpl<$Res>
             ? _value.isDirty
             : isDirty // ignore: cast_nullable_to_non_nullable
                   as bool,
+        autosaveMessage: null == autosaveMessage
+            ? _value.autosaveMessage
+            : autosaveMessage // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -177,6 +192,7 @@ class _$EditorStateImpl extends _EditorState {
     required this.document,
     this.selectedBlockId,
     this.isDirty = false,
+    this.autosaveMessage = false,
   }) : super._();
 
   /// Absolute path to the `.runa` file on disk.
@@ -196,9 +212,14 @@ class _$EditorStateImpl extends _EditorState {
   @JsonKey()
   final bool isDirty;
 
+  /// Whether to show the "Guardado automáticamente" indicator briefly.
+  @override
+  @JsonKey()
+  final bool autosaveMessage;
+
   @override
   String toString() {
-    return 'EditorState(path: $path, document: $document, selectedBlockId: $selectedBlockId, isDirty: $isDirty)';
+    return 'EditorState(path: $path, document: $document, selectedBlockId: $selectedBlockId, isDirty: $isDirty, autosaveMessage: $autosaveMessage)';
   }
 
   @override
@@ -211,12 +232,20 @@ class _$EditorStateImpl extends _EditorState {
                 other.document == document) &&
             (identical(other.selectedBlockId, selectedBlockId) ||
                 other.selectedBlockId == selectedBlockId) &&
-            (identical(other.isDirty, isDirty) || other.isDirty == isDirty));
+            (identical(other.isDirty, isDirty) || other.isDirty == isDirty) &&
+            (identical(other.autosaveMessage, autosaveMessage) ||
+                other.autosaveMessage == autosaveMessage));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, path, document, selectedBlockId, isDirty);
+  int get hashCode => Object.hash(
+    runtimeType,
+    path,
+    document,
+    selectedBlockId,
+    isDirty,
+    autosaveMessage,
+  );
 
   /// Create a copy of EditorState
   /// with the given fields replaced by the non-null parameter values.
@@ -233,6 +262,7 @@ abstract class _EditorState extends EditorState {
     required final Document document,
     final String? selectedBlockId,
     final bool isDirty,
+    final bool autosaveMessage,
   }) = _$EditorStateImpl;
   const _EditorState._() : super._();
 
@@ -251,6 +281,10 @@ abstract class _EditorState extends EditorState {
   /// Whether the in-memory state differs from the last save.
   @override
   bool get isDirty;
+
+  /// Whether to show the "Guardado automáticamente" indicator briefly.
+  @override
+  bool get autosaveMessage;
 
   /// Create a copy of EditorState
   /// with the given fields replaced by the non-null parameter values.

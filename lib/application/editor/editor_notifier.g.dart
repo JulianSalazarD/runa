@@ -6,7 +6,7 @@ part of 'editor_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$editorNotifierHash() => r'32dbb9cf08ae62c9d7209166ce7a6d419f30a3b2';
+String _$editorNotifierHash() => r'a3b3c4084b543ea540e341767b025b319b01c5cf';
 
 /// Copied from Dart SDK
 class _SystemHash {
