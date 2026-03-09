@@ -32,7 +32,7 @@ Future<void> _confirmAndDeleteBlock(
     PdfBlock() => true,
   };
   if (!hasContent) {
-    notifier.removeBlock(block.id);
+    await notifier.removeBlock(block.id);
     return;
   }
   if (!context.mounted) return;
@@ -53,7 +53,7 @@ Future<void> _confirmAndDeleteBlock(
       ],
     ),
   );
-  if (confirmed == true) notifier.removeBlock(block.id);
+  if (confirmed == true) await notifier.removeBlock(block.id);
 }
 
 /// The real document editor, replacing [DocumentEditorPlaceholder].

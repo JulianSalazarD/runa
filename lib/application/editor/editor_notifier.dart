@@ -110,9 +110,41 @@ class EditorNotifier extends _$EditorNotifier {
     state = state.copyWith(selectedBlockId: block.id);
   }
 
-  /// Removes the block with [id]. No-op if not found.
-  void removeBlock(String id) {
+  /// Removes the block with [id] from the document.
+  ///
+  /// If the removed block is an [ImageBlock] or [PdfBlock], and no other
+  /// block in the document references the same asset path, the asset file
+  /// is deleted from disk (best-effort — errors are silently ignored).
+  Future<void> removeBlock(String id) async {
+    final idx = state.blocks.indexWhere((b) => b.id == id);
+    if (idx == -1) return;
+    final block = state.blocks[idx];
+
+    // Remove from state immediately for a responsive UI.
     _setBlocks(state.blocks.where((b) => b.id != id).toList());
+
+    // Determine if this block owned an asset.
+    final assetPath = switch (block) {
+      final ImageBlock b => b.path,
+      final PdfBlock b => b.path,
+      _ => null,
+    };
+    if (assetPath == null) return;
+
+    // Delete asset only when no remaining block references the same path.
+    final remaining = state.blocks; // already updated by _setBlocks above
+    final isOrphaned = !remaining.any((b) => switch (b) {
+      final ImageBlock ib => ib.path == assetPath,
+      final PdfBlock pb => pb.path == assetPath,
+      _ => false,
+    });
+    if (!isOrphaned) return;
+
+    try {
+      await ref.read(assetManagerProvider).deleteAsset(assetPath, state.path);
+    } catch (_) {
+      // Best-effort: ignore I/O errors.
+    }
   }
 
   /// Replaces the block whose id matches [updated.id]. No-op if not found.

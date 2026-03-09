@@ -257,20 +257,20 @@ void main() {
       await notifier.loadDocument(_path);
     });
 
-    test('eliminar bloque existente → desaparece de la lista', () {
-      notifier.removeBlock('b1');
+    test('eliminar bloque existente → desaparece de la lista', () async {
+      await notifier.removeBlock('b1');
 
       expect(state().blocks, hasLength(1));
       expect(state().blocks.first.id, 'b2');
     });
 
-    test('eliminar id no existente → no-op', () {
-      notifier.removeBlock('fantasma');
+    test('eliminar id no existente → no-op', () async {
+      await notifier.removeBlock('fantasma');
       expect(state().blocks, hasLength(2));
     });
 
-    test('removeBlock → isDirty true', () {
-      notifier.removeBlock('b1');
+    test('removeBlock → isDirty true', () async {
+      await notifier.removeBlock('b1');
       expect(state().isDirty, isTrue);
     });
   });
