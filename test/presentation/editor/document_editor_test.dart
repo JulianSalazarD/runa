@@ -291,6 +291,84 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
+  // Block reorder (drag & drop)
+  // -------------------------------------------------------------------------
+
+  group('block reorder', () {
+    testWidgets(
+        'drag handle uses ReorderableDragStartListener when 2+ blocks',
+        (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b1', content: 'primero'),
+        const Block.markdown(id: 'b2', content: 'segundo'),
+      ];
+      await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      expect(find.byType(ReorderableDragStartListener), findsWidgets);
+    });
+
+    testWidgets('drag handle has no ReorderableDragStartListener with 1 block',
+        (tester) async {
+      final blocks = [const Block.markdown(id: 'b1', content: 'único')];
+      await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      expect(find.byType(ReorderableDragStartListener), findsNothing);
+    });
+
+    testWidgets('dragging block 0 to end moves it to last position',
+        (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b0', content: 'primero'),
+        const Block.markdown(id: 'b1', content: 'segundo'),
+        const Block.markdown(id: 'b2', content: 'tercero'),
+      ];
+      final container =
+          await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      // Select block 0 so its drag handle becomes visible (opacity → 1.0).
+      container
+          .read(editorNotifierProvider(_docId).notifier)
+          .setSelectedBlock('b0');
+      await tester.pumpAndSettle();
+
+      // Drag the first handle far enough to pass all blocks below.
+      await tester.drag(
+        find.byType(ReorderableDragStartListener).first,
+        const Offset(0, 400),
+      );
+      await tester.pumpAndSettle();
+
+      final state = container.read(editorNotifierProvider(_docId));
+      expect(state.blocks.last.id, 'b0');
+    });
+
+    testWidgets('reordering marks document as dirty', (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b0', content: 'primero'),
+        const Block.markdown(id: 'b1', content: 'segundo'),
+      ];
+      final container =
+          await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      container
+          .read(editorNotifierProvider(_docId).notifier)
+          .setSelectedBlock('b0');
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+        find.byType(ReorderableDragStartListener).first,
+        const Offset(0, 200),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(editorNotifierProvider(_docId)).isDirty,
+        isTrue,
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Tab switch (didUpdateWidget)
   // -------------------------------------------------------------------------
 

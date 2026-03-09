@@ -194,52 +194,63 @@ class _BlockList extends StatelessWidget {
       );
     }
 
-    // Interleave blocks with insert gaps.
-    // Index layout for N blocks → 2N items:
-    //   even i: block[i÷2]
-    //   odd  i: gap after block[i÷2] (inserts afterId = block[i÷2].id)
-    return ListView.builder(
+    // Each item in the ReorderableListView is a Column that contains:
+    //   • BlockChrome (with drag handle wired to ReorderableDragStartListener)
+    //   • _InsertGap  (insert a new block immediately after this one)
+    //
+    // onReorder adjusts newIndex for removal and delegates to moveBlock.
+    void onReorder(int oldIndex, int newIndex) {
+      if (newIndex > oldIndex) newIndex--;
+      notifier.moveBlock(blocks[oldIndex].id, newIndex);
+    }
+
+    return ReorderableListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: blocks.length * 2,
+      buildDefaultDragHandles: false,
+      onReorder: onReorder,
+      itemCount: blocks.length,
       itemBuilder: (context, index) {
-        final blockIndex = index ~/ 2;
-        if (index.isOdd) {
-          final afterId = blocks[blockIndex].id;
-          return _InsertGap(
-            onInsertMarkdown: () => notifier.addBlock(
-              Block.markdown(id: const Uuid().v4(), content: ''),
-              afterId: afterId,
-            ),
-            onInsertInk: () => notifier.addBlock(
-              Block.ink(
-                id: const Uuid().v4(),
-                strokes: const [],
-                height: 200.0,
-              ),
-              afterId: afterId,
-            ),
-          );
-        }
-        final block = blocks[blockIndex];
+        final block = blocks[index];
         final isSelected = editorState.selectedBlockId == block.id;
         // Auto-focus newly inserted empty MarkdownBlocks (selected + empty).
         final autoFocus = isSelected &&
             block is MarkdownBlock &&
-            (block as MarkdownBlock).content.isEmpty;
-        return BlockChrome(
+            block.content.isEmpty;
+        return Column(
           key: ValueKey(block.id),
-          isSelected: isSelected,
-          onTap: () => notifier.setSelectedBlock(block.id),
-          onDelete: () => notifier.removeBlock(block.id),
-          child: BlockWidget(
-            block: block,
-            onUpdate: notifier.updateBlock,
-            autoFocus: autoFocus,
-            onEnterAtEnd: () => notifier.addBlock(
-              Block.markdown(id: const Uuid().v4(), content: ''),
-              afterId: block.id,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            BlockChrome(
+              isSelected: isSelected,
+              // Only enable drag when there is more than one block.
+              dragIndex: blocks.length > 1 ? index : null,
+              onTap: () => notifier.setSelectedBlock(block.id),
+              onDelete: () => notifier.removeBlock(block.id),
+              child: BlockWidget(
+                block: block,
+                onUpdate: notifier.updateBlock,
+                autoFocus: autoFocus,
+                onEnterAtEnd: () => notifier.addBlock(
+                  Block.markdown(id: const Uuid().v4(), content: ''),
+                  afterId: block.id,
+                ),
+              ),
             ),
-          ),
+            _InsertGap(
+              onInsertMarkdown: () => notifier.addBlock(
+                Block.markdown(id: const Uuid().v4(), content: ''),
+                afterId: block.id,
+              ),
+              onInsertInk: () => notifier.addBlock(
+                Block.ink(
+                  id: const Uuid().v4(),
+                  strokes: const [],
+                  height: 200.0,
+                ),
+                afterId: block.id,
+              ),
+            ),
+          ],
         );
       },
     );

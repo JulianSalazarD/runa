@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 /// - Highlights with a primary border when [isSelected] is true.
 /// - [onTap] is called when the user clicks anywhere on the block.
 /// - [onDelete] is called when the user presses the "×" button.
+/// - [dragIndex] when non-null, wraps the drag handle with
+///   [ReorderableDragStartListener] so this block can be reordered inside a
+///   [ReorderableListView]. Pass null to hide drag-and-drop (e.g. single block).
 class BlockChrome extends StatefulWidget {
   const BlockChrome({
     super.key,
@@ -13,12 +16,14 @@ class BlockChrome extends StatefulWidget {
     required this.onTap,
     required this.onDelete,
     required this.child,
+    this.dragIndex,
   });
 
   final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final Widget child;
+  final int? dragIndex;
 
   @override
   State<BlockChrome> createState() => _BlockChromeState();
@@ -26,6 +31,17 @@ class BlockChrome extends StatefulWidget {
 
 class _BlockChromeState extends State<BlockChrome> {
   bool _hovered = false;
+
+  Widget _buildDragHandle(ColorScheme colorScheme) {
+    final icon = Icon(
+      Icons.drag_indicator,
+      size: 16,
+      color: colorScheme.onSurfaceVariant,
+    );
+    final idx = widget.dragIndex;
+    if (idx == null) return icon;
+    return ReorderableDragStartListener(index: idx, child: icon);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +71,9 @@ class _BlockChromeState extends State<BlockChrome> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag handle — visible on hover or selection
+              // Drag handle — visible on hover or selection.
+              // Wrapped with ReorderableDragStartListener when reordering is
+              // enabled (dragIndex != null).
               SizedBox(
                 width: 28,
                 child: Padding(
@@ -63,11 +81,7 @@ class _BlockChromeState extends State<BlockChrome> {
                   child: AnimatedOpacity(
                     opacity: showControls ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 120),
-                    child: Icon(
-                      Icons.drag_indicator,
-                      size: 16,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    child: _buildDragHandle(colorScheme),
                   ),
                 ),
               ),
