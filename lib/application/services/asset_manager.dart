@@ -10,6 +10,12 @@ abstract interface class AssetManager {
   /// the existing relative path is returned (deduplication by filename).
   Future<String> copyAsset(String sourcePath, String documentPath);
 
+  /// Returns the natural pixel dimensions `(width, height)` of the image at
+  /// [path] by decoding its header.
+  ///
+  /// Throws if the file does not exist or is not a supported image format.
+  Future<(double, double)> readImageSize(String path);
+
   /// Converts a relative asset path (e.g. `_assets/foto.png`) to an absolute
   /// path on the file system.
   String resolveAsset(String relativePath, String documentPath);

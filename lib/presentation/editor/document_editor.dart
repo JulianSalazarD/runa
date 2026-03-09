@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +10,7 @@ import 'package:uuid/uuid.dart';
 import 'block_chrome.dart';
 import 'block_widget.dart';
 
-enum _InsertBlockType { markdown, ink }
+enum _InsertBlockType { markdown, ink, image, pdf }
 
 class _SaveIntent extends Intent {
   const _SaveIntent();
@@ -108,6 +109,50 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     });
   }
 
+  // -------------------------------------------------------------------------
+  // Asset import helpers
+  // -------------------------------------------------------------------------
+
+  Future<void> _importImage({String? afterBlockId}) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'],
+    );
+    if (!mounted || result == null) return;
+    final path = result.files.single.path;
+    if (path == null) return;
+    try {
+      await ref
+          .read(editorNotifierProvider(_docId).notifier)
+          .importImage(path, afterBlockId: afterBlockId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al importar imagen: $e')),
+      );
+    }
+  }
+
+  Future<void> _importPdf({String? afterBlockId}) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    if (!mounted || result == null) return;
+    final path = result.files.single.path;
+    if (path == null) return;
+    try {
+      await ref
+          .read(editorNotifierProvider(_docId).notifier)
+          .importPdf(path, afterBlockId: afterBlockId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al importar PDF: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final editorState = ref.watch(editorNotifierProvider(_docId));
@@ -161,6 +206,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                 _EditorToolbar(
                   path: widget.opened.path,
                   isDirty: editorState.isDirty,
+                  isImporting: editorState.isImporting,
                   autosaveMessage: editorState.autosaveMessage,
                   onSave: notifier.saveDocument,
                   onAddMarkdown: () => notifier.addBlock(
@@ -169,6 +215,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   onAddInk: () => notifier.addBlock(
                     Block.ink(id: _uuid.v4(), strokes: const [], height: 200.0),
                   ),
+                  onAddImage: () => _importImage(),
+                  onAddPdf: () => _importPdf(),
                   onGoHome: () =>
                       ref.read(workspaceNotifierProvider.notifier).closeDirectory(),
                 ),
@@ -176,6 +224,10 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   child: _BlockList(
                     editorState: editorState,
                     notifier: notifier,
+                    onImportImage: ({String? afterBlockId}) =>
+                        _importImage(afterBlockId: afterBlockId),
+                    onImportPdf: ({String? afterBlockId}) =>
+                        _importPdf(afterBlockId: afterBlockId),
                   ),
                 ),
               ],
@@ -195,94 +247,122 @@ class _EditorToolbar extends StatelessWidget {
   const _EditorToolbar({
     required this.path,
     required this.isDirty,
+    required this.isImporting,
     required this.autosaveMessage,
     required this.onSave,
     required this.onAddMarkdown,
     required this.onAddInk,
+    required this.onAddImage,
+    required this.onAddPdf,
     required this.onGoHome,
   });
 
   final String path;
   final bool isDirty;
+  final bool isImporting;
   final bool autosaveMessage;
   final VoidCallback onSave;
   final VoidCallback onAddMarkdown;
   final VoidCallback onAddInk;
+  final VoidCallback onAddImage;
+  final VoidCallback onAddPdf;
   final VoidCallback onGoHome;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.home_outlined),
-            tooltip: 'Menú principal',
-            onPressed: onGoHome,
-            iconSize: 20,
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                p.basenameWithoutExtension(path),
-                style: Theme.of(context).textTheme.titleMedium,
-                overflow: TextOverflow.ellipsis,
-              ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Theme.of(context).dividerColor),
             ),
           ),
-          if (autosaveMessage)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text(
-                'Guardado automáticamente',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.outline,
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.home_outlined),
+                tooltip: 'Menú principal',
+                onPressed: onGoHome,
+                iconSize: 20,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    p.basenameWithoutExtension(path),
+                    style: Theme.of(context).textTheme.titleMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-            )
-          else if (isDirty)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text(
-                '●',
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.primary),
-                semanticsLabel: 'Cambios sin guardar',
+              if (autosaveMessage)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    'Guardado automáticamente',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                )
+              else if (isDirty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    '●',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary),
+                    semanticsLabel: 'Cambios sin guardar',
+                  ),
+                ),
+              PopupMenuButton<_InsertBlockType>(
+                icon: const Icon(Icons.add),
+                tooltip: 'Nuevo bloque al final',
+                onSelected: (type) {
+                  switch (type) {
+                    case _InsertBlockType.markdown:
+                      onAddMarkdown();
+                    case _InsertBlockType.ink:
+                      onAddInk();
+                    case _InsertBlockType.image:
+                      onAddImage();
+                    case _InsertBlockType.pdf:
+                      onAddPdf();
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: _InsertBlockType.markdown,
+                    child: Text('Texto (Markdown)'),
+                  ),
+                  PopupMenuItem(
+                    value: _InsertBlockType.ink,
+                    child: Text('Escritura a mano (Ink)'),
+                  ),
+                  PopupMenuItem(
+                    value: _InsertBlockType.image,
+                    child: Text('Imagen'),
+                  ),
+                  PopupMenuItem(
+                    value: _InsertBlockType.pdf,
+                    child: Text('PDF'),
+                  ),
+                ],
               ),
-            ),
-          PopupMenuButton<_InsertBlockType>(
-            icon: const Icon(Icons.add),
-            tooltip: 'Nuevo bloque al final',
-            onSelected: (type) {
-              if (type == _InsertBlockType.markdown) onAddMarkdown();
-              if (type == _InsertBlockType.ink) onAddInk();
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: _InsertBlockType.markdown,
-                child: Text('Texto (Markdown)'),
-              ),
-              PopupMenuItem(
-                value: _InsertBlockType.ink,
-                child: Text('Escritura a mano (Ink)'),
+              TextButton(
+                onPressed: onSave,
+                child: const Text('Guardar'),
               ),
             ],
           ),
-          TextButton(
-            onPressed: onSave,
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
+        ),
+        if (isImporting) const LinearProgressIndicator(minHeight: 2),
+      ],
     );
   }
 }
@@ -292,10 +372,17 @@ class _EditorToolbar extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _BlockList extends StatelessWidget {
-  const _BlockList({required this.editorState, required this.notifier});
+  const _BlockList({
+    required this.editorState,
+    required this.notifier,
+    required this.onImportImage,
+    required this.onImportPdf,
+  });
 
   final EditorState editorState;
   final EditorNotifier notifier;
+  final Future<void> Function({String? afterBlockId}) onImportImage;
+  final Future<void> Function({String? afterBlockId}) onImportPdf;
 
   @override
   Widget build(BuildContext context) {
@@ -377,6 +464,10 @@ class _BlockList extends StatelessWidget {
                 ),
                 afterId: block.id,
               ),
+              onInsertImage: () =>
+                  onImportImage(afterBlockId: block.id),
+              onInsertPdf: () =>
+                  onImportPdf(afterBlockId: block.id),
             ),
           ],
         );
@@ -393,10 +484,14 @@ class _InsertGap extends StatefulWidget {
   const _InsertGap({
     required this.onInsertMarkdown,
     required this.onInsertInk,
+    required this.onInsertImage,
+    required this.onInsertPdf,
   });
 
   final VoidCallback onInsertMarkdown;
   final VoidCallback onInsertInk;
+  final VoidCallback onInsertImage;
+  final VoidCallback onInsertPdf;
 
   @override
   State<_InsertGap> createState() => _InsertGapState();
@@ -423,11 +518,29 @@ class _InsertGapState extends State<_InsertGap> {
           value: _InsertBlockType.ink,
           child: Text('Escritura a mano (Ink)'),
         ),
+        PopupMenuItem(
+          value: _InsertBlockType.image,
+          child: Text('Imagen'),
+        ),
+        PopupMenuItem(
+          value: _InsertBlockType.pdf,
+          child: Text('PDF'),
+        ),
       ],
     );
     if (!mounted) return;
-    if (result == _InsertBlockType.markdown) widget.onInsertMarkdown();
-    if (result == _InsertBlockType.ink) widget.onInsertInk();
+    switch (result) {
+      case _InsertBlockType.markdown:
+        widget.onInsertMarkdown();
+      case _InsertBlockType.ink:
+        widget.onInsertInk();
+      case _InsertBlockType.image:
+        widget.onInsertImage();
+      case _InsertBlockType.pdf:
+        widget.onInsertPdf();
+      case null:
+        break;
+    }
   }
 
   @override

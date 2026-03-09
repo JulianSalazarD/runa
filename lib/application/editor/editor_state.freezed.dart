@@ -32,6 +32,9 @@ mixin _$EditorState {
   /// Whether to show the "Guardado automáticamente" indicator briefly.
   bool get autosaveMessage => throw _privateConstructorUsedError;
 
+  /// Whether an asset import (image/PDF copy) is in progress.
+  bool get isImporting => throw _privateConstructorUsedError;
+
   /// Create a copy of EditorState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -52,6 +55,7 @@ abstract class $EditorStateCopyWith<$Res> {
     String? selectedBlockId,
     bool isDirty,
     bool autosaveMessage,
+    bool isImporting,
   });
 
   $DocumentCopyWith<$Res> get document;
@@ -77,6 +81,7 @@ class _$EditorStateCopyWithImpl<$Res, $Val extends EditorState>
     Object? selectedBlockId = freezed,
     Object? isDirty = null,
     Object? autosaveMessage = null,
+    Object? isImporting = null,
   }) {
     return _then(
       _value.copyWith(
@@ -99,6 +104,10 @@ class _$EditorStateCopyWithImpl<$Res, $Val extends EditorState>
             autosaveMessage: null == autosaveMessage
                 ? _value.autosaveMessage
                 : autosaveMessage // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isImporting: null == isImporting
+                ? _value.isImporting
+                : isImporting // ignore: cast_nullable_to_non_nullable
                       as bool,
           )
           as $Val,
@@ -131,6 +140,7 @@ abstract class _$$EditorStateImplCopyWith<$Res>
     String? selectedBlockId,
     bool isDirty,
     bool autosaveMessage,
+    bool isImporting,
   });
 
   @override
@@ -156,6 +166,7 @@ class __$$EditorStateImplCopyWithImpl<$Res>
     Object? selectedBlockId = freezed,
     Object? isDirty = null,
     Object? autosaveMessage = null,
+    Object? isImporting = null,
   }) {
     return _then(
       _$EditorStateImpl(
@@ -179,6 +190,10 @@ class __$$EditorStateImplCopyWithImpl<$Res>
             ? _value.autosaveMessage
             : autosaveMessage // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isImporting: null == isImporting
+            ? _value.isImporting
+            : isImporting // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -193,6 +208,7 @@ class _$EditorStateImpl extends _EditorState {
     this.selectedBlockId,
     this.isDirty = false,
     this.autosaveMessage = false,
+    this.isImporting = false,
   }) : super._();
 
   /// Absolute path to the `.runa` file on disk.
@@ -217,9 +233,14 @@ class _$EditorStateImpl extends _EditorState {
   @JsonKey()
   final bool autosaveMessage;
 
+  /// Whether an asset import (image/PDF copy) is in progress.
+  @override
+  @JsonKey()
+  final bool isImporting;
+
   @override
   String toString() {
-    return 'EditorState(path: $path, document: $document, selectedBlockId: $selectedBlockId, isDirty: $isDirty, autosaveMessage: $autosaveMessage)';
+    return 'EditorState(path: $path, document: $document, selectedBlockId: $selectedBlockId, isDirty: $isDirty, autosaveMessage: $autosaveMessage, isImporting: $isImporting)';
   }
 
   @override
@@ -234,7 +255,9 @@ class _$EditorStateImpl extends _EditorState {
                 other.selectedBlockId == selectedBlockId) &&
             (identical(other.isDirty, isDirty) || other.isDirty == isDirty) &&
             (identical(other.autosaveMessage, autosaveMessage) ||
-                other.autosaveMessage == autosaveMessage));
+                other.autosaveMessage == autosaveMessage) &&
+            (identical(other.isImporting, isImporting) ||
+                other.isImporting == isImporting));
   }
 
   @override
@@ -245,6 +268,7 @@ class _$EditorStateImpl extends _EditorState {
     selectedBlockId,
     isDirty,
     autosaveMessage,
+    isImporting,
   );
 
   /// Create a copy of EditorState
@@ -263,6 +287,7 @@ abstract class _EditorState extends EditorState {
     final String? selectedBlockId,
     final bool isDirty,
     final bool autosaveMessage,
+    final bool isImporting,
   }) = _$EditorStateImpl;
   const _EditorState._() : super._();
 
@@ -285,6 +310,10 @@ abstract class _EditorState extends EditorState {
   /// Whether to show the "Guardado automáticamente" indicator briefly.
   @override
   bool get autosaveMessage;
+
+  /// Whether an asset import (image/PDF copy) is in progress.
+  @override
+  bool get isImporting;
 
   /// Create a copy of EditorState
   /// with the given fields replaced by the non-null parameter values.

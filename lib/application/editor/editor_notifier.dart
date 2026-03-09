@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runa/domain/domain.dart';
+import 'package:uuid/uuid.dart';
 
 import '../providers.dart';
 import '../workspace/workspace_notifier.dart';
@@ -129,6 +130,52 @@ class EditorNotifier extends _$EditorNotifier {
     final block = blocks.removeAt(oldIndex);
     blocks.insert(newIndex.clamp(0, blocks.length), block);
     _setBlocks(blocks);
+  }
+
+  // -------------------------------------------------------------------------
+  // Asset import
+  // -------------------------------------------------------------------------
+
+  /// Copies the image at [sourcePath] to the document's `_assets/` folder,
+  /// reads its natural dimensions, creates an [ImageBlock], and inserts it.
+  ///
+  /// [afterBlockId] works the same as in [addBlock]. Throws on I/O error.
+  Future<void> importImage(String sourcePath, {String? afterBlockId}) async {
+    state = state.copyWith(isImporting: true);
+    try {
+      final am = ref.read(assetManagerProvider);
+      final (w, h) = await am.readImageSize(sourcePath);
+      final rel = await am.copyAsset(sourcePath, state.path);
+      addBlock(
+        Block.image(
+          id: const Uuid().v4(),
+          path: rel,
+          naturalWidth: w,
+          naturalHeight: h,
+        ),
+        afterId: afterBlockId,
+      );
+    } finally {
+      state = state.copyWith(isImporting: false);
+    }
+  }
+
+  /// Copies the PDF at [sourcePath] to the document's `_assets/` folder,
+  /// creates a [PdfBlock] (pages populated lazily when rendered), and inserts.
+  ///
+  /// [afterBlockId] works the same as in [addBlock]. Throws on I/O error.
+  Future<void> importPdf(String sourcePath, {String? afterBlockId}) async {
+    state = state.copyWith(isImporting: true);
+    try {
+      final rel =
+          await ref.read(assetManagerProvider).copyAsset(sourcePath, state.path);
+      addBlock(
+        Block.pdf(id: const Uuid().v4(), path: rel),
+        afterId: afterBlockId,
+      );
+    } finally {
+      state = state.copyWith(isImporting: false);
+    }
   }
 
   // -------------------------------------------------------------------------

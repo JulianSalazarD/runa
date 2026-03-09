@@ -25,6 +25,9 @@ class EditorState with _$EditorState {
 
     /// Whether to show the "Guardado automáticamente" indicator briefly.
     @Default(false) bool autosaveMessage,
+
+    /// Whether an asset import (image/PDF copy) is in progress.
+    @Default(false) bool isImporting,
   }) = _EditorState;
 
   /// Shorthand for [document.blocks].

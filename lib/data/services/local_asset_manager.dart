@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:path/path.dart' as p;
 
@@ -57,5 +58,17 @@ class LocalAssetManager implements AssetManager {
     }
     paths.sort();
     return paths;
+  }
+
+  @override
+  Future<(double, double)> readImageSize(String path) async {
+    final bytes = await File(path).readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final width = frame.image.width.toDouble();
+    final height = frame.image.height.toDouble();
+    frame.image.dispose();
+    codec.dispose();
+    return (width, height);
   }
 }
