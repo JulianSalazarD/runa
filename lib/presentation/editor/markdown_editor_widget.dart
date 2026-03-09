@@ -1,21 +1,36 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A growing, monospaced [TextField] for editing raw Markdown.
 ///
 /// Calls [onChanged] with a 300 ms debounce after each keystroke.
 /// When focus is lost the pending debounce is cancelled and [onChanged]
 /// is invoked immediately, ensuring no edits are lost.
+///
+/// If [onEnterAtEnd] is provided, pressing Enter when the cursor is at
+/// the end of the text and the last line is empty (text is '' or ends
+/// with '\n') triggers [onEnterAtEnd] instead of inserting a newline.
+/// The trailing '\n', if present, is removed and flushed via [onChanged]
+/// before the callback fires.
 class MarkdownEditorWidget extends StatefulWidget {
   const MarkdownEditorWidget({
     super.key,
     required this.initialContent,
     required this.onChanged,
+    this.autoFocus = false,
+    this.onEnterAtEnd,
   });
 
   final String initialContent;
   final ValueChanged<String> onChanged;
+
+  /// Whether to request focus when this widget is first built.
+  final bool autoFocus;
+
+  /// Called when Enter is pressed at the end of an empty last line.
+  final VoidCallback? onEnterAtEnd;
 
   @override
   State<MarkdownEditorWidget> createState() => _MarkdownEditorWidgetState();
@@ -32,7 +47,9 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialContent);
-    _focusNode = FocusNode()..addListener(_onFocusChange);
+    _focusNode = FocusNode()
+      ..addListener(_onFocusChange)
+      ..onKeyEvent = _handleKeyEvent;
   }
 
   @override
@@ -53,6 +70,36 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
     }
   }
 
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (widget.onEnterAtEnd == null) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    if (event.logicalKey != LogicalKeyboardKey.enter) {
+      return KeyEventResult.ignored;
+    }
+
+    final text = _controller.text;
+    final selection = _controller.selection;
+    final atEnd =
+        selection.isCollapsed && selection.baseOffset == text.length;
+
+    if (atEnd && (text.isEmpty || text.endsWith('\n'))) {
+      // Remove trailing newline, flush synchronously, then create new block.
+      if (text.endsWith('\n')) {
+        final trimmed = text.substring(0, text.length - 1);
+        _controller.text = trimmed;
+        _controller.selection =
+            TextSelection.collapsed(offset: trimmed.length);
+      }
+      _debounce?.cancel();
+      _debounce = null;
+      widget.onChanged(_controller.text);
+      widget.onEnterAtEnd?.call();
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
   void _onTextChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(_debounceDelay, () => widget.onChanged(value));
@@ -64,6 +111,7 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
       controller: _controller,
       focusNode: _focusNode,
       onChanged: _onTextChanged,
+      autofocus: widget.autoFocus,
       minLines: 1,
       maxLines: null,
       style: const TextStyle(fontFamily: 'monospace', fontSize: 14),

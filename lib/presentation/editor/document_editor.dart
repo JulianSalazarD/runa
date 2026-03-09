@@ -9,6 +9,8 @@ import 'package:uuid/uuid.dart';
 import 'block_chrome.dart';
 import 'block_widget.dart';
 
+enum _InsertBlockType { markdown, ink }
+
 class _SaveIntent extends Intent {
   const _SaveIntent();
 }
@@ -202,22 +204,41 @@ class _BlockList extends StatelessWidget {
       itemBuilder: (context, index) {
         final blockIndex = index ~/ 2;
         if (index.isOdd) {
+          final afterId = blocks[blockIndex].id;
           return _InsertGap(
-            onInsert: () => notifier.addBlock(
+            onInsertMarkdown: () => notifier.addBlock(
               Block.markdown(id: const Uuid().v4(), content: ''),
-              afterId: blocks[blockIndex].id,
+              afterId: afterId,
+            ),
+            onInsertInk: () => notifier.addBlock(
+              Block.ink(
+                id: const Uuid().v4(),
+                strokes: const [],
+                height: 200.0,
+              ),
+              afterId: afterId,
             ),
           );
         }
         final block = blocks[blockIndex];
+        final isSelected = editorState.selectedBlockId == block.id;
+        // Auto-focus newly inserted empty MarkdownBlocks (selected + empty).
+        final autoFocus = isSelected &&
+            block is MarkdownBlock &&
+            (block as MarkdownBlock).content.isEmpty;
         return BlockChrome(
           key: ValueKey(block.id),
-          isSelected: editorState.selectedBlockId == block.id,
+          isSelected: isSelected,
           onTap: () => notifier.setSelectedBlock(block.id),
           onDelete: () => notifier.removeBlock(block.id),
           child: BlockWidget(
             block: block,
             onUpdate: notifier.updateBlock,
+            autoFocus: autoFocus,
+            onEnterAtEnd: () => notifier.addBlock(
+              Block.markdown(id: const Uuid().v4(), content: ''),
+              afterId: block.id,
+            ),
           ),
         );
       },
@@ -230,9 +251,13 @@ class _BlockList extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _InsertGap extends StatefulWidget {
-  const _InsertGap({required this.onInsert});
+  const _InsertGap({
+    required this.onInsertMarkdown,
+    required this.onInsertInk,
+  });
 
-  final VoidCallback onInsert;
+  final VoidCallback onInsertMarkdown;
+  final VoidCallback onInsertInk;
 
   @override
   State<_InsertGap> createState() => _InsertGapState();
@@ -240,6 +265,31 @@ class _InsertGap extends StatefulWidget {
 
 class _InsertGapState extends State<_InsertGap> {
   bool _hovered = false;
+
+  Future<void> _showMenu(BuildContext context, Offset globalPosition) async {
+    final result = await showMenu<_InsertBlockType>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        globalPosition.dx,
+        globalPosition.dy,
+        globalPosition.dx + 1,
+        globalPosition.dy + 1,
+      ),
+      items: const [
+        PopupMenuItem(
+          value: _InsertBlockType.markdown,
+          child: Text('Texto (Markdown)'),
+        ),
+        PopupMenuItem(
+          value: _InsertBlockType.ink,
+          child: Text('Escritura a mano (Ink)'),
+        ),
+      ],
+    );
+    if (!mounted) return;
+    if (result == _InsertBlockType.markdown) widget.onInsertMarkdown();
+    if (result == _InsertBlockType.ink) widget.onInsertInk();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -252,17 +302,19 @@ class _InsertGapState extends State<_InsertGap> {
           child: AnimatedOpacity(
             opacity: _hovered ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 150),
-            child: InkWell(
-              onTap: widget.onInsert,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  shape: BoxShape.circle,
+            child: Tooltip(
+              message: 'Insertar bloque',
+              child: GestureDetector(
+                onTapDown: (d) => _showMenu(context, d.globalPosition),
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add, size: 14),
                 ),
-                child: const Icon(Icons.add, size: 14),
               ),
             ),
           ),

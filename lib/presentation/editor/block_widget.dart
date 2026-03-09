@@ -10,20 +10,36 @@ import 'markdown_preview_widget.dart';
 ///
 /// [onUpdate] is called when the user edits the block content. Callers
 /// should forward this to [EditorNotifier.updateBlock].
+///
+/// [onEnterAtEnd] is forwarded to [MarkdownEditorWidget]: pressing Enter
+/// on an empty last line triggers this callback so the caller can insert
+/// a new block below.
+///
+/// [autoFocus] requests immediate focus on the inner editor when the
+/// widget is first built (useful for newly inserted blocks).
 class BlockWidget extends StatelessWidget {
   const BlockWidget({
     super.key,
     required this.block,
     this.onUpdate,
+    this.onEnterAtEnd,
+    this.autoFocus = false,
   });
 
   final Block block;
   final ValueChanged<Block>? onUpdate;
+  final VoidCallback? onEnterAtEnd;
+  final bool autoFocus;
 
   @override
   Widget build(BuildContext context) {
     return switch (block) {
-      final MarkdownBlock b => _MarkdownBlockView(block: b, onUpdate: onUpdate),
+      final MarkdownBlock b => _MarkdownBlockView(
+          block: b,
+          onUpdate: onUpdate,
+          onEnterAtEnd: onEnterAtEnd,
+          autoFocus: autoFocus,
+        ),
       final InkBlock b => _InkBlockView(block: b, onUpdate: onUpdate),
     };
   }
@@ -34,10 +50,17 @@ class BlockWidget extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _MarkdownBlockView extends StatefulWidget {
-  const _MarkdownBlockView({required this.block, this.onUpdate});
+  const _MarkdownBlockView({
+    required this.block,
+    this.onUpdate,
+    this.onEnterAtEnd,
+    this.autoFocus = false,
+  });
 
   final MarkdownBlock block;
   final ValueChanged<Block>? onUpdate;
+  final VoidCallback? onEnterAtEnd;
+  final bool autoFocus;
 
   @override
   State<_MarkdownBlockView> createState() => _MarkdownBlockViewState();
@@ -66,6 +89,8 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
             initialContent: widget.block.content,
             onChanged: (content) =>
                 widget.onUpdate?.call(widget.block.copyWith(content: content)),
+            autoFocus: widget.autoFocus,
+            onEnterAtEnd: widget.onEnterAtEnd,
           )
         else
           MarkdownPreviewWidget(content: widget.block.content),

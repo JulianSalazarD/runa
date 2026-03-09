@@ -63,6 +63,8 @@ class EditorNotifier extends _$EditorNotifier {
   // -------------------------------------------------------------------------
 
   /// Appends [block] to the end, or inserts it immediately after [afterId].
+  ///
+  /// The new block is automatically selected after insertion.
   void addBlock(Block block, {String? afterId}) {
     final blocks = List<Block>.from(state.blocks);
     if (afterId == null) {
@@ -72,6 +74,7 @@ class EditorNotifier extends _$EditorNotifier {
       blocks.insert(index == -1 ? blocks.length : index + 1, block);
     }
     _setBlocks(blocks);
+    state = state.copyWith(selectedBlockId: block.id);
   }
 
   /// Removes the block with [id]. No-op if not found.
