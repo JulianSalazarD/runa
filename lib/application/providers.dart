@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runa/data/data.dart';
 import 'package:runa/domain/domain.dart';
 
+import 'services/asset_manager.dart';
 import 'services/file_system_service.dart';
 import 'services/recent_files_service.dart';
 
@@ -23,3 +24,7 @@ RecentFilesService recentFilesService(Ref ref) =>
 @riverpod
 FileSystemService fileSystemService(Ref ref) =>
     const LocalFileSystemService();
+
+/// Default [AssetManager] — copies/resolves assets on the local file system.
+@riverpod
+AssetManager assetManager(Ref ref) => const LocalAssetManager();

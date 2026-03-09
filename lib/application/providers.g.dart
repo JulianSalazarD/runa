@@ -68,5 +68,24 @@ final fileSystemServiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FileSystemServiceRef = AutoDisposeProviderRef<FileSystemService>;
+String _$assetManagerHash() => r'c5ed889ea94b785306020f95a065c7e8c5ce80b5';
+
+/// Default [AssetManager] — copies/resolves assets on the local file system.
+///
+/// Copied from [assetManager].
+@ProviderFor(assetManager)
+final assetManagerProvider = AutoDisposeProvider<AssetManager>.internal(
+  assetManager,
+  name: r'assetManagerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$assetManagerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AssetManagerRef = AutoDisposeProviderRef<AssetManager>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
