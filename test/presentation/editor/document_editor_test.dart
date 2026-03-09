@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runa/application/application.dart';
@@ -261,9 +262,10 @@ void main() {
       );
     });
 
-    testWidgets('pressing × on a selected block removes it', (tester) async {
+    testWidgets('pressing × on an empty block removes it without dialog',
+        (tester) async {
       final blocks = [
-        const Block.markdown(id: 'b1', content: 'primero'),
+        const Block.markdown(id: 'b1', content: ''),
         const Block.markdown(id: 'b2', content: 'segundo'),
       ];
       final container =
@@ -273,9 +275,9 @@ void main() {
       container
           .read(editorNotifierProvider(_docId).notifier)
           .setSelectedBlock('b1');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Tap the delete icon (Icons.close).
+      // Tap the delete icon (Icons.close) — no dialog since block is empty.
       await tester.tap(find.byIcon(Icons.close).first);
       await tester.pump();
 
@@ -286,6 +288,138 @@ void main() {
       expect(
         container.read(editorNotifierProvider(_docId)).blocks.first.id,
         'b2',
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Block delete with confirmation
+  // -------------------------------------------------------------------------
+
+  group('block delete', () {
+    testWidgets('× on block with content shows confirmation dialog',
+        (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b1', content: 'texto importante'),
+      ];
+      final container =
+          await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      container
+          .read(editorNotifierProvider(_docId).notifier)
+          .setSelectedBlock('b1');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.close).first);
+      await tester.pumpAndSettle();
+
+      // Dialog must appear.
+      expect(find.text('¿Eliminar este bloque?'), findsOneWidget);
+
+      // Block is NOT yet removed.
+      expect(
+        container.read(editorNotifierProvider(_docId)).blocks,
+        hasLength(1),
+      );
+    });
+
+    testWidgets('confirming dialog removes block and marks dirty',
+        (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b1', content: 'texto'),
+        const Block.markdown(id: 'b2', content: 'otro'),
+      ];
+      final container =
+          await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      container
+          .read(editorNotifierProvider(_docId).notifier)
+          .setSelectedBlock('b1');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.close).first);
+      await tester.pumpAndSettle();
+
+      // Confirm deletion.
+      await tester.tap(find.text('Eliminar'));
+      await tester.pumpAndSettle();
+
+      final state = container.read(editorNotifierProvider(_docId));
+      expect(state.blocks, hasLength(1));
+      expect(state.blocks.first.id, 'b2');
+      expect(state.isDirty, isTrue);
+    });
+
+    testWidgets('cancelling dialog leaves block intact', (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b1', content: 'texto importante'),
+      ];
+      final container =
+          await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      container
+          .read(editorNotifierProvider(_docId).notifier)
+          .setSelectedBlock('b1');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.close).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(editorNotifierProvider(_docId)).blocks,
+        hasLength(1),
+      );
+    });
+
+    testWidgets('Delete key on empty selected block removes without dialog',
+        (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b1', content: ''),
+        const Block.markdown(id: 'b2', content: 'segundo'),
+      ];
+      final container =
+          await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      // Select via notifier — editor Focus node has autofocus so it keeps focus.
+      container
+          .read(editorNotifierProvider(_docId).notifier)
+          .setSelectedBlock('b1');
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.delete);
+      await tester.pump();
+
+      // No dialog; block removed immediately.
+      expect(find.text('¿Eliminar este bloque?'), findsNothing);
+      final state = container.read(editorNotifierProvider(_docId));
+      expect(state.blocks, hasLength(1));
+      expect(state.blocks.first.id, 'b2');
+    });
+
+    testWidgets('Delete key on block with content shows confirmation dialog',
+        (tester) async {
+      final blocks = [
+        const Block.markdown(id: 'b1', content: 'texto importante'),
+      ];
+      final container =
+          await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
+
+      container
+          .read(editorNotifierProvider(_docId).notifier)
+          .setSelectedBlock('b1');
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.delete);
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Eliminar este bloque?'), findsOneWidget);
+      // Block still present while dialog is open.
+      expect(
+        container.read(editorNotifierProvider(_docId)).blocks,
+        hasLength(1),
       );
     });
   });

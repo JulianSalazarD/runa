@@ -15,6 +15,46 @@ class _SaveIntent extends Intent {
   const _SaveIntent();
 }
 
+class _DeleteBlockIntent extends Intent {
+  const _DeleteBlockIntent();
+}
+
+/// Shows a confirmation dialog before deleting a block that has content.
+/// Deletes immediately (no dialog) when the block is empty.
+Future<void> _confirmAndDeleteBlock(
+  BuildContext context,
+  Block block,
+  EditorNotifier notifier,
+) async {
+  final hasContent = switch (block) {
+    final MarkdownBlock b => b.content.isNotEmpty,
+    final InkBlock b => b.strokes.isNotEmpty,
+  };
+  if (!hasContent) {
+    notifier.removeBlock(block.id);
+    return;
+  }
+  if (!context.mounted) return;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Eliminar bloque'),
+      content: const Text('¿Eliminar este bloque?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('Eliminar'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed == true) notifier.removeBlock(block.id);
+}
+
 /// The real document editor, replacing [DocumentEditorPlaceholder].
 ///
 /// Initialises [EditorNotifier] from the already-loaded [opened] document
@@ -32,12 +72,23 @@ class DocumentEditor extends ConsumerStatefulWidget {
 class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   static const _uuid = Uuid();
 
+  /// Focus node for the editor canvas. Holds focus when no TextField is active,
+  /// allowing Delete/Backspace shortcuts to fire on the selected block.
+  late final FocusNode _editorFocusNode;
+
   String get _docId => widget.opened.document.id;
 
   @override
   void initState() {
     super.initState();
+    _editorFocusNode = FocusNode(debugLabel: 'EditorCanvas');
     _initEditor();
+  }
+
+  @override
+  void dispose() {
+    _editorFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -65,6 +116,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     return Shortcuts(
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.keyS, control: true): _SaveIntent(),
+        SingleActivator(LogicalKeyboardKey.delete): _DeleteBlockIntent(),
+        SingleActivator(LogicalKeyboardKey.backspace): _DeleteBlockIntent(),
       },
       child: Actions(
         actions: {
@@ -74,25 +127,49 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
               return null;
             },
           ),
+          _DeleteBlockIntent: CallbackAction<_DeleteBlockIntent>(
+            onInvoke: (_) {
+              final selectedId = editorState.selectedBlockId;
+              if (selectedId == null) return null;
+              final matches =
+                  editorState.blocks.where((b) => b.id == selectedId);
+              if (matches.isEmpty) return null;
+              _confirmAndDeleteBlock(context, matches.first, notifier);
+              return null;
+            },
+          ),
         },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _EditorToolbar(
-              path: widget.opened.path,
-              isDirty: editorState.isDirty,
-              onSave: notifier.saveDocument,
-              onAddBlock: () => notifier.addBlock(
-                Block.markdown(id: _uuid.v4(), content: ''),
-              ),
+        child: Focus(
+          focusNode: _editorFocusNode,
+          autofocus: true,
+          child: GestureDetector(
+            // Tapping the canvas (outside any block) deselects and refocuses
+            // the editor so Delete/Backspace shortcuts remain available.
+            onTap: () {
+              notifier.setSelectedBlock(null);
+              _editorFocusNode.requestFocus();
+            },
+            behavior: HitTestBehavior.translucent,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _EditorToolbar(
+                  path: widget.opened.path,
+                  isDirty: editorState.isDirty,
+                  onSave: notifier.saveDocument,
+                  onAddBlock: () => notifier.addBlock(
+                    Block.markdown(id: _uuid.v4(), content: ''),
+                  ),
+                ),
+                Expanded(
+                  child: _BlockList(
+                    editorState: editorState,
+                    notifier: notifier,
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: _BlockList(
-                editorState: editorState,
-                notifier: notifier,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -225,7 +302,8 @@ class _BlockList extends StatelessWidget {
               // Only enable drag when there is more than one block.
               dragIndex: blocks.length > 1 ? index : null,
               onTap: () => notifier.setSelectedBlock(block.id),
-              onDelete: () => notifier.removeBlock(block.id),
+              onDelete: () =>
+                  _confirmAndDeleteBlock(context, block, notifier),
               child: BlockWidget(
                 block: block,
                 onUpdate: notifier.updateBlock,
