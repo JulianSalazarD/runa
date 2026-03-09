@@ -443,6 +443,8 @@ class _BlockList extends StatelessWidget {
                   _confirmAndDeleteBlock(context, block, notifier),
               child: BlockWidget(
                 block: block,
+                documentPath: editorState.path,
+                isSelected: isSelected,
                 onUpdate: notifier.updateBlock,
                 autoFocus: autoFocus,
                 onEnterAtEnd: () => notifier.addBlock(

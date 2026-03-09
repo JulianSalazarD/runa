@@ -1,6 +1,10 @@
+import 'dart:io' show File;
+
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:runa/domain/domain.dart';
 
+import 'ink_annotation_layer.dart';
 import 'ink_canvas_widget.dart';
 import 'ink_toolbar_widget.dart';
 import 'markdown_editor_widget.dart';
@@ -17,16 +21,30 @@ import 'markdown_preview_widget.dart';
 ///
 /// [autoFocus] requests immediate focus on the inner editor when the
 /// widget is first built (useful for newly inserted blocks).
+///
+/// [documentPath] is needed by [ImageBlock] to resolve asset paths relative
+/// to the `.runa` file location.
+///
+/// [isSelected] controls whether ink annotation layers accept pointer input.
 class BlockWidget extends StatelessWidget {
   const BlockWidget({
     super.key,
     required this.block,
+    this.documentPath = '',
+    this.isSelected = false,
     this.onUpdate,
     this.onEnterAtEnd,
     this.autoFocus = false,
   });
 
   final Block block;
+
+  /// Absolute path to the `.runa` file. Used to resolve relative asset paths.
+  final String documentPath;
+
+  /// When `true`, ink annotation layers accept pointer input.
+  final bool isSelected;
+
   final ValueChanged<Block>? onUpdate;
   final VoidCallback? onEnterAtEnd;
   final bool autoFocus;
@@ -41,11 +59,13 @@ class BlockWidget extends StatelessWidget {
           autoFocus: autoFocus,
         ),
       final InkBlock b => _InkBlockView(block: b, onUpdate: onUpdate),
-      // Placeholders until Fase 3 widgets are implemented (Parts 4 & 5).
-      final ImageBlock b => _AssetBlockPlaceholder(
-          icon: Icons.image_outlined,
-          label: 'Imagen: ${b.path}',
+      final ImageBlock b => _ImageBlockView(
+          block: b,
+          documentPath: documentPath,
+          isSelected: isSelected,
+          onUpdate: onUpdate,
         ),
+      // Placeholder until Fase 3 Part 5 (PDF widget) is implemented.
       final PdfBlock b => _AssetBlockPlaceholder(
           icon: Icons.picture_as_pdf_outlined,
           label: 'PDF: ${b.path}',
@@ -204,7 +224,129 @@ class _InkBlockViewState extends State<_InkBlockView> {
 }
 
 // ---------------------------------------------------------------------------
-// Asset block placeholder (ImageBlock / PdfBlock — widgets added in Fase 3)
+// ImageBlock: image + ink annotation layer
+// ---------------------------------------------------------------------------
+
+class _ImageBlockView extends StatefulWidget {
+  const _ImageBlockView({
+    required this.block,
+    required this.documentPath,
+    required this.isSelected,
+    this.onUpdate,
+  });
+
+  final ImageBlock block;
+
+  /// Absolute path to the `.runa` file. Used to resolve the relative asset
+  /// path stored in [block.path].
+  final String documentPath;
+
+  /// When `true`, the [InkAnnotationLayer] accepts pointer input.
+  final bool isSelected;
+
+  final ValueChanged<Block>? onUpdate;
+
+  @override
+  State<_ImageBlockView> createState() => _ImageBlockViewState();
+}
+
+class _ImageBlockViewState extends State<_ImageBlockView> {
+  StrokeTool _activeTool = StrokeTool.pen;
+  String _activeColor = '#000000FF';
+  double _activeWidth = 3.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final absolutePath =
+        p.join(p.dirname(widget.documentPath), widget.block.path);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkToolbarWidget(
+          activeTool: _activeTool,
+          activeColor: _activeColor,
+          activeWidth: _activeWidth,
+          onToolChanged: (t) => setState(() => _activeTool = t),
+          onColorChanged: (c) => setState(() => _activeColor = c),
+          onWidthChanged: (w) => setState(() => _activeWidth = w),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: widget.block.strokes.isEmpty
+                ? null
+                : () => widget.onUpdate
+                    ?.call(widget.block.copyWith(strokes: const [])),
+            icon: const Icon(Icons.clear, size: 14),
+            label: const Text(
+              'Limpiar anotaciones',
+              style: TextStyle(fontSize: 12),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ),
+        AspectRatio(
+          aspectRatio: widget.block.naturalWidth / widget.block.naturalHeight,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.file(
+                File(absolutePath),
+                fit: BoxFit.fill,
+                errorBuilder: (ctx, error, _) =>
+                    _ImageErrorPlaceholder(path: widget.block.path),
+              ),
+              InkAnnotationLayer(
+                strokes: widget.block.strokes,
+                onStrokesChanged: (strokes) =>
+                    widget.onUpdate?.call(widget.block.copyWith(strokes: strokes)),
+                activeTool: _activeTool,
+                activeColor: _activeColor,
+                activeWidth: _activeWidth,
+                readOnly: !widget.isSelected,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ImageErrorPlaceholder extends StatelessWidget {
+  const _ImageErrorPlaceholder({required this.path});
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.broken_image_outlined,
+              size: 32, color: colorScheme.outline),
+          const SizedBox(height: 4),
+          Text(
+            path,
+            style: TextStyle(fontSize: 11, color: colorScheme.outline),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Asset block placeholder (PdfBlock — widget added in Fase 3 Part 5)
 // ---------------------------------------------------------------------------
 
 class _AssetBlockPlaceholder extends StatelessWidget {

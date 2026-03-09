@@ -9,6 +9,7 @@ library;
 export 'editor/block_chrome.dart';
 export 'editor/block_widget.dart';
 export 'editor/document_editor.dart';
+export 'editor/ink_annotation_layer.dart';
 export 'editor/ink_canvas_widget.dart';
 export 'editor/ink_toolbar_widget.dart';
 export 'editor/markdown_editor_widget.dart';
