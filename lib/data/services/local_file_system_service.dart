@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
 import 'package:runa/application/services/file_system_service.dart';
 
 /// [FileSystemService] backed by `dart:io`.
@@ -15,6 +16,7 @@ class LocalFileSystemService implements FileSystemService {
 
     final paths = <String>[];
     await for (final entity in dir.list(recursive: true)) {
+      if (p.split(entity.path).contains('_assets')) continue;
       if (entity is File && entity.path.endsWith(_runaExtension)) {
         paths.add(entity.path);
       }
@@ -33,6 +35,7 @@ class LocalFileSystemService implements FileSystemService {
 
     for (final entity in entities) {
       if (entity is Directory) {
+        if (p.basename(entity.path) == '_assets') continue; // hide asset dirs
         items.add(DirectoryItem(path: entity.path, isDirectory: true));
       } else if (entity is File && entity.path.endsWith(_runaExtension)) {
         items.add(DirectoryItem(path: entity.path, isDirectory: false));

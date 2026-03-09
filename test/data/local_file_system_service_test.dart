@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:runa/data/data.dart';
 
 void main() {
@@ -69,6 +70,68 @@ void main() {
       File('${tempDir.path}/doc.runa').writeAsStringSync('{}');
       final files = await svc.listRunaFiles(tempDir.path);
       expect(files.first, startsWith('/'));
+    });
+
+    test('ignora archivos dentro de directorios _assets/', () async {
+      final assetsDir = Directory('${tempDir.path}/_assets')..createSync();
+      File('${assetsDir.path}/hidden.runa').writeAsStringSync('{}');
+      File('${tempDir.path}/visible.runa').writeAsStringSync('{}');
+
+      final files = await svc.listRunaFiles(tempDir.path);
+
+      expect(files, hasLength(1));
+      expect(files.first, endsWith('visible.runa'));
+    });
+
+    test('ignora _assets/ en subdirectorios', () async {
+      final sub = Directory('${tempDir.path}/project')..createSync();
+      final assets = Directory('${sub.path}/_assets')..createSync();
+      File('${assets.path}/img.runa').writeAsStringSync('{}');
+      File('${sub.path}/doc.runa').writeAsStringSync('{}');
+
+      final files = await svc.listRunaFiles(tempDir.path);
+
+      expect(files, hasLength(1));
+      expect(files.first, endsWith('doc.runa'));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // listDirectory
+  // -------------------------------------------------------------------------
+
+  group('listDirectory', () {
+    test('excluye el directorio _assets/ de los resultados', () async {
+      Directory('${tempDir.path}/subfolder').createSync();
+      Directory('${tempDir.path}/_assets').createSync();
+      File('${tempDir.path}/doc.runa').writeAsStringSync('{}');
+
+      final items = await svc.listDirectory(tempDir.path);
+
+      final names = items.map((i) => p.basename(i.path)).toList();
+      expect(names, isNot(contains('_assets')));
+      expect(names, contains('subfolder'));
+      expect(names.where((n) => n.endsWith('.runa')), hasLength(1));
+    });
+
+    test('_assets/ anidado en subdirectorio también se excluye', () async {
+      final sub = Directory('${tempDir.path}/project')..createSync();
+      Directory('${sub.path}/_assets').createSync();
+
+      final items = await svc.listDirectory(sub.path);
+
+      expect(items.where((i) => p.basename(i.path) == '_assets'), isEmpty);
+    });
+
+    test('directorio vacío devuelve lista vacía', () async {
+      expect(await svc.listDirectory(tempDir.path), isEmpty);
+    });
+
+    test('directorio inexistente devuelve lista vacía', () async {
+      expect(
+        await svc.listDirectory('${tempDir.path}/does_not_exist'),
+        isEmpty,
+      );
     });
   });
 
