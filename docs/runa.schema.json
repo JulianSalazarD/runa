@@ -58,7 +58,7 @@
           "$ref": "#/$defs/ImageBlock"
         },
         {
-          "$ref": "#/$defs/PdfBlock"
+          "$ref": "#/$defs/PdfPageBlock"
         }
       ]
     },
@@ -244,19 +244,20 @@
         }
       }
     },
-    "PdfBlock": {
+    "PdfPageBlock": {
       "type": "object",
-      "description": "A block displaying a PDF with per-page ink annotation layers.",
+      "description": "A block displaying one page of a PDF with an ink annotation layer. Multiple PdfPageBlocks sharing the same path represent pages of the same PDF; any block type may be interleaved between them.",
       "required": [
         "type",
         "id",
-        "path"
+        "path",
+        "pageIndex"
       ],
       "additionalProperties": false,
       "properties": {
         "type": {
-          "const": "pdf",
-          "description": "Discriminator value for PdfBlock."
+          "const": "pdf_page",
+          "description": "Discriminator value for PdfPageBlock."
         },
         "id": {
           "type": "string",
@@ -265,45 +266,26 @@
         },
         "path": {
           "type": "string",
-          "description": "Relative path to the PDF asset from the .runa file (e.g. _assets/doc.pdf)."
+          "description": "Relative path to the PDF asset from the .runa file (e.g. _assets/doc.pdf). Shared across all pages of the same PDF."
         },
-        "pages": {
-          "type": "array",
-          "description": "Per-page annotation data. Pages without annotations may be absent.",
-          "items": {
-            "$ref": "#/$defs/PdfPageAnnotation"
-          }
-        }
-      }
-    },
-    "PdfPageAnnotation": {
-      "type": "object",
-      "description": "Ink annotations for a single page of a PdfBlock.",
-      "required": [
-        "pageIndex",
-        "pageWidth",
-        "pageHeight"
-      ],
-      "additionalProperties": false,
-      "properties": {
         "pageIndex": {
           "type": "integer",
           "minimum": 0,
-          "description": "Zero-based index of the PDF page."
+          "description": "Zero-based index of the PDF page this block represents."
         },
         "pageWidth": {
           "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Page width in points (pt) as reported by the PDF renderer."
+          "minimum": 0,
+          "description": "Page width in points (pt) as reported by the PDF renderer. 0.0 when not yet populated."
         },
         "pageHeight": {
           "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Page height in points (pt) as reported by the PDF renderer."
+          "minimum": 0,
+          "description": "Page height in points (pt) as reported by the PDF renderer. 0.0 when not yet populated."
         },
         "strokes": {
           "type": "array",
-          "description": "Ink strokes on this page. Coordinates normalised to [0.0, 1.0] relative to pageWidth x pageHeight.",
+          "description": "Ink annotation strokes drawn on this page.",
           "items": {
             "$ref": "#/$defs/Stroke"
           }

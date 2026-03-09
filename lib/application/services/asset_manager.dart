@@ -30,4 +30,10 @@ abstract interface class AssetManager {
   ///
   /// Returns an empty list if the directory does not exist.
   Future<List<String>> listAssets(String documentPath);
+
+  /// Reads page dimensions from the PDF at [path] (absolute path).
+  ///
+  /// Returns a list of `(width, height)` in PDF points, one entry per page.
+  /// Throws if the file does not exist or cannot be parsed.
+  Future<List<(double, double)>> readPdfInfo(String path);
 }

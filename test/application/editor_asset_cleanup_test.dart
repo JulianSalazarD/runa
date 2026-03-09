@@ -63,11 +63,14 @@ class FakeAssetManager implements AssetManager {
   /// Tracks paths passed to [deleteAsset].
   final List<String> deletedAssets = [];
 
-  /// If non-null, [copyAsset] and [readImageSize] throw this exception.
+  /// If non-null, all async methods throw this exception.
   Object? errorToThrow;
 
   /// Controls the size returned by [readImageSize].
   (double, double) imageSize = (1920.0, 1080.0);
+
+  /// Controls the pages returned by [readPdfInfo].
+  List<(double, double)> pdfPages = [(595.0, 842.0)];
 
   /// Records calls: sourcePath → relativePath returned.
   final Map<String, String> copies = {};
@@ -84,6 +87,12 @@ class FakeAssetManager implements AssetManager {
   Future<(double, double)> readImageSize(String path) async {
     if (errorToThrow != null) throw errorToThrow!;
     return imageSize;
+  }
+
+  @override
+  Future<List<(double, double)>> readPdfInfo(String path) async {
+    if (errorToThrow != null) throw errorToThrow!;
+    return pdfPages;
   }
 
   @override
@@ -123,9 +132,10 @@ Block _imageBlock(String id, {String path = _assetPath}) => Block.image(
       naturalHeight: 1080.0,
     );
 
-Block _pdfBlock(String id, {String path = _pdfAssetPath}) => Block.pdf(
+Block _pdfBlock(String id, {String path = _pdfAssetPath}) => Block.pdfPage(
       id: id,
       path: path,
+      pageIndex: 0,
     );
 
 Block _mdBlock(String id) => Block.markdown(id: id, content: 'texto');
@@ -186,7 +196,7 @@ void main() {
       expect(fakeAssets.deletedAssets, isEmpty);
     });
 
-    test('PdfBlock único → asset borrado del disco', () async {
+    test('PdfPageBlock único → asset borrado del disco', () async {
       notifier.initFromDocument(
         _makeDoc(blocks: [_pdfBlock('pdf-1')]),
         _docPath,
@@ -197,7 +207,7 @@ void main() {
       expect(fakeAssets.deletedAssets, contains(_pdfAssetPath));
     });
 
-    test('PdfBlock con duplicado → asset NO borrado', () async {
+    test('PdfPageBlock con duplicado → asset NO borrado', () async {
       notifier.initFromDocument(
         _makeDoc(blocks: [
           _pdfBlock('pdf-1'),

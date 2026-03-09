@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'pdf_page_annotation.dart';
 import 'stroke.dart';
 
 part 'block.freezed.dart';
@@ -9,7 +8,7 @@ part 'block.g.dart';
 /// A content block within a [Document].
 ///
 /// Discriminated by the [type] field in JSON:
-/// `"markdown"`, `"ink"`, `"image"`, or `"pdf"`.
+/// `"markdown"`, `"ink"`, `"image"`, or `"pdf_page"`.
 ///
 /// Use pattern matching to access subtype-specific fields:
 ///
@@ -18,7 +17,7 @@ part 'block.g.dart';
 ///   case MarkdownBlock(:final content) => print(content);
 ///   case InkBlock(:final strokes) => print(strokes.length);
 ///   case ImageBlock(:final path) => print(path);
-///   case PdfBlock(:final path) => print(path);
+///   case PdfPageBlock(:final path) => print(path);
 /// }
 /// ```
 @Freezed(unionKey: 'type')
@@ -72,23 +71,34 @@ sealed class Block with _$Block {
     @Default([]) List<Stroke> strokes,
   }) = ImageBlock;
 
-  /// A block displaying a PDF with per-page ink annotation layers.
+  /// A block displaying one page of a PDF with an ink annotation layer.
+  ///
+  /// Multiple [PdfPageBlock]s sharing the same [path] represent pages from the
+  /// same PDF. Any block type may be inserted between them.
   ///
   /// [path] is a relative path from the `.runa` file, e.g. `_assets/doc.pdf`.
-  /// Each entry in [pages] holds the annotations for one PDF page.
-  @FreezedUnionValue('pdf')
+  /// [pageIndex] is 0-based. [pageWidth] and [pageHeight] are in PDF points.
+  @FreezedUnionValue('pdf_page')
   @JsonSerializable(explicitToJson: true)
-  const factory Block.pdf({
+  const factory Block.pdfPage({
     /// Unique block identifier (UUID v4).
     required String id,
 
     /// Relative path to the PDF asset (e.g. `_assets/doc.pdf`).
     required String path,
 
-    /// Per-page annotation data. One entry per annotated page; pages without
-    /// annotations may be absent from the list.
-    @Default([]) List<PdfPageAnnotation> pages,
-  }) = PdfBlock;
+    /// Zero-based index of the PDF page this block represents.
+    required int pageIndex,
+
+    /// Width of the page in PDF points, as reported by the renderer.
+    @Default(0.0) double pageWidth,
+
+    /// Height of the page in PDF points, as reported by the renderer.
+    @Default(0.0) double pageHeight,
+
+    /// Ink annotation strokes drawn on this page.
+    @Default([]) List<Stroke> strokes,
+  }) = PdfPageBlock;
 
   factory Block.fromJson(Map<String, dynamic> json) => _$BlockFromJson(json);
 }

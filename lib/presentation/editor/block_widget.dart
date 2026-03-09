@@ -9,7 +9,7 @@ import 'ink_canvas_widget.dart';
 import 'ink_toolbar_widget.dart';
 import 'markdown_editor_widget.dart';
 import 'markdown_preview_widget.dart';
-import 'pdf_block_view.dart';
+import 'pdf_page_block_view.dart';
 
 /// Dispatches to the appropriate block renderer based on [block] type.
 ///
@@ -66,7 +66,7 @@ class BlockWidget extends StatelessWidget {
           isSelected: isSelected,
           onUpdate: onUpdate,
         ),
-      final PdfBlock b => PdfBlockView(
+      final PdfPageBlock b => PdfPageBlockView(
           block: b,
           documentPath: documentPath,
           isSelected: isSelected,

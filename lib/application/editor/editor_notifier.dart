@@ -112,7 +112,7 @@ class EditorNotifier extends _$EditorNotifier {
 
   /// Removes the block with [id] from the document.
   ///
-  /// If the removed block is an [ImageBlock] or [PdfBlock], and no other
+  /// If the removed block is an [ImageBlock] or [PdfPageBlock], and no other
   /// block in the document references the same asset path, the asset file
   /// is deleted from disk (best-effort — errors are silently ignored).
   Future<void> removeBlock(String id) async {
@@ -126,7 +126,7 @@ class EditorNotifier extends _$EditorNotifier {
     // Determine if this block owned an asset.
     final assetPath = switch (block) {
       final ImageBlock b => b.path,
-      final PdfBlock b => b.path,
+      final PdfPageBlock b => b.path,
       _ => null,
     };
     if (assetPath == null) return;
@@ -135,7 +135,7 @@ class EditorNotifier extends _$EditorNotifier {
     final remaining = state.blocks; // already updated by _setBlocks above
     final isOrphaned = !remaining.any((b) => switch (b) {
       final ImageBlock ib => ib.path == assetPath,
-      final PdfBlock pb => pb.path == assetPath,
+      final PdfPageBlock pb => pb.path == assetPath,
       _ => false,
     });
     if (!isOrphaned) return;
@@ -193,18 +193,40 @@ class EditorNotifier extends _$EditorNotifier {
   }
 
   /// Copies the PDF at [sourcePath] to the document's `_assets/` folder,
-  /// creates a [PdfBlock] (pages populated lazily when rendered), and inserts.
+  /// reads its page count and dimensions, and inserts one [PdfPageBlock] per
+  /// page consecutively at the target position.
   ///
   /// [afterBlockId] works the same as in [addBlock]. Throws on I/O error.
   Future<void> importPdf(String sourcePath, {String? afterBlockId}) async {
     state = state.copyWith(isImporting: true);
     try {
-      final rel =
-          await ref.read(assetManagerProvider).copyAsset(sourcePath, state.path);
-      addBlock(
-        Block.pdf(id: const Uuid().v4(), path: rel),
-        afterId: afterBlockId,
-      );
+      final am = ref.read(assetManagerProvider);
+      final rel = await am.copyAsset(sourcePath, state.path);
+      final absolutePath = am.resolveAsset(rel, state.path);
+      final pages = await am.readPdfInfo(absolutePath);
+
+      if (pages.isEmpty) return;
+
+      final pageBlocks = [
+        for (int i = 0; i < pages.length; i++)
+          Block.pdfPage(
+            id: const Uuid().v4(),
+            path: rel,
+            pageIndex: i,
+            pageWidth: pages[i].$1,
+            pageHeight: pages[i].$2,
+          ),
+      ];
+
+      // Insert all page blocks consecutively at the target position.
+      final blocks = List<Block>.from(state.blocks);
+      var insertAt = afterBlockId == null
+          ? blocks.length
+          : blocks.indexWhere((b) => b.id == afterBlockId) + 1;
+      if (insertAt <= 0) insertAt = blocks.length;
+      blocks.insertAll(insertAt, pageBlocks);
+      _setBlocks(blocks);
+      state = state.copyWith(selectedBlockId: pageBlocks.first.id);
     } finally {
       state = state.copyWith(isImporting: false);
     }

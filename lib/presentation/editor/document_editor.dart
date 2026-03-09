@@ -27,9 +27,9 @@ Future<void> _confirmAndDeleteBlock(
   final hasContent = switch (block) {
     final MarkdownBlock b => b.content.isNotEmpty,
     final InkBlock b => b.strokes.isNotEmpty,
-    // Image and PDF blocks always reference an asset — treat as having content.
+    // Image and PDF page blocks always reference an asset — treat as having content.
     ImageBlock() => true,
-    PdfBlock() => true,
+    PdfPageBlock() => true,
   };
   if (!hasContent) {
     await notifier.removeBlock(block.id);

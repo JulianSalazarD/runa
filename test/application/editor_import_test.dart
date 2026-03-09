@@ -60,11 +60,14 @@ class FakeFileSystemService implements FileSystemService {
 }
 
 class FakeAssetManager implements AssetManager {
-  /// If non-null, [copyAsset] and [readImageSize] throw this exception.
+  /// If non-null, all async methods throw this exception.
   Object? errorToThrow;
 
   /// Controls the size returned by [readImageSize].
   (double, double) imageSize = (1920.0, 1080.0);
+
+  /// Controls the pages returned by [readPdfInfo].
+  List<(double, double)> pdfPages = [(595.0, 842.0)];
 
   /// Records calls: sourcePath → relativePath returned.
   final Map<String, String> copies = {};
@@ -81,6 +84,12 @@ class FakeAssetManager implements AssetManager {
   Future<(double, double)> readImageSize(String path) async {
     if (errorToThrow != null) throw errorToThrow!;
     return imageSize;
+  }
+
+  @override
+  Future<List<(double, double)>> readPdfInfo(String path) async {
+    if (errorToThrow != null) throw errorToThrow!;
+    return pdfPages;
   }
 
   @override
@@ -206,32 +215,43 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('importPdf', () {
-    test('inserta PdfBlock con path relativo correcto', () async {
+    test('crea un PdfPageBlock por cada página del PDF', () async {
+      fakeAssets.pdfPages = [(595.0, 842.0), (595.0, 842.0)];
+
       await notifier.importPdf('/external/doc.pdf');
 
-      expect(state().blocks, hasLength(1));
-      final block = state().blocks.first;
-      expect(block, isA<PdfBlock>());
-      final pdf = block as PdfBlock;
-      expect(pdf.path, '_assets/doc.pdf');
+      expect(state().blocks, hasLength(2));
+      expect(state().blocks.every((b) => b is PdfPageBlock), isTrue);
+      final p0 = state().blocks[0] as PdfPageBlock;
+      final p1 = state().blocks[1] as PdfPageBlock;
+      expect(p0.pageIndex, 0);
+      expect(p1.pageIndex, 1);
+      expect(p0.path, '_assets/doc.pdf');
+      expect(p0.path, p1.path); // same PDF asset
     });
 
-    test('PdfBlock insertado tiene pages vacías (se poblan al renderizar)', () async {
+    test('PdfPageBlock tiene dimensiones de página correctas', () async {
+      fakeAssets.pdfPages = [(612.0, 792.0)];
+
       await notifier.importPdf('/external/doc.pdf');
 
-      final pdf = state().blocks.first as PdfBlock;
-      expect(pdf.pages, isEmpty);
+      final page = state().blocks.first as PdfPageBlock;
+      expect(page.pageWidth, 612.0);
+      expect(page.pageHeight, 792.0);
     });
 
-    test('inserta después de afterBlockId cuando se especifica', () async {
-      final mdBlock = Block.markdown(id: 'md-1', content: 'hola');
-      notifier.addBlock(mdBlock);
+    test('inserta páginas después de afterBlockId cuando se especifica', () async {
+      fakeAssets.pdfPages = [(595.0, 842.0)];
+      notifier.addBlock(const Block.markdown(id: 'md-1', content: 'before'));
+      notifier.addBlock(const Block.markdown(id: 'md-2', content: 'after'));
 
       await notifier.importPdf('/external/doc.pdf', afterBlockId: 'md-1');
 
-      expect(state().blocks, hasLength(2));
+      // Expected order: md-1, pdf-page-0, md-2
+      expect(state().blocks, hasLength(3));
       expect(state().blocks[0].id, 'md-1');
-      expect(state().blocks[1], isA<PdfBlock>());
+      expect(state().blocks[1], isA<PdfPageBlock>());
+      expect(state().blocks[2].id, 'md-2');
     });
 
     test('marca isDirty tras importar', () async {

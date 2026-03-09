@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:path/path.dart' as p;
+import 'package:pdfrx/pdfrx.dart';
 
 import 'package:runa/application/services/asset_manager.dart';
 
@@ -70,5 +71,18 @@ class LocalAssetManager implements AssetManager {
     frame.image.dispose();
     codec.dispose();
     return (width, height);
+  }
+
+  @override
+  Future<List<(double, double)>> readPdfInfo(String path) async {
+    final doc = await PdfDocument.openFile(path);
+    try {
+      return List.generate(doc.pages.length, (i) {
+        final page = doc.pages[i]; // 0-indexed in pdfrx
+        return (page.width, page.height);
+      });
+    } finally {
+      await doc.dispose();
+    }
   }
 }

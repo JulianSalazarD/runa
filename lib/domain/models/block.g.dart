@@ -64,24 +64,28 @@ Map<String, dynamic> _$$ImageBlockImplToJson(_$ImageBlockImpl instance) =>
       'type': instance.$type,
     };
 
-_$PdfBlockImpl _$$PdfBlockImplFromJson(Map<String, dynamic> json) =>
-    _$PdfBlockImpl(
+_$PdfPageBlockImpl _$$PdfPageBlockImplFromJson(Map<String, dynamic> json) =>
+    _$PdfPageBlockImpl(
       id: json['id'] as String,
       path: json['path'] as String,
-      pages:
-          (json['pages'] as List<dynamic>?)
-              ?.map(
-                (e) => PdfPageAnnotation.fromJson(e as Map<String, dynamic>),
-              )
+      pageIndex: (json['pageIndex'] as num).toInt(),
+      pageWidth: (json['pageWidth'] as num?)?.toDouble() ?? 0.0,
+      pageHeight: (json['pageHeight'] as num?)?.toDouble() ?? 0.0,
+      strokes:
+          (json['strokes'] as List<dynamic>?)
+              ?.map((e) => Stroke.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
       $type: json['type'] as String?,
     );
 
-Map<String, dynamic> _$$PdfBlockImplToJson(_$PdfBlockImpl instance) =>
+Map<String, dynamic> _$$PdfPageBlockImplToJson(_$PdfPageBlockImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'path': instance.path,
-      'pages': instance.pages.map((e) => e.toJson()).toList(),
+      'pageIndex': instance.pageIndex,
+      'pageWidth': instance.pageWidth,
+      'pageHeight': instance.pageHeight,
+      'strokes': instance.strokes.map((e) => e.toJson()).toList(),
       'type': instance.$type,
     };

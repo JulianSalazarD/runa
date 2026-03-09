@@ -23,8 +23,8 @@ Block _$BlockFromJson(Map<String, dynamic> json) {
       return InkBlock.fromJson(json);
     case 'image':
       return ImageBlock.fromJson(json);
-    case 'pdf':
-      return PdfBlock.fromJson(json);
+    case 'pdf_page':
+      return PdfPageBlock.fromJson(json);
 
     default:
       throw CheckedFromJsonException(
@@ -56,9 +56,12 @@ mixin _$Block {
     required TResult Function(
       String id,
       String path,
-      List<PdfPageAnnotation> pages,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
     )
-    pdf,
+    pdfPage,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
@@ -72,8 +75,15 @@ mixin _$Block {
       List<Stroke> strokes,
     )?
     image,
-    TResult? Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult? Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
@@ -87,8 +97,15 @@ mixin _$Block {
       List<Stroke> strokes,
     )?
     image,
-    TResult Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -96,21 +113,21 @@ mixin _$Block {
     required TResult Function(MarkdownBlock value) markdown,
     required TResult Function(InkBlock value) ink,
     required TResult Function(ImageBlock value) image,
-    required TResult Function(PdfBlock value) pdf,
+    required TResult Function(PdfPageBlock value) pdfPage,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(MarkdownBlock value)? markdown,
     TResult? Function(InkBlock value)? ink,
     TResult? Function(ImageBlock value)? image,
-    TResult? Function(PdfBlock value)? pdf,
+    TResult? Function(PdfPageBlock value)? pdfPage,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(MarkdownBlock value)? markdown,
     TResult Function(InkBlock value)? ink,
     TResult Function(ImageBlock value)? image,
-    TResult Function(PdfBlock value)? pdf,
+    TResult Function(PdfPageBlock value)? pdfPage,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
 
@@ -266,9 +283,12 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
     required TResult Function(
       String id,
       String path,
-      List<PdfPageAnnotation> pages,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
     )
-    pdf,
+    pdfPage,
   }) {
     return markdown(id, content);
   }
@@ -286,8 +306,15 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult? Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult? Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
   }) {
     return markdown?.call(id, content);
   }
@@ -305,8 +332,15 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
     required TResult orElse(),
   }) {
     if (markdown != null) {
@@ -321,7 +355,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
     required TResult Function(MarkdownBlock value) markdown,
     required TResult Function(InkBlock value) ink,
     required TResult Function(ImageBlock value) image,
-    required TResult Function(PdfBlock value) pdf,
+    required TResult Function(PdfPageBlock value) pdfPage,
   }) {
     return markdown(this);
   }
@@ -332,7 +366,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
     TResult? Function(MarkdownBlock value)? markdown,
     TResult? Function(InkBlock value)? ink,
     TResult? Function(ImageBlock value)? image,
-    TResult? Function(PdfBlock value)? pdf,
+    TResult? Function(PdfPageBlock value)? pdfPage,
   }) {
     return markdown?.call(this);
   }
@@ -343,7 +377,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
     TResult Function(MarkdownBlock value)? markdown,
     TResult Function(InkBlock value)? ink,
     TResult Function(ImageBlock value)? image,
-    TResult Function(PdfBlock value)? pdf,
+    TResult Function(PdfPageBlock value)? pdfPage,
     required TResult orElse(),
   }) {
     if (markdown != null) {
@@ -517,9 +551,12 @@ class _$InkBlockImpl implements InkBlock {
     required TResult Function(
       String id,
       String path,
-      List<PdfPageAnnotation> pages,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
     )
-    pdf,
+    pdfPage,
   }) {
     return ink(id, height, strokes);
   }
@@ -537,8 +574,15 @@ class _$InkBlockImpl implements InkBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult? Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult? Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
   }) {
     return ink?.call(id, height, strokes);
   }
@@ -556,8 +600,15 @@ class _$InkBlockImpl implements InkBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
     required TResult orElse(),
   }) {
     if (ink != null) {
@@ -572,7 +623,7 @@ class _$InkBlockImpl implements InkBlock {
     required TResult Function(MarkdownBlock value) markdown,
     required TResult Function(InkBlock value) ink,
     required TResult Function(ImageBlock value) image,
-    required TResult Function(PdfBlock value) pdf,
+    required TResult Function(PdfPageBlock value) pdfPage,
   }) {
     return ink(this);
   }
@@ -583,7 +634,7 @@ class _$InkBlockImpl implements InkBlock {
     TResult? Function(MarkdownBlock value)? markdown,
     TResult? Function(InkBlock value)? ink,
     TResult? Function(ImageBlock value)? image,
-    TResult? Function(PdfBlock value)? pdf,
+    TResult? Function(PdfPageBlock value)? pdfPage,
   }) {
     return ink?.call(this);
   }
@@ -594,7 +645,7 @@ class _$InkBlockImpl implements InkBlock {
     TResult Function(MarkdownBlock value)? markdown,
     TResult Function(InkBlock value)? ink,
     TResult Function(ImageBlock value)? image,
-    TResult Function(PdfBlock value)? pdf,
+    TResult Function(PdfPageBlock value)? pdfPage,
     required TResult orElse(),
   }) {
     if (ink != null) {
@@ -804,9 +855,12 @@ class _$ImageBlockImpl implements ImageBlock {
     required TResult Function(
       String id,
       String path,
-      List<PdfPageAnnotation> pages,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
     )
-    pdf,
+    pdfPage,
   }) {
     return image(id, path, naturalWidth, naturalHeight, strokes);
   }
@@ -824,8 +878,15 @@ class _$ImageBlockImpl implements ImageBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult? Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult? Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
   }) {
     return image?.call(id, path, naturalWidth, naturalHeight, strokes);
   }
@@ -843,8 +904,15 @@ class _$ImageBlockImpl implements ImageBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -859,7 +927,7 @@ class _$ImageBlockImpl implements ImageBlock {
     required TResult Function(MarkdownBlock value) markdown,
     required TResult Function(InkBlock value) ink,
     required TResult Function(ImageBlock value) image,
-    required TResult Function(PdfBlock value) pdf,
+    required TResult Function(PdfPageBlock value) pdfPage,
   }) {
     return image(this);
   }
@@ -870,7 +938,7 @@ class _$ImageBlockImpl implements ImageBlock {
     TResult? Function(MarkdownBlock value)? markdown,
     TResult? Function(InkBlock value)? ink,
     TResult? Function(ImageBlock value)? image,
-    TResult? Function(PdfBlock value)? pdf,
+    TResult? Function(PdfPageBlock value)? pdfPage,
   }) {
     return image?.call(this);
   }
@@ -881,7 +949,7 @@ class _$ImageBlockImpl implements ImageBlock {
     TResult Function(MarkdownBlock value)? markdown,
     TResult Function(InkBlock value)? ink,
     TResult Function(ImageBlock value)? image,
-    TResult Function(PdfBlock value)? pdf,
+    TResult Function(PdfPageBlock value)? pdfPage,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -933,32 +1001,47 @@ abstract class ImageBlock implements Block {
 }
 
 /// @nodoc
-abstract class _$$PdfBlockImplCopyWith<$Res> implements $BlockCopyWith<$Res> {
-  factory _$$PdfBlockImplCopyWith(
-    _$PdfBlockImpl value,
-    $Res Function(_$PdfBlockImpl) then,
-  ) = __$$PdfBlockImplCopyWithImpl<$Res>;
+abstract class _$$PdfPageBlockImplCopyWith<$Res>
+    implements $BlockCopyWith<$Res> {
+  factory _$$PdfPageBlockImplCopyWith(
+    _$PdfPageBlockImpl value,
+    $Res Function(_$PdfPageBlockImpl) then,
+  ) = __$$PdfPageBlockImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String path, List<PdfPageAnnotation> pages});
+  $Res call({
+    String id,
+    String path,
+    int pageIndex,
+    double pageWidth,
+    double pageHeight,
+    List<Stroke> strokes,
+  });
 }
 
 /// @nodoc
-class __$$PdfBlockImplCopyWithImpl<$Res>
-    extends _$BlockCopyWithImpl<$Res, _$PdfBlockImpl>
-    implements _$$PdfBlockImplCopyWith<$Res> {
-  __$$PdfBlockImplCopyWithImpl(
-    _$PdfBlockImpl _value,
-    $Res Function(_$PdfBlockImpl) _then,
+class __$$PdfPageBlockImplCopyWithImpl<$Res>
+    extends _$BlockCopyWithImpl<$Res, _$PdfPageBlockImpl>
+    implements _$$PdfPageBlockImplCopyWith<$Res> {
+  __$$PdfPageBlockImplCopyWithImpl(
+    _$PdfPageBlockImpl _value,
+    $Res Function(_$PdfPageBlockImpl) _then,
   ) : super(_value, _then);
 
   /// Create a copy of Block
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? id = null, Object? path = null, Object? pages = null}) {
+  $Res call({
+    Object? id = null,
+    Object? path = null,
+    Object? pageIndex = null,
+    Object? pageWidth = null,
+    Object? pageHeight = null,
+    Object? strokes = null,
+  }) {
     return _then(
-      _$PdfBlockImpl(
+      _$PdfPageBlockImpl(
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
@@ -967,10 +1050,22 @@ class __$$PdfBlockImplCopyWithImpl<$Res>
             ? _value.path
             : path // ignore: cast_nullable_to_non_nullable
                   as String,
-        pages: null == pages
-            ? _value._pages
-            : pages // ignore: cast_nullable_to_non_nullable
-                  as List<PdfPageAnnotation>,
+        pageIndex: null == pageIndex
+            ? _value.pageIndex
+            : pageIndex // ignore: cast_nullable_to_non_nullable
+                  as int,
+        pageWidth: null == pageWidth
+            ? _value.pageWidth
+            : pageWidth // ignore: cast_nullable_to_non_nullable
+                  as double,
+        pageHeight: null == pageHeight
+            ? _value.pageHeight
+            : pageHeight // ignore: cast_nullable_to_non_nullable
+                  as double,
+        strokes: null == strokes
+            ? _value._strokes
+            : strokes // ignore: cast_nullable_to_non_nullable
+                  as List<Stroke>,
       ),
     );
   }
@@ -979,17 +1074,20 @@ class __$$PdfBlockImplCopyWithImpl<$Res>
 /// @nodoc
 
 @JsonSerializable(explicitToJson: true)
-class _$PdfBlockImpl implements PdfBlock {
-  const _$PdfBlockImpl({
+class _$PdfPageBlockImpl implements PdfPageBlock {
+  const _$PdfPageBlockImpl({
     required this.id,
     required this.path,
-    final List<PdfPageAnnotation> pages = const [],
+    required this.pageIndex,
+    this.pageWidth = 0.0,
+    this.pageHeight = 0.0,
+    final List<Stroke> strokes = const [],
     final String? $type,
-  }) : _pages = pages,
-       $type = $type ?? 'pdf';
+  }) : _strokes = strokes,
+       $type = $type ?? 'pdf_page';
 
-  factory _$PdfBlockImpl.fromJson(Map<String, dynamic> json) =>
-      _$$PdfBlockImplFromJson(json);
+  factory _$PdfPageBlockImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PdfPageBlockImplFromJson(json);
 
   /// Unique block identifier (UUID v4).
   @override
@@ -999,18 +1097,30 @@ class _$PdfBlockImpl implements PdfBlock {
   @override
   final String path;
 
-  /// Per-page annotation data. One entry per annotated page; pages without
-  /// annotations may be absent from the list.
-  final List<PdfPageAnnotation> _pages;
+  /// Zero-based index of the PDF page this block represents.
+  @override
+  final int pageIndex;
 
-  /// Per-page annotation data. One entry per annotated page; pages without
-  /// annotations may be absent from the list.
+  /// Width of the page in PDF points, as reported by the renderer.
   @override
   @JsonKey()
-  List<PdfPageAnnotation> get pages {
-    if (_pages is EqualUnmodifiableListView) return _pages;
+  final double pageWidth;
+
+  /// Height of the page in PDF points, as reported by the renderer.
+  @override
+  @JsonKey()
+  final double pageHeight;
+
+  /// Ink annotation strokes drawn on this page.
+  final List<Stroke> _strokes;
+
+  /// Ink annotation strokes drawn on this page.
+  @override
+  @JsonKey()
+  List<Stroke> get strokes {
+    if (_strokes is EqualUnmodifiableListView) return _strokes;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_pages);
+    return EqualUnmodifiableListView(_strokes);
   }
 
   @JsonKey(name: 'type')
@@ -1018,17 +1128,23 @@ class _$PdfBlockImpl implements PdfBlock {
 
   @override
   String toString() {
-    return 'Block.pdf(id: $id, path: $path, pages: $pages)';
+    return 'Block.pdfPage(id: $id, path: $path, pageIndex: $pageIndex, pageWidth: $pageWidth, pageHeight: $pageHeight, strokes: $strokes)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$PdfBlockImpl &&
+            other is _$PdfPageBlockImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.path, path) || other.path == path) &&
-            const DeepCollectionEquality().equals(other._pages, _pages));
+            (identical(other.pageIndex, pageIndex) ||
+                other.pageIndex == pageIndex) &&
+            (identical(other.pageWidth, pageWidth) ||
+                other.pageWidth == pageWidth) &&
+            (identical(other.pageHeight, pageHeight) ||
+                other.pageHeight == pageHeight) &&
+            const DeepCollectionEquality().equals(other._strokes, _strokes));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1037,7 +1153,10 @@ class _$PdfBlockImpl implements PdfBlock {
     runtimeType,
     id,
     path,
-    const DeepCollectionEquality().hash(_pages),
+    pageIndex,
+    pageWidth,
+    pageHeight,
+    const DeepCollectionEquality().hash(_strokes),
   );
 
   /// Create a copy of Block
@@ -1045,8 +1164,8 @@ class _$PdfBlockImpl implements PdfBlock {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PdfBlockImplCopyWith<_$PdfBlockImpl> get copyWith =>
-      __$$PdfBlockImplCopyWithImpl<_$PdfBlockImpl>(this, _$identity);
+  _$$PdfPageBlockImplCopyWith<_$PdfPageBlockImpl> get copyWith =>
+      __$$PdfPageBlockImplCopyWithImpl<_$PdfPageBlockImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1065,11 +1184,14 @@ class _$PdfBlockImpl implements PdfBlock {
     required TResult Function(
       String id,
       String path,
-      List<PdfPageAnnotation> pages,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
     )
-    pdf,
+    pdfPage,
   }) {
-    return pdf(id, path, pages);
+    return pdfPage(id, path, pageIndex, pageWidth, pageHeight, strokes);
   }
 
   @override
@@ -1085,10 +1207,17 @@ class _$PdfBlockImpl implements PdfBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult? Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult? Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
   }) {
-    return pdf?.call(id, path, pages);
+    return pdfPage?.call(id, path, pageIndex, pageWidth, pageHeight, strokes);
   }
 
   @override
@@ -1104,12 +1233,19 @@ class _$PdfBlockImpl implements PdfBlock {
       List<Stroke> strokes,
     )?
     image,
-    TResult Function(String id, String path, List<PdfPageAnnotation> pages)?
-    pdf,
+    TResult Function(
+      String id,
+      String path,
+      int pageIndex,
+      double pageWidth,
+      double pageHeight,
+      List<Stroke> strokes,
+    )?
+    pdfPage,
     required TResult orElse(),
   }) {
-    if (pdf != null) {
-      return pdf(id, path, pages);
+    if (pdfPage != null) {
+      return pdfPage(id, path, pageIndex, pageWidth, pageHeight, strokes);
     }
     return orElse();
   }
@@ -1120,9 +1256,9 @@ class _$PdfBlockImpl implements PdfBlock {
     required TResult Function(MarkdownBlock value) markdown,
     required TResult Function(InkBlock value) ink,
     required TResult Function(ImageBlock value) image,
-    required TResult Function(PdfBlock value) pdf,
+    required TResult Function(PdfPageBlock value) pdfPage,
   }) {
-    return pdf(this);
+    return pdfPage(this);
   }
 
   @override
@@ -1131,9 +1267,9 @@ class _$PdfBlockImpl implements PdfBlock {
     TResult? Function(MarkdownBlock value)? markdown,
     TResult? Function(InkBlock value)? ink,
     TResult? Function(ImageBlock value)? image,
-    TResult? Function(PdfBlock value)? pdf,
+    TResult? Function(PdfPageBlock value)? pdfPage,
   }) {
-    return pdf?.call(this);
+    return pdfPage?.call(this);
   }
 
   @override
@@ -1142,30 +1278,33 @@ class _$PdfBlockImpl implements PdfBlock {
     TResult Function(MarkdownBlock value)? markdown,
     TResult Function(InkBlock value)? ink,
     TResult Function(ImageBlock value)? image,
-    TResult Function(PdfBlock value)? pdf,
+    TResult Function(PdfPageBlock value)? pdfPage,
     required TResult orElse(),
   }) {
-    if (pdf != null) {
-      return pdf(this);
+    if (pdfPage != null) {
+      return pdfPage(this);
     }
     return orElse();
   }
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PdfBlockImplToJson(this);
+    return _$$PdfPageBlockImplToJson(this);
   }
 }
 
-abstract class PdfBlock implements Block {
-  const factory PdfBlock({
+abstract class PdfPageBlock implements Block {
+  const factory PdfPageBlock({
     required final String id,
     required final String path,
-    final List<PdfPageAnnotation> pages,
-  }) = _$PdfBlockImpl;
+    required final int pageIndex,
+    final double pageWidth,
+    final double pageHeight,
+    final List<Stroke> strokes,
+  }) = _$PdfPageBlockImpl;
 
-  factory PdfBlock.fromJson(Map<String, dynamic> json) =
-      _$PdfBlockImpl.fromJson;
+  factory PdfPageBlock.fromJson(Map<String, dynamic> json) =
+      _$PdfPageBlockImpl.fromJson;
 
   /// Unique block identifier (UUID v4).
   @override
@@ -1174,14 +1313,22 @@ abstract class PdfBlock implements Block {
   /// Relative path to the PDF asset (e.g. `_assets/doc.pdf`).
   String get path;
 
-  /// Per-page annotation data. One entry per annotated page; pages without
-  /// annotations may be absent from the list.
-  List<PdfPageAnnotation> get pages;
+  /// Zero-based index of the PDF page this block represents.
+  int get pageIndex;
+
+  /// Width of the page in PDF points, as reported by the renderer.
+  double get pageWidth;
+
+  /// Height of the page in PDF points, as reported by the renderer.
+  double get pageHeight;
+
+  /// Ink annotation strokes drawn on this page.
+  List<Stroke> get strokes;
 
   /// Create a copy of Block
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PdfBlockImplCopyWith<_$PdfBlockImpl> get copyWith =>
+  _$$PdfPageBlockImplCopyWith<_$PdfPageBlockImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

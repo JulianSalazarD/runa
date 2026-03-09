@@ -172,7 +172,7 @@ void main() {
         MarkdownBlock(:final content) => content,
         InkBlock() => 'ink',
         ImageBlock() => 'image',
-        PdfBlock() => 'pdf',
+        PdfPageBlock() => 'pdf_page',
       };
       expect(result, '# Hello');
     });
@@ -183,7 +183,7 @@ void main() {
         MarkdownBlock() => -1,
         InkBlock(:final strokes) => strokes.length,
         ImageBlock() => -1,
-        PdfBlock() => -1,
+        PdfPageBlock() => -1,
       };
       expect(result, 1);
     });
