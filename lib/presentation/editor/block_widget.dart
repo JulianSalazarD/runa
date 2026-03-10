@@ -7,6 +7,7 @@ import 'package:runa/domain/domain.dart';
 import 'ink_annotation_layer.dart';
 import 'ink_canvas_widget.dart';
 import 'ink_toolbar_widget.dart';
+import 'markdown/task_list_extension.dart';
 import 'markdown_editor_widget.dart';
 import 'markdown_preview_widget.dart';
 import 'pdf_page_block_view.dart';
@@ -124,7 +125,19 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
             onEnterAtEnd: widget.onEnterAtEnd,
           )
         else
-          MarkdownPreviewWidget(content: widget.block.content),
+          MarkdownPreviewWidget(
+            content: widget.block.content,
+            onCheckboxToggled: widget.onUpdate == null
+                ? null
+                : (idx, checked) {
+                    final newContent = toggleCheckboxAt(
+                      widget.block.content,
+                      idx,
+                      checked,
+                    );
+                    widget.onUpdate!(widget.block.copyWith(content: newContent));
+                  },
+          ),
         Align(
           alignment: Alignment.centerRight,
           child: TextButton.icon(
