@@ -165,7 +165,11 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
       autofocus: widget.autoFocus,
       minLines: 1,
       maxLines: null,
-      style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+      style: TextStyle(
+        fontFamily: 'monospace',
+        fontSize: 16,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
       decoration: const InputDecoration(
         hintText: 'Escribe Markdown aquí…',
         border: InputBorder.none,
