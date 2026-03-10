@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
+import 'markdown/math_markdown_extension.dart';
+
 /// Renders [content] as Markdown using the current Material3 theme.
 ///
 /// Shows an italic placeholder when [content] is empty.
+/// Supports inline math (`$...$`, `\(...\)`) and block math (`$$...$$`,
+/// `\[...\]`) via [InlineMathSyntax] and [BlockMathSyntax].
 class MarkdownPreviewWidget extends StatelessWidget {
   const MarkdownPreviewWidget({super.key, required this.content});
 
@@ -27,6 +31,9 @@ class MarkdownPreviewWidget extends StatelessWidget {
     final theme = Theme.of(context);
     return MarkdownBody(
       data: content,
+      inlineSyntaxes: mathInlineSyntaxes(),
+      blockSyntaxes: mathBlockSyntaxes,
+      builders: mathBuilders(),
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
         code: theme.textTheme.bodyMedium?.copyWith(
           fontFamily: 'monospace',

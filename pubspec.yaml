@@ -26,10 +26,12 @@ dependencies:
 
   # Markdown rendering
   flutter_markdown: ^0.7.0
+  markdown: ^7.0.0
 
   # Utilities
   uuid: ^4.5.1
   pdfrx: ^2.2.24
+  flutter_math_fork: ^0.7.2
 
 dev_dependencies:
   flutter_test:
