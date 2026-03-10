@@ -66,6 +66,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _sidebarVisible = true;
+
   @override
   void initState() {
     super.initState();
@@ -135,12 +137,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Row(
       children: [
-        SizedBox(
-          width: 250,
-          child:
-              FileSidebarWidget(directoryPath: workspace.openedDirectoryPath!),
+        // Sidebar panel — colapsable
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          width: _sidebarVisible ? 250 : 0,
+          child: _sidebarVisible
+              ? FileSidebarWidget(
+                  directoryPath: workspace.openedDirectoryPath!,
+                )
+              : const SizedBox.shrink(),
         ),
-        const VerticalDivider(width: 1),
+        // Toggle strip + divider
+        Container(
+          width: 20,
+          decoration: BoxDecoration(
+            border: Border(
+              left: _sidebarVisible
+                  ? BorderSide(color: Theme.of(context).dividerColor)
+                  : BorderSide.none,
+              right: BorderSide(color: Theme.of(context).dividerColor),
+            ),
+          ),
+          child: Tooltip(
+            message:
+                _sidebarVisible ? 'Ocultar sidebar' : 'Mostrar sidebar',
+            child: InkWell(
+              onTap: () => setState(() => _sidebarVisible = !_sidebarVisible),
+              child: Center(
+                child: Icon(
+                  _sidebarVisible
+                      ? Icons.chevron_left
+                      : Icons.chevron_right,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
