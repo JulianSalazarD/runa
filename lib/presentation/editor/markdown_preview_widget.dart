@@ -86,6 +86,7 @@ class MarkdownPreviewWidget extends StatelessWidget {
         );
       },
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+        p: theme.textTheme.bodyLarge,
         code: theme.textTheme.bodyMedium?.copyWith(
           fontFamily: 'monospace',
           backgroundColor: theme.colorScheme.surfaceContainerHighest,

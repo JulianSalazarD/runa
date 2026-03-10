@@ -110,12 +110,19 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
 
   void _toggle() => setState(() => _isEditing = !_isEditing);
 
+  static String _wordCountText(String text) {
+    final trimmed = text.trim();
+    final words =
+        trimmed.isEmpty ? 0 : trimmed.split(RegExp(r'\s+')).length;
+    return '$words ${words == 1 ? 'palabra' : 'palabras'} · ${text.length} caracteres';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_isEditing)
+        if (_isEditing) ...[
           MarkdownEditorWidget(
             key: ValueKey('editor_${widget.block.id}'),
             initialContent: widget.block.content,
@@ -123,8 +130,18 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
                 widget.onUpdate?.call(widget.block.copyWith(content: content)),
             autoFocus: widget.autoFocus,
             onEnterAtEnd: widget.onEnterAtEnd,
-          )
-        else
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              _wordCountText(widget.block.content),
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+          ),
+        ] else
           MarkdownPreviewWidget(
             content: widget.block.content,
             onCheckboxToggled: widget.onUpdate == null

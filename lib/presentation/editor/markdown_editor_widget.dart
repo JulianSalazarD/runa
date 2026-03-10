@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'markdown_format_actions.dart';
+
 /// A growing, monospaced [TextField] for editing raw Markdown.
 ///
 /// Calls [onChanged] with a 300 ms debounce after each keystroke.
@@ -70,34 +72,79 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
     }
   }
 
+  void _scheduleChange() {
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDelay, () => widget.onChanged(_controller.text));
+  }
+
+  void _applyFormat(TextEditingValue Function(TextEditingValue) transform) {
+    final newValue = transform(_controller.value);
+    if (newValue == _controller.value) return;
+    _controller.value = newValue;
+    _scheduleChange();
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (widget.onEnterAtEnd == null) return KeyEventResult.ignored;
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
-    if (event.logicalKey != LogicalKeyboardKey.enter) {
-      return KeyEventResult.ignored;
-    }
-    // Require Ctrl+Enter to create a new block (plain Enter just adds a newline).
-    if (!HardwareKeyboard.instance.isControlPressed) {
-      return KeyEventResult.ignored;
-    }
 
-    final text = _controller.text;
-    final selection = _controller.selection;
-    final atEnd =
-        selection.isCollapsed && selection.baseOffset == text.length;
+    final ctrl = HardwareKeyboard.instance.isControlPressed;
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    final key = event.logicalKey;
 
-    if (atEnd && (text.isEmpty || text.endsWith('\n'))) {
-      // Remove trailing newline, flush synchronously, then create new block.
-      if (text.endsWith('\n')) {
-        final trimmed = text.substring(0, text.length - 1);
-        _controller.text = trimmed;
-        _controller.selection =
-            TextSelection.collapsed(offset: trimmed.length);
+    // ----------------------------------------------------------------
+    // Ctrl+Enter → create new block (existing behaviour)
+    // ----------------------------------------------------------------
+    if (ctrl && !shift && key == LogicalKeyboardKey.enter) {
+      if (widget.onEnterAtEnd == null) return KeyEventResult.ignored;
+
+      final text = _controller.text;
+      final selection = _controller.selection;
+      final atEnd =
+          selection.isCollapsed && selection.baseOffset == text.length;
+
+      if (atEnd && (text.isEmpty || text.endsWith('\n'))) {
+        if (text.endsWith('\n')) {
+          final trimmed = text.substring(0, text.length - 1);
+          _controller.text = trimmed;
+          _controller.selection =
+              TextSelection.collapsed(offset: trimmed.length);
+        }
+        _debounce?.cancel();
+        _debounce = null;
+        widget.onChanged(_controller.text);
+        widget.onEnterAtEnd?.call();
+        return KeyEventResult.handled;
       }
-      _debounce?.cancel();
-      _debounce = null;
-      widget.onChanged(_controller.text);
-      widget.onEnterAtEnd?.call();
+      return KeyEventResult.ignored;
+    }
+
+    // ----------------------------------------------------------------
+    // Format shortcuts (Ctrl, no Shift)
+    // ----------------------------------------------------------------
+    if (ctrl && !shift) {
+      if (key == LogicalKeyboardKey.keyB) {
+        _applyFormat((v) => applyInlineWrap(v, '**', '**'));
+        return KeyEventResult.handled;
+      }
+      if (key == LogicalKeyboardKey.keyI) {
+        _applyFormat((v) => applyInlineWrap(v, '_', '_'));
+        return KeyEventResult.handled;
+      }
+      if (key == LogicalKeyboardKey.keyK) {
+        _applyFormat(applyLinkWrap);
+        return KeyEventResult.handled;
+      }
+      if (key == LogicalKeyboardKey.backquote) {
+        _applyFormat((v) => applyInlineWrap(v, '`', '`'));
+        return KeyEventResult.handled;
+      }
+    }
+
+    // ----------------------------------------------------------------
+    // Tab / Shift+Tab → indent / unindent
+    // ----------------------------------------------------------------
+    if (!ctrl && key == LogicalKeyboardKey.tab) {
+      _applyFormat((v) => applyIndent(v, unindent: shift));
       return KeyEventResult.handled;
     }
 
