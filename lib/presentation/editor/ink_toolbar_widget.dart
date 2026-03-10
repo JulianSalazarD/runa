@@ -19,9 +19,9 @@ const _kColors = [
   '#884400FF', // Brown
 ];
 
-/// Available stroke widths: fine / medium / thick.
-const _kWidths = [2.0, 4.0, 8.0];
-const _kWidthLabels = ['Fino', 'Medio', 'Grueso'];
+/// Available stroke widths: very fine / fine / medium / thick.
+const _kWidths = [1.0, 2.0, 4.0, 8.0];
+const _kWidthLabels = ['Muy fino', 'Fino', 'Medio', 'Grueso'];
 
 // ---------------------------------------------------------------------------
 // InkToolbarWidget

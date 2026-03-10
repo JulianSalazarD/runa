@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 
 import 'block_chrome.dart';
 import 'block_widget.dart';
+import 'ink_toolbar_widget.dart';
 
 enum _InsertBlockType { markdown, ink, image, pdf }
 
@@ -78,6 +79,11 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   /// Focus node for the editor canvas. Holds focus when no TextField is active,
   /// allowing Delete/Backspace shortcuts to fire on the selected block.
   late final FocusNode _editorFocusNode;
+
+  /// Ink tool state — shown in the top toolbar when an ink/image block is selected.
+  StrokeTool _inkTool = StrokeTool.pen;
+  String _inkColor = '#000000FF';
+  double _inkWidth = 2.0;
 
   String get _docId => widget.opened.document.id;
 
@@ -187,6 +193,14 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     final editorState = ref.watch(editorNotifierProvider(_docId));
     final notifier = ref.read(editorNotifierProvider(_docId).notifier);
 
+    final selectedBlock = editorState.selectedBlockId == null
+        ? null
+        : editorState.blocks
+            .where((b) => b.id == editorState.selectedBlockId)
+            .firstOrNull;
+    final showInkToolbar =
+        selectedBlock is InkBlock || selectedBlock is ImageBlock;
+
     return Shortcuts(
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.keyS, control: true): _SaveIntent(),
@@ -244,11 +258,18 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   onAddInk: () => notifier.addBlock(
                     Block.ink(id: _uuid.v4(), strokes: const [], height: 200.0),
                   ),
-                  onAddImage: () => _importImage(),
-                  onAddPdf: () => _importPdf(),
+                  onAddImage: _importImage,
+                  onAddPdf: _importPdf,
                   onExportPdf: _exportToPdf,
                   onGoHome: () =>
                       ref.read(workspaceNotifierProvider.notifier).closeDirectory(),
+                  showInkToolbar: showInkToolbar,
+                  inkTool: _inkTool,
+                  inkColor: _inkColor,
+                  inkWidth: _inkWidth,
+                  onInkToolChanged: (t) => setState(() => _inkTool = t),
+                  onInkColorChanged: (c) => setState(() => _inkColor = c),
+                  onInkWidthChanged: (w) => setState(() => _inkWidth = w),
                 ),
                 Expanded(
                   child: _BlockList(
@@ -258,6 +279,9 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                         _importImage(afterBlockId: afterBlockId),
                     onImportPdf: ({String? afterBlockId}) =>
                         _importPdf(afterBlockId: afterBlockId),
+                    inkTool: _inkTool,
+                    inkColor: _inkColor,
+                    inkWidth: _inkWidth,
                   ),
                 ),
               ],
@@ -286,6 +310,13 @@ class _EditorToolbar extends StatelessWidget {
     required this.onAddPdf,
     required this.onExportPdf,
     required this.onGoHome,
+    required this.showInkToolbar,
+    required this.inkTool,
+    required this.inkColor,
+    required this.inkWidth,
+    required this.onInkToolChanged,
+    required this.onInkColorChanged,
+    required this.onInkWidthChanged,
   });
 
   final String path;
@@ -299,6 +330,13 @@ class _EditorToolbar extends StatelessWidget {
   final VoidCallback onAddPdf;
   final VoidCallback onExportPdf;
   final VoidCallback onGoHome;
+  final bool showInkToolbar;
+  final StrokeTool inkTool;
+  final String inkColor;
+  final double inkWidth;
+  final ValueChanged<StrokeTool> onInkToolChanged;
+  final ValueChanged<String> onInkColorChanged;
+  final ValueChanged<double> onInkWidthChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -399,6 +437,22 @@ class _EditorToolbar extends StatelessWidget {
             ],
           ),
         ),
+        if (showInkToolbar)
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Theme.of(context).dividerColor),
+              ),
+            ),
+            child: InkToolbarWidget(
+              activeTool: inkTool,
+              activeColor: inkColor,
+              activeWidth: inkWidth,
+              onToolChanged: onInkToolChanged,
+              onColorChanged: onInkColorChanged,
+              onWidthChanged: onInkWidthChanged,
+            ),
+          ),
         if (isImporting) const LinearProgressIndicator(minHeight: 2),
       ],
     );
@@ -415,12 +469,18 @@ class _BlockList extends StatelessWidget {
     required this.notifier,
     required this.onImportImage,
     required this.onImportPdf,
+    required this.inkTool,
+    required this.inkColor,
+    required this.inkWidth,
   });
 
   final EditorState editorState;
   final EditorNotifier notifier;
   final Future<void> Function({String? afterBlockId}) onImportImage;
   final Future<void> Function({String? afterBlockId}) onImportPdf;
+  final StrokeTool inkTool;
+  final String inkColor;
+  final double inkWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -489,6 +549,9 @@ class _BlockList extends StatelessWidget {
                   Block.markdown(id: const Uuid().v4(), content: ''),
                   afterId: block.id,
                 ),
+                inkTool: inkTool,
+                inkColor: inkColor,
+                inkWidth: inkWidth,
               ),
             ),
             _InsertGap(

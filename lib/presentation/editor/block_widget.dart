@@ -6,7 +6,6 @@ import 'package:runa/domain/domain.dart';
 
 import 'ink_annotation_layer.dart';
 import 'ink_canvas_widget.dart';
-import 'ink_toolbar_widget.dart';
 import 'markdown/task_list_extension.dart';
 import 'markdown_editor_widget.dart';
 import 'markdown_preview_widget.dart';
@@ -37,6 +36,9 @@ class BlockWidget extends StatelessWidget {
     this.onUpdate,
     this.onEnterAtEnd,
     this.autoFocus = false,
+    this.inkTool = StrokeTool.pen,
+    this.inkColor = '#000000FF',
+    this.inkWidth = 2.0,
   });
 
   final Block block;
@@ -51,6 +53,11 @@ class BlockWidget extends StatelessWidget {
   final VoidCallback? onEnterAtEnd;
   final bool autoFocus;
 
+  /// Ink tool settings managed by the parent (shown in the top toolbar).
+  final StrokeTool inkTool;
+  final String inkColor;
+  final double inkWidth;
+
   @override
   Widget build(BuildContext context) {
     return switch (block) {
@@ -60,12 +67,21 @@ class BlockWidget extends StatelessWidget {
           onEnterAtEnd: onEnterAtEnd,
           autoFocus: autoFocus,
         ),
-      final InkBlock b => _InkBlockView(block: b, onUpdate: onUpdate),
+      final InkBlock b => _InkBlockView(
+          block: b,
+          onUpdate: onUpdate,
+          activeTool: inkTool,
+          activeColor: inkColor,
+          activeWidth: inkWidth,
+        ),
       final ImageBlock b => _ImageBlockView(
           block: b,
           documentPath: documentPath,
           isSelected: isSelected,
           onUpdate: onUpdate,
+          activeTool: inkTool,
+          activeColor: inkColor,
+          activeWidth: inkWidth,
         ),
       final PdfPageBlock b => PdfPageBlockView(
           block: b,
@@ -184,10 +200,19 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
 // ---------------------------------------------------------------------------
 
 class _InkBlockView extends StatefulWidget {
-  const _InkBlockView({required this.block, this.onUpdate});
+  const _InkBlockView({
+    required this.block,
+    this.onUpdate,
+    required this.activeTool,
+    required this.activeColor,
+    required this.activeWidth,
+  });
 
   final InkBlock block;
   final ValueChanged<Block>? onUpdate;
+  final StrokeTool activeTool;
+  final String activeColor;
+  final double activeWidth;
 
   @override
   State<_InkBlockView> createState() => _InkBlockViewState();
@@ -195,10 +220,6 @@ class _InkBlockView extends StatefulWidget {
 
 class _InkBlockViewState extends State<_InkBlockView> {
   static const _minHeight = 80.0;
-
-  StrokeTool _activeTool = StrokeTool.pen;
-  String _activeColor = '#000000FF';
-  double _activeWidth = 3.0;
 
   late double _height;
   bool _isDragging = false;
@@ -223,20 +244,12 @@ class _InkBlockViewState extends State<_InkBlockView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InkToolbarWidget(
-          activeTool: _activeTool,
-          activeColor: _activeColor,
-          activeWidth: _activeWidth,
-          onToolChanged: (t) => setState(() => _activeTool = t),
-          onColorChanged: (c) => setState(() => _activeColor = c),
-          onWidthChanged: (w) => setState(() => _activeWidth = w),
-        ),
         InkCanvasWidget(
           block: widget.block,
           height: _height,
-          activeTool: _activeTool,
-          activeColor: _activeColor,
-          activeWidth: _activeWidth,
+          activeTool: widget.activeTool,
+          activeColor: widget.activeColor,
+          activeWidth: widget.activeWidth,
           onUpdate: (updated) => widget.onUpdate?.call(updated),
         ),
         _ResizeHandle(
@@ -259,12 +272,15 @@ class _InkBlockViewState extends State<_InkBlockView> {
 // ImageBlock: image + ink annotation layer
 // ---------------------------------------------------------------------------
 
-class _ImageBlockView extends StatefulWidget {
+class _ImageBlockView extends StatelessWidget {
   const _ImageBlockView({
     required this.block,
     required this.documentPath,
     required this.isSelected,
     this.onUpdate,
+    required this.activeTool,
+    required this.activeColor,
+    required this.activeWidth,
   });
 
   final ImageBlock block;
@@ -277,39 +293,24 @@ class _ImageBlockView extends StatefulWidget {
   final bool isSelected;
 
   final ValueChanged<Block>? onUpdate;
-
-  @override
-  State<_ImageBlockView> createState() => _ImageBlockViewState();
-}
-
-class _ImageBlockViewState extends State<_ImageBlockView> {
-  StrokeTool _activeTool = StrokeTool.pen;
-  String _activeColor = '#000000FF';
-  double _activeWidth = 3.0;
+  final StrokeTool activeTool;
+  final String activeColor;
+  final double activeWidth;
 
   @override
   Widget build(BuildContext context) {
     final absolutePath =
-        p.join(p.dirname(widget.documentPath), widget.block.path);
+        p.join(p.dirname(documentPath), block.path);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InkToolbarWidget(
-          activeTool: _activeTool,
-          activeColor: _activeColor,
-          activeWidth: _activeWidth,
-          onToolChanged: (t) => setState(() => _activeTool = t),
-          onColorChanged: (c) => setState(() => _activeColor = c),
-          onWidthChanged: (w) => setState(() => _activeWidth = w),
-        ),
         Align(
           alignment: Alignment.centerRight,
           child: TextButton.icon(
-            onPressed: widget.block.strokes.isEmpty
+            onPressed: block.strokes.isEmpty
                 ? null
-                : () => widget.onUpdate
-                    ?.call(widget.block.copyWith(strokes: const [])),
+                : () => onUpdate?.call(block.copyWith(strokes: const [])),
             icon: const Icon(Icons.clear, size: 14),
             label: const Text(
               'Limpiar anotaciones',
@@ -323,7 +324,7 @@ class _ImageBlockViewState extends State<_ImageBlockView> {
           ),
         ),
         AspectRatio(
-          aspectRatio: widget.block.naturalWidth / widget.block.naturalHeight,
+          aspectRatio: block.naturalWidth / block.naturalHeight,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -331,16 +332,16 @@ class _ImageBlockViewState extends State<_ImageBlockView> {
                 File(absolutePath),
                 fit: BoxFit.fill,
                 errorBuilder: (ctx, error, _) =>
-                    _ImageErrorPlaceholder(path: widget.block.path),
+                    _ImageErrorPlaceholder(path: block.path),
               ),
               InkAnnotationLayer(
-                strokes: widget.block.strokes,
+                strokes: block.strokes,
                 onStrokesChanged: (strokes) =>
-                    widget.onUpdate?.call(widget.block.copyWith(strokes: strokes)),
-                activeTool: _activeTool,
-                activeColor: _activeColor,
-                activeWidth: _activeWidth,
-                readOnly: !widget.isSelected,
+                    onUpdate?.call(block.copyWith(strokes: strokes)),
+                activeTool: activeTool,
+                activeColor: activeColor,
+                activeWidth: activeWidth,
+                readOnly: !isSelected,
               ),
             ],
           ),
