@@ -1,9 +1,11 @@
+import 'dart:io' show File;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:runa/application/application.dart';
+import 'package:runa/application/services/pdf_exporter.dart';
 import 'package:runa/domain/domain.dart';
 import 'package:uuid/uuid.dart';
 
@@ -133,6 +135,33 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     }
   }
 
+  Future<void> _exportToPdf() async {
+    final document = ref.read(editorNotifierProvider(_docId)).document;
+    final docPath = widget.opened.path;
+
+    final savePath = await FilePicker.platform.saveFile(
+      fileName: '${p.basenameWithoutExtension(docPath)}.pdf',
+      allowedExtensions: ['pdf'],
+      type: FileType.custom,
+    );
+    if (!mounted || savePath == null) return;
+
+    try {
+      final exporter = PdfExporter();
+      final bytes = await exporter.export(document, documentPath: docPath);
+      await File(savePath).writeAsBytes(bytes);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PDF exportado correctamente')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al exportar PDF: $e')),
+      );
+    }
+  }
+
   Future<void> _importPdf({String? afterBlockId}) async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -217,6 +246,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   ),
                   onAddImage: () => _importImage(),
                   onAddPdf: () => _importPdf(),
+                  onExportPdf: _exportToPdf,
                   onGoHome: () =>
                       ref.read(workspaceNotifierProvider.notifier).closeDirectory(),
                 ),
@@ -254,6 +284,7 @@ class _EditorToolbar extends StatelessWidget {
     required this.onAddInk,
     required this.onAddImage,
     required this.onAddPdf,
+    required this.onExportPdf,
     required this.onGoHome,
   });
 
@@ -266,6 +297,7 @@ class _EditorToolbar extends StatelessWidget {
   final VoidCallback onAddInk;
   final VoidCallback onAddImage;
   final VoidCallback onAddPdf;
+  final VoidCallback onExportPdf;
   final VoidCallback onGoHome;
 
   @override
@@ -320,6 +352,12 @@ class _EditorToolbar extends StatelessWidget {
                     semanticsLabel: 'Cambios sin guardar',
                   ),
                 ),
+              IconButton(
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                tooltip: 'Exportar a PDF',
+                onPressed: onExportPdf,
+                iconSize: 20,
+              ),
               PopupMenuButton<_InsertBlockType>(
                 icon: const Icon(Icons.add),
                 tooltip: 'Nuevo bloque al final',

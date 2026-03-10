@@ -33,6 +33,9 @@ dependencies:
   pdfrx: ^2.2.24
   flutter_math_fork: ^0.7.2
 
+  # PDF generation
+  pdf: ^3.10.0
+
   # Syntax highlighting
   flutter_highlight: ^0.7.0
   highlight: ^0.7.0
