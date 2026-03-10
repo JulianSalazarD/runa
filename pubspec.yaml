@@ -33,6 +33,10 @@ dependencies:
   pdfrx: ^2.2.24
   flutter_math_fork: ^0.7.2
 
+  # Syntax highlighting
+  flutter_highlight: ^0.7.0
+  highlight: ^0.7.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
+import 'markdown/code_block_builder.dart';
 import 'markdown/math_markdown_extension.dart';
 
 /// Renders [content] as Markdown using the current Material3 theme.
@@ -33,7 +34,10 @@ class MarkdownPreviewWidget extends StatelessWidget {
       data: content,
       inlineSyntaxes: mathInlineSyntaxes(),
       blockSyntaxes: mathBlockSyntaxes,
-      builders: mathBuilders(),
+      builders: {
+        ...mathBuilders(),
+        ...codeBlockBuilders(),
+      },
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
         code: theme.textTheme.bodyMedium?.copyWith(
           fontFamily: 'monospace',
