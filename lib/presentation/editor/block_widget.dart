@@ -39,6 +39,9 @@ class BlockWidget extends StatelessWidget {
     this.inkTool = StrokeTool.pen,
     this.inkColor = '#000000FF',
     this.inkWidth = 2.0,
+    this.textFontSize = 16.0,
+    this.textBold = false,
+    this.textItalic = false,
   });
 
   final Block block;
@@ -58,6 +61,11 @@ class BlockWidget extends StatelessWidget {
   final String inkColor;
   final double inkWidth;
 
+  /// Text element settings for the ink canvas text tool.
+  final double textFontSize;
+  final bool textBold;
+  final bool textItalic;
+
   @override
   Widget build(BuildContext context) {
     return switch (block) {
@@ -73,6 +81,9 @@ class BlockWidget extends StatelessWidget {
           activeTool: inkTool,
           activeColor: inkColor,
           activeWidth: inkWidth,
+          textFontSize: textFontSize,
+          textBold: textBold,
+          textItalic: textItalic,
         ),
       final ImageBlock b => _ImageBlockView(
           block: b,
@@ -206,6 +217,9 @@ class _InkBlockView extends StatefulWidget {
     required this.activeTool,
     required this.activeColor,
     required this.activeWidth,
+    this.textFontSize = 16.0,
+    this.textBold = false,
+    this.textItalic = false,
   });
 
   final InkBlock block;
@@ -213,6 +227,9 @@ class _InkBlockView extends StatefulWidget {
   final StrokeTool activeTool;
   final String activeColor;
   final double activeWidth;
+  final double textFontSize;
+  final bool textBold;
+  final bool textItalic;
 
   @override
   State<_InkBlockView> createState() => _InkBlockViewState();
@@ -250,6 +267,9 @@ class _InkBlockViewState extends State<_InkBlockView> {
           activeTool: widget.activeTool,
           activeColor: widget.activeColor,
           activeWidth: widget.activeWidth,
+          activeFontSize: widget.textFontSize,
+          textBold: widget.textBold,
+          textItalic: widget.textItalic,
           onUpdate: (updated) => widget.onUpdate?.call(updated),
         ),
         _ResizeHandle(

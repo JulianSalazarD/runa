@@ -246,6 +246,8 @@ class _AnnotationPainter extends CustomPainter {
         paint.strokeWidth = stroke.width * 3;
       case StrokeTool.eraser:
         break;
+      case StrokeTool.text:
+        break;
     }
     return paint;
   }

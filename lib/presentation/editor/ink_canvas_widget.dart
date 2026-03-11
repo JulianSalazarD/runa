@@ -1,10 +1,12 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:runa/domain/domain.dart';
 import 'package:uuid/uuid.dart';
 
 import 'ink_background_painter.dart';
+import 'text_element_painter.dart';
 
 // ---------------------------------------------------------------------------
 // InkCanvasWidget
@@ -12,9 +14,9 @@ import 'ink_background_painter.dart';
 
 /// Drawing canvas for an [InkBlock].
 ///
-/// Captures raw pointer events and emits completed [Stroke]s via [onUpdate].
-/// Renders committed strokes (smoothed) and the in-progress stroke (raw)
-/// through [InkPainter].
+/// Captures raw pointer events and emits completed [Stroke]s or [TextElement]s
+/// via [onUpdate]. Renders committed strokes (smoothed), text elements, and
+/// the in-progress stroke through separate [CustomPainter]s.
 class InkCanvasWidget extends StatefulWidget {
   const InkCanvasWidget({
     super.key,
@@ -23,6 +25,9 @@ class InkCanvasWidget extends StatefulWidget {
     required this.activeTool,
     required this.activeColor,
     required this.activeWidth,
+    this.activeFontSize = 16.0,
+    this.textBold = false,
+    this.textItalic = false,
     this.onUpdate,
   });
 
@@ -36,7 +41,17 @@ class InkCanvasWidget extends StatefulWidget {
   /// Base stroke width in logical pixels.
   final double activeWidth;
 
-  /// Called when a stroke is committed or a stroke is erased.
+  /// Font size used when placing a new text element.
+  final double activeFontSize;
+
+  /// Whether new text elements use bold weight.
+  final bool textBold;
+
+  /// Whether new text elements use italic style.
+  final bool textItalic;
+
+  /// Called when a stroke is committed, a stroke is erased, or text elements
+  /// are updated.
   final ValueChanged<InkBlock>? onUpdate;
 
   @override
@@ -49,6 +64,27 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
 
   List<StrokePoint> _currentPoints = [];
 
+  // Text tool state
+  TextElement? _editingElement;
+  bool _isNewElement = true;
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _textFocusNode = FocusNode();
+  BoxConstraints _constraints = const BoxConstraints();
+
+  @override
+  void initState() {
+    super.initState();
+    _textFocusNode.addListener(_onTextFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _textFocusNode.removeListener(_onTextFocusChanged);
+    _textFocusNode.dispose();
+    super.dispose();
+  }
+
   StrokePoint _makePoint(PointerEvent e) => StrokePoint(
         x: e.localPosition.dx,
         y: e.localPosition.dy,
@@ -58,14 +94,20 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
       );
 
   void _onPointerDown(PointerDownEvent e) {
+    if (widget.activeTool == StrokeTool.text) return;
     setState(() => _currentPoints = [_makePoint(e)]);
   }
 
   void _onPointerMove(PointerMoveEvent e) {
+    if (widget.activeTool == StrokeTool.text) return;
     setState(() => _currentPoints = [..._currentPoints, _makePoint(e)]);
   }
 
   void _onPointerUp(PointerUpEvent e) {
+    if (widget.activeTool == StrokeTool.text) {
+      _handleTextTap(e.localPosition);
+      return;
+    }
     final allPoints = [..._currentPoints, _makePoint(e)];
     _currentPoints = [];
 
@@ -113,6 +155,83 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     return false;
   }
 
+  // ---------------------------------------------------------------------------
+  // Text tool handlers
+  // ---------------------------------------------------------------------------
+
+  void _handleTextTap(Offset pos) {
+    final w = _constraints.maxWidth;
+    final h = _constraints.maxHeight;
+    if (w <= 0 || h <= 0) return;
+
+    final normX = (pos.dx / w).clamp(0.0, 1.0);
+    final normY = (pos.dy / h).clamp(0.0, 1.0);
+
+    // Hit-test existing elements (within 20px logical).
+    final existing = widget.block.textElements.where((TextElement el) {
+      final ex = el.x * w;
+      final ey = el.y * h;
+      return (pos.dx - ex).abs() < 20 && (pos.dy - ey).abs() < 20;
+    }).firstOrNull;
+
+    _textController.text = existing?.content ?? '';
+    setState(() {
+      _isNewElement = existing == null;
+      _editingElement = existing ??
+          TextElement(
+            id: _uuid.v4(),
+            x: normX,
+            y: normY,
+            content: '',
+            fontSize: widget.activeFontSize,
+            color: widget.activeColor,
+            bold: widget.textBold,
+            italic: widget.textItalic,
+          );
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _textFocusNode.requestFocus();
+    });
+  }
+
+  void _onTextFocusChanged() {
+    if (!_textFocusNode.hasFocus) _confirmText();
+  }
+
+  void _confirmText() {
+    if (_editingElement == null) return;
+    final content = _textController.text.trim();
+    final el = _editingElement!;
+
+    if (content.isEmpty) {
+      // Delete element if it existed, otherwise cancel.
+      if (!_isNewElement) {
+        final updated = widget.block.textElements
+            .where((TextElement e) => e.id != el.id)
+            .toList();
+        widget.onUpdate?.call(widget.block.copyWith(textElements: updated));
+      }
+    } else {
+      final confirmed = el.copyWith(content: content);
+      final List<TextElement> updated;
+      if (_isNewElement) {
+        updated = [...widget.block.textElements, confirmed];
+      } else {
+        updated = widget.block.textElements
+            .map((TextElement e) => e.id == confirmed.id ? confirmed : e)
+            .toList();
+      }
+      widget.onUpdate?.call(widget.block.copyWith(textElements: updated));
+    }
+
+    setState(() => _editingElement = null);
+    _textController.clear();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Color parsing
+  // ---------------------------------------------------------------------------
+
   static Color? _parseColorHex(String? hex) {
     if (hex == null) return null;
     final h = hex.replaceFirst('#', '');
@@ -123,30 +242,115 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     return Color.fromARGB(a, r, g, b);
   }
 
+  // ---------------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: _onPointerDown,
-      onPointerMove: _onPointerMove,
-      onPointerUp: _onPointerUp,
-      child: SizedBox(
-        height: widget.height,
-        child: ClipRect(
-          child: CustomPaint(
-            painter: InkBackgroundPainter(
-              background: widget.block.background,
-              spacing: widget.block.backgroundSpacing,
-              lineColor: _parseColorHex(widget.block.backgroundLineColor),
-              defaultColor: Theme.of(context).colorScheme.outlineVariant,
-              backgroundColor: _parseColorHex(widget.block.backgroundColor),
+    return Focus(
+      onKeyEvent: (_, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape &&
+            _editingElement != null) {
+          setState(() => _editingElement = null);
+          _textController.clear();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Listener(
+        onPointerDown: _onPointerDown,
+        onPointerMove: _onPointerMove,
+        onPointerUp: _onPointerUp,
+        child: SizedBox(
+          height: widget.height,
+          child: ClipRect(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                _constraints = constraints;
+                return Stack(
+                  children: [
+                    CustomPaint(
+                      painter: InkBackgroundPainter(
+                        background: widget.block.background,
+                        spacing: widget.block.backgroundSpacing,
+                        lineColor:
+                            _parseColorHex(widget.block.backgroundLineColor),
+                        defaultColor:
+                            Theme.of(context).colorScheme.outlineVariant,
+                        backgroundColor:
+                            _parseColorHex(widget.block.backgroundColor),
+                      ),
+                      size: Size(constraints.maxWidth, widget.height),
+                    ),
+                    CustomPaint(
+                      painter: TextElementPainter(
+                        elements: widget.block.textElements,
+                      ),
+                      size: Size(constraints.maxWidth, widget.height),
+                    ),
+                    CustomPaint(
+                      painter: InkPainter(
+                        strokes: widget.block.strokes,
+                        currentPoints: _currentPoints,
+                        activeTool: widget.activeTool,
+                      ),
+                      size: Size(constraints.maxWidth, widget.height),
+                    ),
+                    if (_editingElement != null)
+                      Positioned(
+                        left: (_editingElement!.x * constraints.maxWidth)
+                            .clamp(0.0, constraints.maxWidth - 10),
+                        top: (_editingElement!.y * widget.height)
+                            .clamp(0.0, widget.height - 10),
+                        child: _buildInlineEditor(),
+                      ),
+                  ],
+                );
+              },
             ),
-            foregroundPainter: InkPainter(
-              strokes: widget.block.strokes,
-              currentPoints: _currentPoints,
-              activeTool: widget.activeTool,
-            ),
-            size: Size.infinite,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInlineEditor() {
+    final el = _editingElement!;
+    return IntrinsicWidth(
+      child: Container(
+        constraints: BoxConstraints(
+          minWidth: 40,
+          maxWidth: _constraints.maxWidth * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          border: Border.all(
+            color: Colors.blueAccent,
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(3),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: TextField(
+          controller: _textController,
+          focusNode: _textFocusNode,
+          style: TextStyle(
+            fontSize: el.fontSize,
+            fontWeight: el.bold ? FontWeight.bold : FontWeight.normal,
+            fontStyle: el.italic ? FontStyle.italic : FontStyle.normal,
+            color: _parseColorHex(el.color) ?? Colors.black,
+          ),
+          decoration: const InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+          onSubmitted: (_) => _confirmText(),
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
         ),
       ),
     );
@@ -223,6 +427,9 @@ class InkPainter extends CustomPainter {
         paint.strokeWidth = stroke.width * 3;
       case StrokeTool.eraser:
         // Eraser strokes are never rendered; they remove other strokes.
+        break;
+      case StrokeTool.text:
+        // Text elements are rendered by TextElementPainter, not here.
         break;
     }
     return paint;

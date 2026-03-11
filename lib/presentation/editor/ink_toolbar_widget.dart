@@ -47,6 +47,12 @@ class InkToolbarWidget extends StatelessWidget {
     this.onBackgroundSpacingChanged,
     this.onBackgroundLineColorChanged,
     this.onBackgroundCanvasColorChanged,
+    this.textFontSize,
+    this.textBold,
+    this.textItalic,
+    this.onTextFontSizeChanged,
+    this.onTextBoldChanged,
+    this.onTextItalicChanged,
   });
 
   final StrokeTool activeTool;
@@ -67,6 +73,13 @@ class InkToolbarWidget extends StatelessWidget {
 
   /// Called with the new canvas color, or null to reset to transparent.
   final ValueChanged<String?>? onBackgroundCanvasColorChanged;
+
+  final double? textFontSize;
+  final bool? textBold;
+  final bool? textItalic;
+  final ValueChanged<double>? onTextFontSizeChanged;
+  final ValueChanged<bool>? onTextBoldChanged;
+  final ValueChanged<bool>? onTextItalicChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +118,13 @@ class InkToolbarWidget extends StatelessWidget {
               activeTool: activeTool,
               onTap: onToolChanged,
             ),
+            _ToolButton(
+              icon: Icons.text_fields,
+              label: 'Texto',
+              tool: StrokeTool.text,
+              activeTool: activeTool,
+              onTap: onToolChanged,
+            ),
             const VerticalDivider(indent: 4, endIndent: 4),
             // Color swatches.
             for (final color in _kColors)
@@ -122,6 +142,83 @@ class InkToolbarWidget extends StatelessWidget {
                 isSelected: activeWidth == _kWidths[i],
                 onTap: () => onWidthChanged(_kWidths[i]),
               ),
+            if (activeTool == StrokeTool.text &&
+                onTextFontSizeChanged != null) ...[
+              const VerticalDivider(indent: 4, endIndent: 4),
+              for (final size in [10.0, 14.0, 18.0, 24.0, 32.0])
+                _FontSizeButton(
+                  fontSize: size,
+                  isSelected: textFontSize == size,
+                  onTap: () => onTextFontSizeChanged!(size),
+                ),
+              const SizedBox(width: 4),
+              // Bold toggle
+              Tooltip(
+                message: 'Negrita',
+                child: InkWell(
+                  onTap: () =>
+                      onTextBoldChanged?.call(!(textBold ?? false)),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: (textBold ?? false)
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : null,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'B',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: (textBold ?? false)
+                            ? Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer
+                            : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Italic toggle
+              Tooltip(
+                message: 'Cursiva',
+                child: InkWell(
+                  onTap: () =>
+                      onTextItalicChanged?.call(!(textItalic ?? false)),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: (textItalic ?? false)
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : null,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'I',
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontSize: 14,
+                        color: (textItalic ?? false)
+                            ? Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer
+                            : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             if (onBackgroundChanged != null) ...[
               const VerticalDivider(indent: 4, endIndent: 4),
               _BackgroundButton(
@@ -626,5 +723,51 @@ class _BackgroundDialogState extends State<_BackgroundDialog> {
     final b = int.parse(h.substring(4, 6), radix: 16);
     final a = int.parse(h.substring(6, 8), radix: 16);
     return Color.fromARGB(a, r, g, b);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _FontSizeButton
+// ---------------------------------------------------------------------------
+
+class _FontSizeButton extends StatelessWidget {
+  const _FontSizeButton({
+    required this.fontSize,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final double fontSize;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: '${fontSize.round()}px',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 28,
+          height: 28,
+          margin: const EdgeInsets.symmetric(horizontal: 1),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? colorScheme.primaryContainer : null,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            '${fontSize.round()}',
+            style: TextStyle(
+              fontSize: 10,
+              color: isSelected
+                  ? colorScheme.onPrimaryContainer
+                  : colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

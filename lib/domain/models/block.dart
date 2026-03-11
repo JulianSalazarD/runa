@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'ink_background.dart';
 import 'stroke.dart';
+import 'text_element.dart';
 
 part 'block.freezed.dart';
 part 'block.g.dart';
@@ -60,6 +61,9 @@ sealed class Block with _$Block {
     /// Canvas fill color in `#RRGGBBAA` format. When null the canvas is
     /// transparent (shows the widget background / theme surface).
     String? backgroundColor,
+
+    /// Typographic text elements placed on the canvas.
+    @Default([]) List<TextElement> textElements,
   }) = InkBlock;
 
   /// A block displaying an image with an ink annotation layer on top.

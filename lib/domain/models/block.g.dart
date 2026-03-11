@@ -36,6 +36,11 @@ _$InkBlockImpl _$$InkBlockImplFromJson(Map<String, dynamic> json) =>
           (json['backgroundSpacing'] as num?)?.toDouble() ?? 24.0,
       backgroundLineColor: json['backgroundLineColor'] as String?,
       backgroundColor: json['backgroundColor'] as String?,
+      textElements:
+          (json['textElements'] as List<dynamic>?)
+              ?.map((e) => TextElement.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       $type: json['type'] as String?,
     );
 
@@ -48,6 +53,7 @@ Map<String, dynamic> _$$InkBlockImplToJson(_$InkBlockImpl instance) =>
       'backgroundSpacing': instance.backgroundSpacing,
       'backgroundLineColor': instance.backgroundLineColor,
       'backgroundColor': instance.backgroundColor,
+      'textElements': instance.textElements.map((e) => e.toJson()).toList(),
       'type': instance.$type,
     };
 

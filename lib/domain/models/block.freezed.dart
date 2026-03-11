@@ -51,6 +51,7 @@ mixin _$Block {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )
     ink,
     required TResult Function(
@@ -82,6 +83,7 @@ mixin _$Block {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult? Function(
@@ -113,6 +115,7 @@ mixin _$Block {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult Function(
@@ -304,6 +307,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )
     ink,
     required TResult Function(
@@ -339,6 +343,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult? Function(
@@ -374,6 +379,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult Function(
@@ -484,6 +490,7 @@ abstract class _$$InkBlockImplCopyWith<$Res> implements $BlockCopyWith<$Res> {
     double backgroundSpacing,
     String? backgroundLineColor,
     String? backgroundColor,
+    List<TextElement> textElements,
   });
 }
 
@@ -508,6 +515,7 @@ class __$$InkBlockImplCopyWithImpl<$Res>
     Object? backgroundSpacing = null,
     Object? backgroundLineColor = freezed,
     Object? backgroundColor = freezed,
+    Object? textElements = null,
   }) {
     return _then(
       _$InkBlockImpl(
@@ -539,6 +547,10 @@ class __$$InkBlockImplCopyWithImpl<$Res>
             ? _value.backgroundColor
             : backgroundColor // ignore: cast_nullable_to_non_nullable
                   as String?,
+        textElements: null == textElements
+            ? _value._textElements
+            : textElements // ignore: cast_nullable_to_non_nullable
+                  as List<TextElement>,
       ),
     );
   }
@@ -556,8 +568,10 @@ class _$InkBlockImpl implements InkBlock {
     this.backgroundSpacing = 24.0,
     this.backgroundLineColor,
     this.backgroundColor,
+    final List<TextElement> textElements = const [],
     final String? $type,
   }) : _strokes = strokes,
+       _textElements = textElements,
        $type = $type ?? 'ink';
 
   factory _$InkBlockImpl.fromJson(Map<String, dynamic> json) =>
@@ -603,12 +617,24 @@ class _$InkBlockImpl implements InkBlock {
   @override
   final String? backgroundColor;
 
+  /// Typographic text elements placed on the canvas.
+  final List<TextElement> _textElements;
+
+  /// Typographic text elements placed on the canvas.
+  @override
+  @JsonKey()
+  List<TextElement> get textElements {
+    if (_textElements is EqualUnmodifiableListView) return _textElements;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_textElements);
+  }
+
   @JsonKey(name: 'type')
   final String $type;
 
   @override
   String toString() {
-    return 'Block.ink(id: $id, height: $height, strokes: $strokes, background: $background, backgroundSpacing: $backgroundSpacing, backgroundLineColor: $backgroundLineColor, backgroundColor: $backgroundColor)';
+    return 'Block.ink(id: $id, height: $height, strokes: $strokes, background: $background, backgroundSpacing: $backgroundSpacing, backgroundLineColor: $backgroundLineColor, backgroundColor: $backgroundColor, textElements: $textElements)';
   }
 
   @override
@@ -626,7 +652,11 @@ class _$InkBlockImpl implements InkBlock {
             (identical(other.backgroundLineColor, backgroundLineColor) ||
                 other.backgroundLineColor == backgroundLineColor) &&
             (identical(other.backgroundColor, backgroundColor) ||
-                other.backgroundColor == backgroundColor));
+                other.backgroundColor == backgroundColor) &&
+            const DeepCollectionEquality().equals(
+              other._textElements,
+              _textElements,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -640,6 +670,7 @@ class _$InkBlockImpl implements InkBlock {
     backgroundSpacing,
     backgroundLineColor,
     backgroundColor,
+    const DeepCollectionEquality().hash(_textElements),
   );
 
   /// Create a copy of Block
@@ -662,6 +693,7 @@ class _$InkBlockImpl implements InkBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )
     ink,
     required TResult Function(
@@ -690,6 +722,7 @@ class _$InkBlockImpl implements InkBlock {
       backgroundSpacing,
       backgroundLineColor,
       backgroundColor,
+      textElements,
     );
   }
 
@@ -705,6 +738,7 @@ class _$InkBlockImpl implements InkBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult? Function(
@@ -733,6 +767,7 @@ class _$InkBlockImpl implements InkBlock {
       backgroundSpacing,
       backgroundLineColor,
       backgroundColor,
+      textElements,
     );
   }
 
@@ -748,6 +783,7 @@ class _$InkBlockImpl implements InkBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult Function(
@@ -778,6 +814,7 @@ class _$InkBlockImpl implements InkBlock {
         backgroundSpacing,
         backgroundLineColor,
         backgroundColor,
+        textElements,
       );
     }
     return orElse();
@@ -835,6 +872,7 @@ abstract class InkBlock implements Block {
     final double backgroundSpacing,
     final String? backgroundLineColor,
     final String? backgroundColor,
+    final List<TextElement> textElements,
   }) = _$InkBlockImpl;
 
   factory InkBlock.fromJson(Map<String, dynamic> json) =
@@ -863,6 +901,9 @@ abstract class InkBlock implements Block {
   /// Canvas fill color in `#RRGGBBAA` format. When null the canvas is
   /// transparent (shows the widget background / theme surface).
   String? get backgroundColor;
+
+  /// Typographic text elements placed on the canvas.
+  List<TextElement> get textElements;
 
   /// Create a copy of Block
   /// with the given fields replaced by the non-null parameter values.
@@ -1034,6 +1075,7 @@ class _$ImageBlockImpl implements ImageBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )
     ink,
     required TResult Function(
@@ -1069,6 +1111,7 @@ class _$ImageBlockImpl implements ImageBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult? Function(
@@ -1104,6 +1147,7 @@ class _$ImageBlockImpl implements ImageBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult Function(
@@ -1389,6 +1433,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )
     ink,
     required TResult Function(
@@ -1424,6 +1469,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult? Function(
@@ -1459,6 +1505,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       double backgroundSpacing,
       String? backgroundLineColor,
       String? backgroundColor,
+      List<TextElement> textElements,
     )?
     ink,
     TResult Function(

@@ -85,6 +85,11 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   String _inkColor = '#000000FF';
   double _inkWidth = 2.0;
 
+  /// Text element state for the ink canvas text tool.
+  double _textFontSize = 16.0;
+  bool _textBold = false;
+  bool _textItalic = false;
+
   String get _docId => widget.opened.document.id;
 
   @override
@@ -272,6 +277,14 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   onInkToolChanged: (t) => setState(() => _inkTool = t),
                   onInkColorChanged: (c) => setState(() => _inkColor = c),
                   onInkWidthChanged: (w) => setState(() => _inkWidth = w),
+                  textFontSize: _textFontSize,
+                  textBold: _textBold,
+                  textItalic: _textItalic,
+                  onTextFontSizeChanged: (double s) =>
+                      setState(() => _textFontSize = s),
+                  onTextBoldChanged: (bool v) => setState(() => _textBold = v),
+                  onTextItalicChanged: (bool v) =>
+                      setState(() => _textItalic = v),
                   inkBackground: selectedInkBlock?.background,
                   inkBackgroundSpacing: selectedInkBlock?.backgroundSpacing,
                   inkBackgroundLineColor: selectedInkBlock?.backgroundLineColor,
@@ -304,6 +317,9 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     inkTool: _inkTool,
                     inkColor: _inkColor,
                     inkWidth: _inkWidth,
+                    textFontSize: _textFontSize,
+                    textBold: _textBold,
+                    textItalic: _textItalic,
                   ),
                 ),
               ],
@@ -347,6 +363,12 @@ class _EditorToolbar extends StatelessWidget {
     this.onInkBackgroundSpacingChanged,
     this.onInkBackgroundLineColorChanged,
     this.onInkBackgroundCanvasColorChanged,
+    required this.textFontSize,
+    required this.textBold,
+    required this.textItalic,
+    required this.onTextFontSizeChanged,
+    required this.onTextBoldChanged,
+    required this.onTextItalicChanged,
   });
 
   final String path;
@@ -375,6 +397,12 @@ class _EditorToolbar extends StatelessWidget {
   final ValueChanged<double>? onInkBackgroundSpacingChanged;
   final ValueChanged<String>? onInkBackgroundLineColorChanged;
   final ValueChanged<String?>? onInkBackgroundCanvasColorChanged;
+  final double textFontSize;
+  final bool textBold;
+  final bool textItalic;
+  final ValueChanged<double> onTextFontSizeChanged;
+  final ValueChanged<bool> onTextBoldChanged;
+  final ValueChanged<bool> onTextItalicChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -497,6 +525,12 @@ class _EditorToolbar extends StatelessWidget {
               onBackgroundSpacingChanged: onInkBackgroundSpacingChanged,
               onBackgroundLineColorChanged: onInkBackgroundLineColorChanged,
               onBackgroundCanvasColorChanged: onInkBackgroundCanvasColorChanged,
+              textFontSize: textFontSize,
+              textBold: textBold,
+              textItalic: textItalic,
+              onTextFontSizeChanged: onTextFontSizeChanged,
+              onTextBoldChanged: onTextBoldChanged,
+              onTextItalicChanged: onTextItalicChanged,
             ),
           ),
         if (isImporting) const LinearProgressIndicator(minHeight: 2),
@@ -518,6 +552,9 @@ class _BlockList extends StatelessWidget {
     required this.inkTool,
     required this.inkColor,
     required this.inkWidth,
+    required this.textFontSize,
+    required this.textBold,
+    required this.textItalic,
   });
 
   final EditorState editorState;
@@ -527,6 +564,9 @@ class _BlockList extends StatelessWidget {
   final StrokeTool inkTool;
   final String inkColor;
   final double inkWidth;
+  final double textFontSize;
+  final bool textBold;
+  final bool textItalic;
 
   @override
   Widget build(BuildContext context) {
@@ -598,6 +638,9 @@ class _BlockList extends StatelessWidget {
                 inkTool: inkTool,
                 inkColor: inkColor,
                 inkWidth: inkWidth,
+                textFontSize: textFontSize,
+                textBold: textBold,
+                textItalic: textItalic,
               ),
             ),
             _InsertGap(
