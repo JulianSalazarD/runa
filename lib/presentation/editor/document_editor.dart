@@ -287,6 +287,11 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                       ? null
                       : (c) => notifier.updateBlock(
                           selectedInkBlock.copyWith(backgroundLineColor: c)),
+                  inkBackgroundCanvasColor: selectedInkBlock?.backgroundColor,
+                  onInkBackgroundCanvasColorChanged: selectedInkBlock == null
+                      ? null
+                      : (String? c) => notifier.updateBlock(
+                          selectedInkBlock.copyWith(backgroundColor: c)),
                 ),
                 Expanded(
                   child: _BlockList(
@@ -337,9 +342,11 @@ class _EditorToolbar extends StatelessWidget {
     this.inkBackground,
     this.inkBackgroundSpacing,
     this.inkBackgroundLineColor,
+    this.inkBackgroundCanvasColor,
     this.onInkBackgroundChanged,
     this.onInkBackgroundSpacingChanged,
     this.onInkBackgroundLineColorChanged,
+    this.onInkBackgroundCanvasColorChanged,
   });
 
   final String path;
@@ -363,9 +370,11 @@ class _EditorToolbar extends StatelessWidget {
   final InkBackground? inkBackground;
   final double? inkBackgroundSpacing;
   final String? inkBackgroundLineColor;
+  final String? inkBackgroundCanvasColor;
   final ValueChanged<InkBackground>? onInkBackgroundChanged;
   final ValueChanged<double>? onInkBackgroundSpacingChanged;
   final ValueChanged<String>? onInkBackgroundLineColorChanged;
+  final ValueChanged<String?>? onInkBackgroundCanvasColorChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -480,6 +489,14 @@ class _EditorToolbar extends StatelessWidget {
               onToolChanged: onInkToolChanged,
               onColorChanged: onInkColorChanged,
               onWidthChanged: onInkWidthChanged,
+              activeBackground: inkBackground,
+              backgroundSpacing: inkBackgroundSpacing,
+              backgroundLineColor: inkBackgroundLineColor,
+              backgroundCanvasColor: inkBackgroundCanvasColor,
+              onBackgroundChanged: onInkBackgroundChanged,
+              onBackgroundSpacingChanged: onInkBackgroundSpacingChanged,
+              onBackgroundLineColorChanged: onInkBackgroundLineColorChanged,
+              onBackgroundCanvasColorChanged: onInkBackgroundCanvasColorChanged,
             ),
           ),
         if (isImporting) const LinearProgressIndicator(minHeight: 2),

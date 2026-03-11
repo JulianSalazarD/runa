@@ -35,6 +35,7 @@ _$InkBlockImpl _$$InkBlockImplFromJson(Map<String, dynamic> json) =>
       backgroundSpacing:
           (json['backgroundSpacing'] as num?)?.toDouble() ?? 24.0,
       backgroundLineColor: json['backgroundLineColor'] as String?,
+      backgroundColor: json['backgroundColor'] as String?,
       $type: json['type'] as String?,
     );
 
@@ -46,6 +47,7 @@ Map<String, dynamic> _$$InkBlockImplToJson(_$InkBlockImpl instance) =>
       'background': _$InkBackgroundEnumMap[instance.background]!,
       'backgroundSpacing': instance.backgroundSpacing,
       'backgroundLineColor': instance.backgroundLineColor,
+      'backgroundColor': instance.backgroundColor,
       'type': instance.$type,
     };
 

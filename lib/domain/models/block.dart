@@ -56,6 +56,10 @@ sealed class Block with _$Block {
     /// Explicit line color in `#RRGGBBAA` format. When null, the theme
     /// default (outlineVariant at 20% opacity) is used.
     String? backgroundLineColor,
+
+    /// Canvas fill color in `#RRGGBBAA` format. When null the canvas is
+    /// transparent (shows the widget background / theme surface).
+    String? backgroundColor,
   }) = InkBlock;
 
   /// A block displaying an image with an ink annotation layer on top.

@@ -50,6 +50,7 @@ mixin _$Block {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )
     ink,
     required TResult Function(
@@ -80,6 +81,7 @@ mixin _$Block {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult? Function(
@@ -110,6 +112,7 @@ mixin _$Block {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult Function(
@@ -300,6 +303,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )
     ink,
     required TResult Function(
@@ -334,6 +338,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult? Function(
@@ -368,6 +373,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult Function(
@@ -477,6 +483,7 @@ abstract class _$$InkBlockImplCopyWith<$Res> implements $BlockCopyWith<$Res> {
     InkBackground background,
     double backgroundSpacing,
     String? backgroundLineColor,
+    String? backgroundColor,
   });
 }
 
@@ -500,6 +507,7 @@ class __$$InkBlockImplCopyWithImpl<$Res>
     Object? background = null,
     Object? backgroundSpacing = null,
     Object? backgroundLineColor = freezed,
+    Object? backgroundColor = freezed,
   }) {
     return _then(
       _$InkBlockImpl(
@@ -527,6 +535,10 @@ class __$$InkBlockImplCopyWithImpl<$Res>
             ? _value.backgroundLineColor
             : backgroundLineColor // ignore: cast_nullable_to_non_nullable
                   as String?,
+        backgroundColor: freezed == backgroundColor
+            ? _value.backgroundColor
+            : backgroundColor // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -543,6 +555,7 @@ class _$InkBlockImpl implements InkBlock {
     this.background = InkBackground.plain,
     this.backgroundSpacing = 24.0,
     this.backgroundLineColor,
+    this.backgroundColor,
     final String? $type,
   }) : _strokes = strokes,
        $type = $type ?? 'ink';
@@ -585,12 +598,17 @@ class _$InkBlockImpl implements InkBlock {
   @override
   final String? backgroundLineColor;
 
+  /// Canvas fill color in `#RRGGBBAA` format. When null the canvas is
+  /// transparent (shows the widget background / theme surface).
+  @override
+  final String? backgroundColor;
+
   @JsonKey(name: 'type')
   final String $type;
 
   @override
   String toString() {
-    return 'Block.ink(id: $id, height: $height, strokes: $strokes, background: $background, backgroundSpacing: $backgroundSpacing, backgroundLineColor: $backgroundLineColor)';
+    return 'Block.ink(id: $id, height: $height, strokes: $strokes, background: $background, backgroundSpacing: $backgroundSpacing, backgroundLineColor: $backgroundLineColor, backgroundColor: $backgroundColor)';
   }
 
   @override
@@ -606,7 +624,9 @@ class _$InkBlockImpl implements InkBlock {
             (identical(other.backgroundSpacing, backgroundSpacing) ||
                 other.backgroundSpacing == backgroundSpacing) &&
             (identical(other.backgroundLineColor, backgroundLineColor) ||
-                other.backgroundLineColor == backgroundLineColor));
+                other.backgroundLineColor == backgroundLineColor) &&
+            (identical(other.backgroundColor, backgroundColor) ||
+                other.backgroundColor == backgroundColor));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -619,6 +639,7 @@ class _$InkBlockImpl implements InkBlock {
     background,
     backgroundSpacing,
     backgroundLineColor,
+    backgroundColor,
   );
 
   /// Create a copy of Block
@@ -640,6 +661,7 @@ class _$InkBlockImpl implements InkBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )
     ink,
     required TResult Function(
@@ -667,6 +689,7 @@ class _$InkBlockImpl implements InkBlock {
       background,
       backgroundSpacing,
       backgroundLineColor,
+      backgroundColor,
     );
   }
 
@@ -681,6 +704,7 @@ class _$InkBlockImpl implements InkBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult? Function(
@@ -708,6 +732,7 @@ class _$InkBlockImpl implements InkBlock {
       background,
       backgroundSpacing,
       backgroundLineColor,
+      backgroundColor,
     );
   }
 
@@ -722,6 +747,7 @@ class _$InkBlockImpl implements InkBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult Function(
@@ -751,6 +777,7 @@ class _$InkBlockImpl implements InkBlock {
         background,
         backgroundSpacing,
         backgroundLineColor,
+        backgroundColor,
       );
     }
     return orElse();
@@ -807,6 +834,7 @@ abstract class InkBlock implements Block {
     final InkBackground background,
     final double backgroundSpacing,
     final String? backgroundLineColor,
+    final String? backgroundColor,
   }) = _$InkBlockImpl;
 
   factory InkBlock.fromJson(Map<String, dynamic> json) =
@@ -831,6 +859,10 @@ abstract class InkBlock implements Block {
   /// Explicit line color in `#RRGGBBAA` format. When null, the theme
   /// default (outlineVariant at 20% opacity) is used.
   String? get backgroundLineColor;
+
+  /// Canvas fill color in `#RRGGBBAA` format. When null the canvas is
+  /// transparent (shows the widget background / theme surface).
+  String? get backgroundColor;
 
   /// Create a copy of Block
   /// with the given fields replaced by the non-null parameter values.
@@ -1001,6 +1033,7 @@ class _$ImageBlockImpl implements ImageBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )
     ink,
     required TResult Function(
@@ -1035,6 +1068,7 @@ class _$ImageBlockImpl implements ImageBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult? Function(
@@ -1069,6 +1103,7 @@ class _$ImageBlockImpl implements ImageBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult Function(
@@ -1353,6 +1388,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )
     ink,
     required TResult Function(
@@ -1387,6 +1423,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult? Function(
@@ -1421,6 +1458,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       InkBackground background,
       double backgroundSpacing,
       String? backgroundLineColor,
+      String? backgroundColor,
     )?
     ink,
     TResult Function(

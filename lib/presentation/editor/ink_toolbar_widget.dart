@@ -42,9 +42,11 @@ class InkToolbarWidget extends StatelessWidget {
     this.activeBackground,
     this.backgroundSpacing,
     this.backgroundLineColor,
+    this.backgroundCanvasColor,
     this.onBackgroundChanged,
     this.onBackgroundSpacingChanged,
     this.onBackgroundLineColorChanged,
+    this.onBackgroundCanvasColorChanged,
   });
 
   final StrokeTool activeTool;
@@ -56,9 +58,15 @@ class InkToolbarWidget extends StatelessWidget {
   final InkBackground? activeBackground;
   final double? backgroundSpacing;
   final String? backgroundLineColor;
+
+  /// Canvas fill color in `#RRGGBBAA` format. Null = transparent.
+  final String? backgroundCanvasColor;
   final ValueChanged<InkBackground>? onBackgroundChanged;
   final ValueChanged<double>? onBackgroundSpacingChanged;
   final ValueChanged<String>? onBackgroundLineColorChanged;
+
+  /// Called with the new canvas color, or null to reset to transparent.
+  final ValueChanged<String?>? onBackgroundCanvasColorChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -120,9 +128,11 @@ class InkToolbarWidget extends StatelessWidget {
                 background: activeBackground!,
                 spacing: backgroundSpacing!,
                 lineColor: backgroundLineColor,
+                canvasColor: backgroundCanvasColor,
                 onBackgroundChanged: onBackgroundChanged!,
                 onSpacingChanged: onBackgroundSpacingChanged!,
                 onLineColorChanged: onBackgroundLineColorChanged!,
+                onCanvasColorChanged: onBackgroundCanvasColorChanged,
               ),
             ],
           ],
@@ -290,17 +300,21 @@ class _BackgroundButton extends StatefulWidget {
     required this.background,
     required this.spacing,
     this.lineColor,
+    this.canvasColor,
     required this.onBackgroundChanged,
     required this.onSpacingChanged,
     required this.onLineColorChanged,
+    this.onCanvasColorChanged,
   });
 
   final InkBackground background;
   final double spacing;
   final String? lineColor;
+  final String? canvasColor;
   final ValueChanged<InkBackground> onBackgroundChanged;
   final ValueChanged<double> onSpacingChanged;
   final ValueChanged<String> onLineColorChanged;
+  final ValueChanged<String?>? onCanvasColorChanged;
 
   @override
   State<_BackgroundButton> createState() => _BackgroundButtonState();
@@ -314,9 +328,11 @@ class _BackgroundButtonState extends State<_BackgroundButton> {
         background: widget.background,
         spacing: widget.spacing,
         lineColor: widget.lineColor,
+        canvasColor: widget.canvasColor,
         onBackgroundChanged: widget.onBackgroundChanged,
         onSpacingChanged: widget.onSpacingChanged,
         onLineColorChanged: widget.onLineColorChanged,
+        onCanvasColorChanged: widget.onCanvasColorChanged,
       ),
     );
   }
@@ -370,17 +386,21 @@ class _BackgroundDialog extends StatefulWidget {
     required this.background,
     required this.spacing,
     this.lineColor,
+    this.canvasColor,
     required this.onBackgroundChanged,
     required this.onSpacingChanged,
     required this.onLineColorChanged,
+    this.onCanvasColorChanged,
   });
 
   final InkBackground background;
   final double spacing;
   final String? lineColor;
+  final String? canvasColor;
   final ValueChanged<InkBackground> onBackgroundChanged;
   final ValueChanged<double> onSpacingChanged;
   final ValueChanged<String> onLineColorChanged;
+  final ValueChanged<String?>? onCanvasColorChanged;
 
   @override
   State<_BackgroundDialog> createState() => _BackgroundDialogState();
@@ -512,11 +532,7 @@ class _BackgroundDialogState extends State<_BackgroundDialog> {
                         width: widget.lineColor == null ? 2 : 1,
                       ),
                     ),
-                    child: Icon(
-                      Icons.auto_awesome,
-                      size: 10,
-                      color: colorScheme.onSurface,
-                    ),
+                    child: Icon(Icons.auto_awesome, size: 10, color: colorScheme.onSurface),
                   ),
                   ..._kColors.map((color) {
                     final isSelected = color == widget.lineColor;
@@ -531,9 +547,56 @@ class _BackgroundDialogState extends State<_BackgroundDialog> {
                           color: c,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected
-                                ? colorScheme.primary
-                                : colorScheme.outlineVariant,
+                            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ],
+            if (widget.onCanvasColorChanged != null) ...[
+              const SizedBox(height: 12),
+              Text('Color de fondo', style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 4,
+                children: [
+                  // "Transparente" option
+                  GestureDetector(
+                    onTap: () => widget.onCanvasColorChanged!(null),
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: widget.canvasColor == null
+                              ? colorScheme.primary
+                              : colorScheme.outlineVariant,
+                          width: widget.canvasColor == null ? 2 : 1,
+                        ),
+                      ),
+                      child: Icon(Icons.do_not_disturb_alt, size: 12, color: colorScheme.onSurface),
+                    ),
+                  ),
+                  ..._kColors.map((color) {
+                    final isSelected = color == widget.canvasColor;
+                    final c = _hexToColor(color);
+                    return GestureDetector(
+                      onTap: () => widget.onCanvasColorChanged!(color),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          color: c,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
                             width: isSelected ? 2 : 1,
                           ),
                         ),

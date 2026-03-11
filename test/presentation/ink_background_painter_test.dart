@@ -65,11 +65,41 @@ void main() {
         spacing: 24.0,
         defaultColor: Colors.grey,
       );
-      // Instantiating and calling shouldRepaint should not throw.
-      expect(
-        painter.shouldRepaint(painter),
-        isFalse,
+      expect(painter.shouldRepaint(painter), isFalse);
+    });
+  });
+
+  group('InkBackgroundPainter — backgroundColor', () {
+    test('shouldRepaint returns true when backgroundColor changes', () {
+      const withColor = InkBackgroundPainter(
+        background: InkBackground.plain,
+        spacing: 24.0,
+        defaultColor: Colors.grey,
+        backgroundColor: Colors.yellow,
       );
+      const withoutColor = InkBackgroundPainter(
+        background: InkBackground.plain,
+        spacing: 24.0,
+        defaultColor: Colors.grey,
+      );
+      expect(withColor.shouldRepaint(withoutColor), isTrue);
+      expect(withoutColor.shouldRepaint(withColor), isTrue);
+    });
+
+    test('shouldRepaint returns false when backgroundColor is same', () {
+      const a = InkBackgroundPainter(
+        background: InkBackground.plain,
+        spacing: 24.0,
+        defaultColor: Colors.grey,
+        backgroundColor: Colors.blue,
+      );
+      const b = InkBackgroundPainter(
+        background: InkBackground.plain,
+        spacing: 24.0,
+        defaultColor: Colors.grey,
+        backgroundColor: Colors.blue,
+      );
+      expect(a.shouldRepaint(b), isFalse);
     });
   });
 }

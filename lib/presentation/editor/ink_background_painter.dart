@@ -13,6 +13,7 @@ class InkBackgroundPainter extends CustomPainter {
     required this.spacing,
     this.lineColor,
     required this.defaultColor,
+    this.backgroundColor,
   });
 
   final InkBackground background;
@@ -24,8 +25,18 @@ class InkBackgroundPainter extends CustomPainter {
   /// Theme color used as fallback when [lineColor] is null.
   final Color defaultColor;
 
+  /// Canvas fill color. When null the canvas is transparent.
+  final Color? backgroundColor;
+
   @override
   void paint(Canvas canvas, Size size) {
+    if (backgroundColor != null) {
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..color = backgroundColor!,
+      );
+    }
+
     if (background == InkBackground.plain) return;
 
     final color = lineColor ?? defaultColor.withValues(alpha: 0.2);
@@ -96,5 +107,6 @@ class InkBackgroundPainter extends CustomPainter {
       old.background != background ||
       old.spacing != spacing ||
       old.lineColor != lineColor ||
-      old.defaultColor != defaultColor;
+      old.defaultColor != defaultColor ||
+      old.backgroundColor != backgroundColor;
 }

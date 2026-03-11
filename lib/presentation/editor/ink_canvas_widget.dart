@@ -138,6 +138,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
               spacing: widget.block.backgroundSpacing,
               lineColor: _parseColorHex(widget.block.backgroundLineColor),
               defaultColor: Theme.of(context).colorScheme.outlineVariant,
+              backgroundColor: _parseColorHex(widget.block.backgroundColor),
             ),
             foregroundPainter: InkPainter(
               strokes: widget.block.strokes,

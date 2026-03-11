@@ -52,5 +52,18 @@ void main() {
       final json = block.toJson();
       expect(json['background'], 'grid');
     });
+
+    test('backgroundColor round-trips', () {
+      const block = Block.ink(id: 'id', height: 200, backgroundColor: '#FFFF00FF');
+      final restored = Block.fromJson(block.toJson()) as InkBlock;
+      expect(restored.backgroundColor, '#FFFF00FF');
+    });
+
+    test('backgroundColor is null by default', () {
+      const block = Block.ink(id: 'id', height: 200) as InkBlock;
+      expect(block.backgroundColor, isNull);
+      final restored = Block.fromJson(block.toJson()) as InkBlock;
+      expect(restored.backgroundColor, isNull);
+    });
   });
 }
