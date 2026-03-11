@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:runa/domain/domain.dart';
 import 'package:uuid/uuid.dart';
 
+import 'ink_background_painter.dart';
+
 // ---------------------------------------------------------------------------
 // InkCanvasWidget
 // ---------------------------------------------------------------------------
@@ -111,6 +113,16 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     return false;
   }
 
+  static Color? _parseColorHex(String? hex) {
+    if (hex == null) return null;
+    final h = hex.replaceFirst('#', '');
+    final r = int.parse(h.substring(0, 2), radix: 16);
+    final g = int.parse(h.substring(2, 4), radix: 16);
+    final b = int.parse(h.substring(4, 6), radix: 16);
+    final a = int.parse(h.substring(6, 8), radix: 16);
+    return Color.fromARGB(a, r, g, b);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Listener(
@@ -121,7 +133,13 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
         height: widget.height,
         child: ClipRect(
           child: CustomPaint(
-            painter: InkPainter(
+            painter: InkBackgroundPainter(
+              background: widget.block.background,
+              spacing: widget.block.backgroundSpacing,
+              lineColor: _parseColorHex(widget.block.backgroundLineColor),
+              defaultColor: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            foregroundPainter: InkPainter(
               strokes: widget.block.strokes,
               currentPoints: _currentPoints,
               activeTool: widget.activeTool,

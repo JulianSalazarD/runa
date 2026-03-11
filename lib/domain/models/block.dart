@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'ink_background.dart';
 import 'stroke.dart';
 
 part 'block.freezed.dart';
@@ -45,6 +46,16 @@ sealed class Block with _$Block {
 
     /// Ink strokes in draw order (painter's algorithm). May be empty.
     @Default([]) List<Stroke> strokes,
+
+    /// Background pattern rendered behind the strokes.
+    @Default(InkBackground.plain) InkBackground background,
+
+    /// Spacing between background lines/dots in logical pixels.
+    @Default(24.0) double backgroundSpacing,
+
+    /// Explicit line color in `#RRGGBBAA` format. When null, the theme
+    /// default (outlineVariant at 20% opacity) is used.
+    String? backgroundLineColor,
   }) = InkBlock;
 
   /// A block displaying an image with an ink annotation layer on top.

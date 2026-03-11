@@ -39,6 +39,12 @@ class InkToolbarWidget extends StatelessWidget {
     required this.onToolChanged,
     required this.onColorChanged,
     required this.onWidthChanged,
+    this.activeBackground,
+    this.backgroundSpacing,
+    this.backgroundLineColor,
+    this.onBackgroundChanged,
+    this.onBackgroundSpacingChanged,
+    this.onBackgroundLineColorChanged,
   });
 
   final StrokeTool activeTool;
@@ -47,6 +53,12 @@ class InkToolbarWidget extends StatelessWidget {
   final ValueChanged<StrokeTool> onToolChanged;
   final ValueChanged<String> onColorChanged;
   final ValueChanged<double> onWidthChanged;
+  final InkBackground? activeBackground;
+  final double? backgroundSpacing;
+  final String? backgroundLineColor;
+  final ValueChanged<InkBackground>? onBackgroundChanged;
+  final ValueChanged<double>? onBackgroundSpacingChanged;
+  final ValueChanged<String>? onBackgroundLineColorChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +114,17 @@ class InkToolbarWidget extends StatelessWidget {
                 isSelected: activeWidth == _kWidths[i],
                 onTap: () => onWidthChanged(_kWidths[i]),
               ),
+            if (onBackgroundChanged != null) ...[
+              const VerticalDivider(indent: 4, endIndent: 4),
+              _BackgroundButton(
+                background: activeBackground!,
+                spacing: backgroundSpacing!,
+                lineColor: backgroundLineColor,
+                onBackgroundChanged: onBackgroundChanged!,
+                onSpacingChanged: onBackgroundSpacingChanged!,
+                onLineColorChanged: onBackgroundLineColorChanged!,
+              ),
+            ],
           ],
         ),
       ),
@@ -255,5 +278,290 @@ class _WidthButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _BackgroundButton — opens a dialog to configure InkBlock background
+// ---------------------------------------------------------------------------
+
+class _BackgroundButton extends StatefulWidget {
+  const _BackgroundButton({
+    required this.background,
+    required this.spacing,
+    this.lineColor,
+    required this.onBackgroundChanged,
+    required this.onSpacingChanged,
+    required this.onLineColorChanged,
+  });
+
+  final InkBackground background;
+  final double spacing;
+  final String? lineColor;
+  final ValueChanged<InkBackground> onBackgroundChanged;
+  final ValueChanged<double> onSpacingChanged;
+  final ValueChanged<String> onLineColorChanged;
+
+  @override
+  State<_BackgroundButton> createState() => _BackgroundButtonState();
+}
+
+class _BackgroundButtonState extends State<_BackgroundButton> {
+  void _openDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => _BackgroundDialog(
+        background: widget.background,
+        spacing: widget.spacing,
+        lineColor: widget.lineColor,
+        onBackgroundChanged: widget.onBackgroundChanged,
+        onSpacingChanged: widget.onSpacingChanged,
+        onLineColorChanged: widget.onLineColorChanged,
+      ),
+    );
+  }
+
+  static IconData _icon(InkBackground bg) => switch (bg) {
+        InkBackground.plain => Icons.crop_landscape_outlined,
+        InkBackground.ruled => Icons.format_align_justify,
+        InkBackground.grid => Icons.grid_on_outlined,
+        InkBackground.dotted => Icons.grain,
+        InkBackground.isometric => Icons.change_history_outlined,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: 'Fondo del canvas',
+      child: InkWell(
+        onTap: _openDialog,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          width: 32,
+          height: 32,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: widget.background != InkBackground.plain
+                ? colorScheme.primaryContainer
+                : null,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(
+            _icon(widget.background),
+            size: 18,
+            color: widget.background != InkBackground.plain
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _BackgroundDialog
+// ---------------------------------------------------------------------------
+
+class _BackgroundDialog extends StatefulWidget {
+  const _BackgroundDialog({
+    required this.background,
+    required this.spacing,
+    this.lineColor,
+    required this.onBackgroundChanged,
+    required this.onSpacingChanged,
+    required this.onLineColorChanged,
+  });
+
+  final InkBackground background;
+  final double spacing;
+  final String? lineColor;
+  final ValueChanged<InkBackground> onBackgroundChanged;
+  final ValueChanged<double> onSpacingChanged;
+  final ValueChanged<String> onLineColorChanged;
+
+  @override
+  State<_BackgroundDialog> createState() => _BackgroundDialogState();
+}
+
+class _BackgroundDialogState extends State<_BackgroundDialog> {
+  late double _spacing;
+
+  @override
+  void initState() {
+    super.initState();
+    _spacing = widget.spacing;
+  }
+
+  static String _label(InkBackground bg) => switch (bg) {
+        InkBackground.plain => 'Sin fondo',
+        InkBackground.ruled => 'Rayado',
+        InkBackground.grid => 'Cuadriculado',
+        InkBackground.dotted => 'Puntilleado',
+        InkBackground.isometric => 'Isométrico',
+      };
+
+  static IconData _icon(InkBackground bg) => switch (bg) {
+        InkBackground.plain => Icons.crop_landscape_outlined,
+        InkBackground.ruled => Icons.format_align_justify,
+        InkBackground.grid => Icons.grid_on_outlined,
+        InkBackground.dotted => Icons.grain,
+        InkBackground.isometric => Icons.change_history_outlined,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return AlertDialog(
+      title: const Text('Fondo del canvas'),
+      contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Background type grid
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: InkBackground.values.map((bg) {
+                final isSelected = bg == widget.background;
+                return GestureDetector(
+                  onTap: () {
+                    widget.onBackgroundChanged(bg);
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colorScheme.primaryContainer
+                          : colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                      border: isSelected
+                          ? Border.all(color: colorScheme.primary, width: 2)
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _icon(bg),
+                          size: 20,
+                          color: isSelected
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _label(bg),
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: isSelected
+                                ? colorScheme.onPrimaryContainer
+                                : colorScheme.onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            if (widget.background != InkBackground.plain) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Espaciado: ${_spacing.round()} px',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Slider(
+                value: _spacing,
+                min: 12,
+                max: 48,
+                divisions: 9,
+                onChanged: (v) {
+                  setState(() => _spacing = v);
+                  widget.onSpacingChanged(v);
+                },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Color de líneas',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 4,
+                children: [
+                  // "Auto" option (null = theme default)
+                  Container(
+                    width: 22,
+                    height: 22,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: widget.lineColor == null
+                            ? colorScheme.primary
+                            : colorScheme.outlineVariant,
+                        width: widget.lineColor == null ? 2 : 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      size: 10,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  ..._kColors.map((color) {
+                    final isSelected = color == widget.lineColor;
+                    final c = _hexToColor(color);
+                    return GestureDetector(
+                      onTap: () => widget.onLineColorChanged(color),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          color: c,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colorScheme.outlineVariant,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cerrar'),
+        ),
+      ],
+    );
+  }
+
+  static Color _hexToColor(String hex) {
+    final h = hex.replaceFirst('#', '');
+    final r = int.parse(h.substring(0, 2), radix: 16);
+    final g = int.parse(h.substring(2, 4), radix: 16);
+    final b = int.parse(h.substring(4, 6), radix: 16);
+    final a = int.parse(h.substring(6, 8), radix: 16);
+    return Color.fromARGB(a, r, g, b);
   }
 }

@@ -8,6 +8,7 @@ library;
 
 export 'models/block.dart';
 export 'models/document.dart';
+export 'models/ink_background.dart';
 export 'models/stroke.dart';
 export 'models/stroke_point.dart';
 export 'repositories/document_repository.dart';

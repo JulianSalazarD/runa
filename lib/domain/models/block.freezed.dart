@@ -43,7 +43,14 @@ mixin _$Block {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String id, String content) markdown,
-    required TResult Function(String id, double height, List<Stroke> strokes)
+    required TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )
     ink,
     required TResult Function(
       String id,
@@ -66,7 +73,15 @@ mixin _$Block {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String id, String content)? markdown,
-    TResult? Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult? Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult? Function(
       String id,
       String path,
@@ -88,7 +103,15 @@ mixin _$Block {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String id, String content)? markdown,
-    TResult Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult Function(
       String id,
       String path,
@@ -270,7 +293,14 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String id, String content) markdown,
-    required TResult Function(String id, double height, List<Stroke> strokes)
+    required TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )
     ink,
     required TResult Function(
       String id,
@@ -297,7 +327,15 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String id, String content)? markdown,
-    TResult? Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult? Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult? Function(
       String id,
       String path,
@@ -323,7 +361,15 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String id, String content)? markdown,
-    TResult Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult Function(
       String id,
       String path,
@@ -424,7 +470,14 @@ abstract class _$$InkBlockImplCopyWith<$Res> implements $BlockCopyWith<$Res> {
   ) = __$$InkBlockImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, double height, List<Stroke> strokes});
+  $Res call({
+    String id,
+    double height,
+    List<Stroke> strokes,
+    InkBackground background,
+    double backgroundSpacing,
+    String? backgroundLineColor,
+  });
 }
 
 /// @nodoc
@@ -444,6 +497,9 @@ class __$$InkBlockImplCopyWithImpl<$Res>
     Object? id = null,
     Object? height = null,
     Object? strokes = null,
+    Object? background = null,
+    Object? backgroundSpacing = null,
+    Object? backgroundLineColor = freezed,
   }) {
     return _then(
       _$InkBlockImpl(
@@ -459,6 +515,18 @@ class __$$InkBlockImplCopyWithImpl<$Res>
             ? _value._strokes
             : strokes // ignore: cast_nullable_to_non_nullable
                   as List<Stroke>,
+        background: null == background
+            ? _value.background
+            : background // ignore: cast_nullable_to_non_nullable
+                  as InkBackground,
+        backgroundSpacing: null == backgroundSpacing
+            ? _value.backgroundSpacing
+            : backgroundSpacing // ignore: cast_nullable_to_non_nullable
+                  as double,
+        backgroundLineColor: freezed == backgroundLineColor
+            ? _value.backgroundLineColor
+            : backgroundLineColor // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -472,6 +540,9 @@ class _$InkBlockImpl implements InkBlock {
     required this.id,
     required this.height,
     final List<Stroke> strokes = const [],
+    this.background = InkBackground.plain,
+    this.backgroundSpacing = 24.0,
+    this.backgroundLineColor,
     final String? $type,
   }) : _strokes = strokes,
        $type = $type ?? 'ink';
@@ -499,12 +570,27 @@ class _$InkBlockImpl implements InkBlock {
     return EqualUnmodifiableListView(_strokes);
   }
 
+  /// Background pattern rendered behind the strokes.
+  @override
+  @JsonKey()
+  final InkBackground background;
+
+  /// Spacing between background lines/dots in logical pixels.
+  @override
+  @JsonKey()
+  final double backgroundSpacing;
+
+  /// Explicit line color in `#RRGGBBAA` format. When null, the theme
+  /// default (outlineVariant at 20% opacity) is used.
+  @override
+  final String? backgroundLineColor;
+
   @JsonKey(name: 'type')
   final String $type;
 
   @override
   String toString() {
-    return 'Block.ink(id: $id, height: $height, strokes: $strokes)';
+    return 'Block.ink(id: $id, height: $height, strokes: $strokes, background: $background, backgroundSpacing: $backgroundSpacing, backgroundLineColor: $backgroundLineColor)';
   }
 
   @override
@@ -514,7 +600,13 @@ class _$InkBlockImpl implements InkBlock {
             other is _$InkBlockImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.height, height) || other.height == height) &&
-            const DeepCollectionEquality().equals(other._strokes, _strokes));
+            const DeepCollectionEquality().equals(other._strokes, _strokes) &&
+            (identical(other.background, background) ||
+                other.background == background) &&
+            (identical(other.backgroundSpacing, backgroundSpacing) ||
+                other.backgroundSpacing == backgroundSpacing) &&
+            (identical(other.backgroundLineColor, backgroundLineColor) ||
+                other.backgroundLineColor == backgroundLineColor));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -524,6 +616,9 @@ class _$InkBlockImpl implements InkBlock {
     id,
     height,
     const DeepCollectionEquality().hash(_strokes),
+    background,
+    backgroundSpacing,
+    backgroundLineColor,
   );
 
   /// Create a copy of Block
@@ -538,7 +633,14 @@ class _$InkBlockImpl implements InkBlock {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String id, String content) markdown,
-    required TResult Function(String id, double height, List<Stroke> strokes)
+    required TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )
     ink,
     required TResult Function(
       String id,
@@ -558,14 +660,29 @@ class _$InkBlockImpl implements InkBlock {
     )
     pdfPage,
   }) {
-    return ink(id, height, strokes);
+    return ink(
+      id,
+      height,
+      strokes,
+      background,
+      backgroundSpacing,
+      backgroundLineColor,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String id, String content)? markdown,
-    TResult? Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult? Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult? Function(
       String id,
       String path,
@@ -584,14 +701,29 @@ class _$InkBlockImpl implements InkBlock {
     )?
     pdfPage,
   }) {
-    return ink?.call(id, height, strokes);
+    return ink?.call(
+      id,
+      height,
+      strokes,
+      background,
+      backgroundSpacing,
+      backgroundLineColor,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String id, String content)? markdown,
-    TResult Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult Function(
       String id,
       String path,
@@ -612,7 +744,14 @@ class _$InkBlockImpl implements InkBlock {
     required TResult orElse(),
   }) {
     if (ink != null) {
-      return ink(id, height, strokes);
+      return ink(
+        id,
+        height,
+        strokes,
+        background,
+        backgroundSpacing,
+        backgroundLineColor,
+      );
     }
     return orElse();
   }
@@ -665,6 +804,9 @@ abstract class InkBlock implements Block {
     required final String id,
     required final double height,
     final List<Stroke> strokes,
+    final InkBackground background,
+    final double backgroundSpacing,
+    final String? backgroundLineColor,
   }) = _$InkBlockImpl;
 
   factory InkBlock.fromJson(Map<String, dynamic> json) =
@@ -679,6 +821,16 @@ abstract class InkBlock implements Block {
 
   /// Ink strokes in draw order (painter's algorithm). May be empty.
   List<Stroke> get strokes;
+
+  /// Background pattern rendered behind the strokes.
+  InkBackground get background;
+
+  /// Spacing between background lines/dots in logical pixels.
+  double get backgroundSpacing;
+
+  /// Explicit line color in `#RRGGBBAA` format. When null, the theme
+  /// default (outlineVariant at 20% opacity) is used.
+  String? get backgroundLineColor;
 
   /// Create a copy of Block
   /// with the given fields replaced by the non-null parameter values.
@@ -842,7 +994,14 @@ class _$ImageBlockImpl implements ImageBlock {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String id, String content) markdown,
-    required TResult Function(String id, double height, List<Stroke> strokes)
+    required TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )
     ink,
     required TResult Function(
       String id,
@@ -869,7 +1028,15 @@ class _$ImageBlockImpl implements ImageBlock {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String id, String content)? markdown,
-    TResult? Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult? Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult? Function(
       String id,
       String path,
@@ -895,7 +1062,15 @@ class _$ImageBlockImpl implements ImageBlock {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String id, String content)? markdown,
-    TResult Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult Function(
       String id,
       String path,
@@ -1171,7 +1346,14 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String id, String content) markdown,
-    required TResult Function(String id, double height, List<Stroke> strokes)
+    required TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )
     ink,
     required TResult Function(
       String id,
@@ -1198,7 +1380,15 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String id, String content)? markdown,
-    TResult? Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult? Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult? Function(
       String id,
       String path,
@@ -1224,7 +1414,15 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String id, String content)? markdown,
-    TResult Function(String id, double height, List<Stroke> strokes)? ink,
+    TResult Function(
+      String id,
+      double height,
+      List<Stroke> strokes,
+      InkBackground background,
+      double backgroundSpacing,
+      String? backgroundLineColor,
+    )?
+    ink,
     TResult Function(
       String id,
       String path,

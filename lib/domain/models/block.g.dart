@@ -29,6 +29,12 @@ _$InkBlockImpl _$$InkBlockImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Stroke.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      background:
+          $enumDecodeNullable(_$InkBackgroundEnumMap, json['background']) ??
+          InkBackground.plain,
+      backgroundSpacing:
+          (json['backgroundSpacing'] as num?)?.toDouble() ?? 24.0,
+      backgroundLineColor: json['backgroundLineColor'] as String?,
       $type: json['type'] as String?,
     );
 
@@ -37,8 +43,19 @@ Map<String, dynamic> _$$InkBlockImplToJson(_$InkBlockImpl instance) =>
       'id': instance.id,
       'height': instance.height,
       'strokes': instance.strokes.map((e) => e.toJson()).toList(),
+      'background': _$InkBackgroundEnumMap[instance.background]!,
+      'backgroundSpacing': instance.backgroundSpacing,
+      'backgroundLineColor': instance.backgroundLineColor,
       'type': instance.$type,
     };
+
+const _$InkBackgroundEnumMap = {
+  InkBackground.plain: 'plain',
+  InkBackground.ruled: 'ruled',
+  InkBackground.grid: 'grid',
+  InkBackground.dotted: 'dotted',
+  InkBackground.isometric: 'isometric',
+};
 
 _$ImageBlockImpl _$$ImageBlockImplFromJson(Map<String, dynamic> json) =>
     _$ImageBlockImpl(

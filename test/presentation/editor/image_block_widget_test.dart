@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runa/domain/domain.dart';
 import 'package:runa/presentation/editor/block_widget.dart';
 import 'package:runa/presentation/editor/ink_annotation_layer.dart';
-import 'package:runa/presentation/editor/ink_toolbar_widget.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -118,7 +117,7 @@ void main() {
       expect((updated! as ImageBlock).strokes, isEmpty);
     });
 
-    testWidgets('InkToolbarWidget se renderiza dentro de ImageBlock',
+    testWidgets('InkAnnotationLayer se renderiza dentro de ImageBlock',
         (tester) async {
       await tester.pumpWidget(_wrapBlock(BlockWidget(
         block: _imageBlock,
@@ -127,7 +126,9 @@ void main() {
       )));
       await tester.pump();
 
-      expect(find.byType(InkToolbarWidget), findsOneWidget);
+      // The InkToolbarWidget now lives in the top editor bar (not inside
+      // the block), so we verify the annotation layer is present instead.
+      expect(find.byType(InkAnnotationLayer), findsOneWidget);
     });
   });
 

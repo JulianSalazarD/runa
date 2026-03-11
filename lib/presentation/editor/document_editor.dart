@@ -200,6 +200,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
             .firstOrNull;
     final showInkToolbar =
         selectedBlock is InkBlock || selectedBlock is ImageBlock;
+    final InkBlock? selectedInkBlock =
+        selectedBlock is InkBlock ? selectedBlock : null;
 
     return Shortcuts(
       shortcuts: const {
@@ -270,6 +272,21 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   onInkToolChanged: (t) => setState(() => _inkTool = t),
                   onInkColorChanged: (c) => setState(() => _inkColor = c),
                   onInkWidthChanged: (w) => setState(() => _inkWidth = w),
+                  inkBackground: selectedInkBlock?.background,
+                  inkBackgroundSpacing: selectedInkBlock?.backgroundSpacing,
+                  inkBackgroundLineColor: selectedInkBlock?.backgroundLineColor,
+                  onInkBackgroundChanged: selectedInkBlock == null
+                      ? null
+                      : (bg) => notifier
+                          .updateBlock(selectedInkBlock.copyWith(background: bg)),
+                  onInkBackgroundSpacingChanged: selectedInkBlock == null
+                      ? null
+                      : (s) => notifier.updateBlock(
+                          selectedInkBlock.copyWith(backgroundSpacing: s)),
+                  onInkBackgroundLineColorChanged: selectedInkBlock == null
+                      ? null
+                      : (c) => notifier.updateBlock(
+                          selectedInkBlock.copyWith(backgroundLineColor: c)),
                 ),
                 Expanded(
                   child: _BlockList(
@@ -317,6 +334,12 @@ class _EditorToolbar extends StatelessWidget {
     required this.onInkToolChanged,
     required this.onInkColorChanged,
     required this.onInkWidthChanged,
+    this.inkBackground,
+    this.inkBackgroundSpacing,
+    this.inkBackgroundLineColor,
+    this.onInkBackgroundChanged,
+    this.onInkBackgroundSpacingChanged,
+    this.onInkBackgroundLineColorChanged,
   });
 
   final String path;
@@ -337,6 +360,12 @@ class _EditorToolbar extends StatelessWidget {
   final ValueChanged<StrokeTool> onInkToolChanged;
   final ValueChanged<String> onInkColorChanged;
   final ValueChanged<double> onInkWidthChanged;
+  final InkBackground? inkBackground;
+  final double? inkBackgroundSpacing;
+  final String? inkBackgroundLineColor;
+  final ValueChanged<InkBackground>? onInkBackgroundChanged;
+  final ValueChanged<double>? onInkBackgroundSpacingChanged;
+  final ValueChanged<String>? onInkBackgroundLineColorChanged;
 
   @override
   Widget build(BuildContext context) {
