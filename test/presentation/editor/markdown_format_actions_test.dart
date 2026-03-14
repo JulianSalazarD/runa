@@ -93,28 +93,62 @@ void main() {
   // ----------------------------------------------------------------
   // applyIndent
   // ----------------------------------------------------------------
-  group('applyIndent — Tab', () {
-    test('adds 2 spaces at line start', () {
+  group('applyIndent — Tab (collapsed)', () {
+    test('list item: inserts 2 spaces at line start', () {
+      // "- item" is a list item → indent the whole line
       final result = applyIndent(_cursor('- item', 6));
       expect(result.text, '  - item');
       expect(result.selection.baseOffset, 8); // cursor moved right by 2
     });
 
-    test('cursor in middle of line indents at line start', () {
+    test('list item with *: inserts 2 spaces at line start', () {
+      final result = applyIndent(_cursor('* todo', 4));
+      expect(result.text, '  * todo');
+      expect(result.selection.baseOffset, 6);
+    });
+
+    test('ordered list item: inserts 2 spaces at line start', () {
+      final result = applyIndent(_cursor('1. item', 5));
+      expect(result.text, '  1. item');
+      expect(result.selection.baseOffset, 7);
+    });
+
+    test('regular line: inserts 2 spaces at cursor position', () {
       final result = applyIndent(_cursor('hello', 3));
-      expect(result.text, '  hello');
+      expect(result.text, 'hel  lo');
       expect(result.selection.baseOffset, 5); // 3 + 2
     });
 
-    test('multi-line: only current line is indented', () {
-      // cursor on second line
+    test('regular multi-line text: inserts at cursor, not line start', () {
       const text = 'first line\nsecond';
       final result = applyIndent(_cursor(text, 15)); // inside "second"
-      expect(result.text, 'first line\n  second');
+      // "second" is not a list item → insert at cursor (pos 15 = "seco|nd")
+      expect(result.text, 'first line\nseco  nd');
+      expect(result.selection.baseOffset, 17);
     });
   });
 
-  group('applyIndent — Shift+Tab (unindent)', () {
+  group('applyIndent — Tab (non-collapsed, multiline)', () {
+    test('3-line selection: all lines indented at line start', () {
+      const text = 'line1\nline2\nline3';
+      // Select from start of line1 to end of line3
+      final result = applyIndent(_value(text, start: 0, end: 17));
+      expect(result.text, '  line1\n  line2\n  line3');
+    });
+
+    test('selection spanning 2 lines: both indented', () {
+      const text = 'alpha\nbeta';
+      final result = applyIndent(_value(text, start: 2, end: 9));
+      expect(result.text, '  alpha\n  beta');
+    });
+
+    test('selection within single line: that line is indented', () {
+      final result = applyIndent(_value('hello world', start: 2, end: 7));
+      expect(result.text, '  hello world');
+    });
+  });
+
+  group('applyIndent — Shift+Tab (collapsed)', () {
     test('removes 2 leading spaces from line start', () {
       final result = applyIndent(_cursor('  - item', 6), unindent: true);
       expect(result.text, '- item');
@@ -137,6 +171,29 @@ void main() {
       final result = applyIndent(_cursor('  text', 0), unindent: true);
       expect(result.text, 'text');
       expect(result.selection.baseOffset, 0);
+    });
+  });
+
+  group('applyIndent — Shift+Tab (non-collapsed, multiline)', () {
+    test('2-line selection: both lines unindented', () {
+      const text = '  alpha\n  beta';
+      final result = applyIndent(_value(text, start: 0, end: 14),
+          unindent: true);
+      expect(result.text, 'alpha\nbeta');
+    });
+
+    test('line with only 1 space: removes just 1', () {
+      const text = ' line1\n  line2';
+      final result = applyIndent(_value(text, start: 0, end: 14),
+          unindent: true);
+      expect(result.text, 'line1\nline2');
+    });
+
+    test('line with no spaces: left unchanged, others unindented', () {
+      const text = '  line1\nline2';
+      final result = applyIndent(_value(text, start: 0, end: 13),
+          unindent: true);
+      expect(result.text, 'line1\nline2');
     });
   });
 }
