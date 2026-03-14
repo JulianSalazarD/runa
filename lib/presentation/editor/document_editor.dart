@@ -90,6 +90,9 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   bool _textBold = false;
   bool _textItalic = false;
 
+  /// Active geometric shape tool. Null = no shape tool active.
+  ShapeType? _inkShapeType;
+
   String get _docId => widget.opened.document.id;
 
   @override
@@ -274,7 +277,10 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   inkTool: _inkTool,
                   inkColor: _inkColor,
                   inkWidth: _inkWidth,
-                  onInkToolChanged: (t) => setState(() => _inkTool = t),
+                  onInkToolChanged: (t) => setState(() {
+                    _inkTool = t;
+                    _inkShapeType = null; // deactivate shape on stroke tool tap
+                  }),
                   onInkColorChanged: (c) => setState(() => _inkColor = c),
                   onInkWidthChanged: (w) => setState(() => _inkWidth = w),
                   textFontSize: _textFontSize,
@@ -305,6 +311,10 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                       ? null
                       : (String? c) => notifier.updateBlock(
                           selectedInkBlock.copyWith(backgroundColor: c)),
+                  inkShapeType: _inkShapeType,
+                  onInkShapeTypeChanged: showInkToolbar
+                      ? (ShapeType? t) => setState(() => _inkShapeType = t)
+                      : null,
                 ),
                 Expanded(
                   child: _BlockList(
@@ -320,6 +330,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     textFontSize: _textFontSize,
                     textBold: _textBold,
                     textItalic: _textItalic,
+                    inkShapeType: _inkShapeType,
                   ),
                 ),
               ],
@@ -369,6 +380,8 @@ class _EditorToolbar extends StatelessWidget {
     required this.onTextFontSizeChanged,
     required this.onTextBoldChanged,
     required this.onTextItalicChanged,
+    this.inkShapeType,
+    this.onInkShapeTypeChanged,
   });
 
   final String path;
@@ -403,6 +416,8 @@ class _EditorToolbar extends StatelessWidget {
   final ValueChanged<double> onTextFontSizeChanged;
   final ValueChanged<bool> onTextBoldChanged;
   final ValueChanged<bool> onTextItalicChanged;
+  final ShapeType? inkShapeType;
+  final ValueChanged<ShapeType?>? onInkShapeTypeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -531,6 +546,8 @@ class _EditorToolbar extends StatelessWidget {
               onTextFontSizeChanged: onTextFontSizeChanged,
               onTextBoldChanged: onTextBoldChanged,
               onTextItalicChanged: onTextItalicChanged,
+              activeShapeType: inkShapeType,
+              onShapeTypeChanged: onInkShapeTypeChanged,
             ),
           ),
         if (isImporting) const LinearProgressIndicator(minHeight: 2),
@@ -555,6 +572,7 @@ class _BlockList extends StatelessWidget {
     required this.textFontSize,
     required this.textBold,
     required this.textItalic,
+    this.inkShapeType,
   });
 
   final EditorState editorState;
@@ -567,6 +585,7 @@ class _BlockList extends StatelessWidget {
   final double textFontSize;
   final bool textBold;
   final bool textItalic;
+  final ShapeType? inkShapeType;
 
   @override
   Widget build(BuildContext context) {
@@ -641,6 +660,7 @@ class _BlockList extends StatelessWidget {
                 textFontSize: textFontSize,
                 textBold: textBold,
                 textItalic: textItalic,
+                inkShapeType: inkShapeType,
               ),
             ),
             _InsertGap(

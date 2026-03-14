@@ -52,6 +52,7 @@ mixin _$Block {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )
     ink,
     required TResult Function(
@@ -84,6 +85,7 @@ mixin _$Block {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult? Function(
@@ -116,6 +118,7 @@ mixin _$Block {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult Function(
@@ -308,6 +311,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )
     ink,
     required TResult Function(
@@ -344,6 +348,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult? Function(
@@ -380,6 +385,7 @@ class _$MarkdownBlockImpl implements MarkdownBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult Function(
@@ -491,6 +497,7 @@ abstract class _$$InkBlockImplCopyWith<$Res> implements $BlockCopyWith<$Res> {
     String? backgroundLineColor,
     String? backgroundColor,
     List<TextElement> textElements,
+    List<ShapeElement> shapes,
   });
 }
 
@@ -516,6 +523,7 @@ class __$$InkBlockImplCopyWithImpl<$Res>
     Object? backgroundLineColor = freezed,
     Object? backgroundColor = freezed,
     Object? textElements = null,
+    Object? shapes = null,
   }) {
     return _then(
       _$InkBlockImpl(
@@ -551,6 +559,10 @@ class __$$InkBlockImplCopyWithImpl<$Res>
             ? _value._textElements
             : textElements // ignore: cast_nullable_to_non_nullable
                   as List<TextElement>,
+        shapes: null == shapes
+            ? _value._shapes
+            : shapes // ignore: cast_nullable_to_non_nullable
+                  as List<ShapeElement>,
       ),
     );
   }
@@ -569,9 +581,11 @@ class _$InkBlockImpl implements InkBlock {
     this.backgroundLineColor,
     this.backgroundColor,
     final List<TextElement> textElements = const [],
+    final List<ShapeElement> shapes = const [],
     final String? $type,
   }) : _strokes = strokes,
        _textElements = textElements,
+       _shapes = shapes,
        $type = $type ?? 'ink';
 
   factory _$InkBlockImpl.fromJson(Map<String, dynamic> json) =>
@@ -629,12 +643,24 @@ class _$InkBlockImpl implements InkBlock {
     return EqualUnmodifiableListView(_textElements);
   }
 
+  /// Geometric shapes placed on the canvas.
+  final List<ShapeElement> _shapes;
+
+  /// Geometric shapes placed on the canvas.
+  @override
+  @JsonKey()
+  List<ShapeElement> get shapes {
+    if (_shapes is EqualUnmodifiableListView) return _shapes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_shapes);
+  }
+
   @JsonKey(name: 'type')
   final String $type;
 
   @override
   String toString() {
-    return 'Block.ink(id: $id, height: $height, strokes: $strokes, background: $background, backgroundSpacing: $backgroundSpacing, backgroundLineColor: $backgroundLineColor, backgroundColor: $backgroundColor, textElements: $textElements)';
+    return 'Block.ink(id: $id, height: $height, strokes: $strokes, background: $background, backgroundSpacing: $backgroundSpacing, backgroundLineColor: $backgroundLineColor, backgroundColor: $backgroundColor, textElements: $textElements, shapes: $shapes)';
   }
 
   @override
@@ -656,7 +682,8 @@ class _$InkBlockImpl implements InkBlock {
             const DeepCollectionEquality().equals(
               other._textElements,
               _textElements,
-            ));
+            ) &&
+            const DeepCollectionEquality().equals(other._shapes, _shapes));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -671,6 +698,7 @@ class _$InkBlockImpl implements InkBlock {
     backgroundLineColor,
     backgroundColor,
     const DeepCollectionEquality().hash(_textElements),
+    const DeepCollectionEquality().hash(_shapes),
   );
 
   /// Create a copy of Block
@@ -694,6 +722,7 @@ class _$InkBlockImpl implements InkBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )
     ink,
     required TResult Function(
@@ -723,6 +752,7 @@ class _$InkBlockImpl implements InkBlock {
       backgroundLineColor,
       backgroundColor,
       textElements,
+      shapes,
     );
   }
 
@@ -739,6 +769,7 @@ class _$InkBlockImpl implements InkBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult? Function(
@@ -768,6 +799,7 @@ class _$InkBlockImpl implements InkBlock {
       backgroundLineColor,
       backgroundColor,
       textElements,
+      shapes,
     );
   }
 
@@ -784,6 +816,7 @@ class _$InkBlockImpl implements InkBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult Function(
@@ -815,6 +848,7 @@ class _$InkBlockImpl implements InkBlock {
         backgroundLineColor,
         backgroundColor,
         textElements,
+        shapes,
       );
     }
     return orElse();
@@ -873,6 +907,7 @@ abstract class InkBlock implements Block {
     final String? backgroundLineColor,
     final String? backgroundColor,
     final List<TextElement> textElements,
+    final List<ShapeElement> shapes,
   }) = _$InkBlockImpl;
 
   factory InkBlock.fromJson(Map<String, dynamic> json) =
@@ -904,6 +939,9 @@ abstract class InkBlock implements Block {
 
   /// Typographic text elements placed on the canvas.
   List<TextElement> get textElements;
+
+  /// Geometric shapes placed on the canvas.
+  List<ShapeElement> get shapes;
 
   /// Create a copy of Block
   /// with the given fields replaced by the non-null parameter values.
@@ -1076,6 +1114,7 @@ class _$ImageBlockImpl implements ImageBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )
     ink,
     required TResult Function(
@@ -1112,6 +1151,7 @@ class _$ImageBlockImpl implements ImageBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult? Function(
@@ -1148,6 +1188,7 @@ class _$ImageBlockImpl implements ImageBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult Function(
@@ -1434,6 +1475,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )
     ink,
     required TResult Function(
@@ -1470,6 +1512,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult? Function(
@@ -1506,6 +1549,7 @@ class _$PdfPageBlockImpl implements PdfPageBlock {
       String? backgroundLineColor,
       String? backgroundColor,
       List<TextElement> textElements,
+      List<ShapeElement> shapes,
     )?
     ink,
     TResult Function(

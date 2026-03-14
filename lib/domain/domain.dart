@@ -9,6 +9,8 @@ library;
 export 'models/block.dart';
 export 'models/document.dart';
 export 'models/ink_background.dart';
+export 'models/shape_element.dart';
+export 'models/shape_type.dart';
 export 'models/stroke.dart';
 export 'models/stroke_point.dart';
 export 'models/text_element.dart';

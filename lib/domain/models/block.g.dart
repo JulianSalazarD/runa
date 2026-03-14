@@ -41,6 +41,11 @@ _$InkBlockImpl _$$InkBlockImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => TextElement.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      shapes:
+          (json['shapes'] as List<dynamic>?)
+              ?.map((e) => ShapeElement.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       $type: json['type'] as String?,
     );
 
@@ -54,6 +59,7 @@ Map<String, dynamic> _$$InkBlockImplToJson(_$InkBlockImpl instance) =>
       'backgroundLineColor': instance.backgroundLineColor,
       'backgroundColor': instance.backgroundColor,
       'textElements': instance.textElements.map((e) => e.toJson()).toList(),
+      'shapes': instance.shapes.map((e) => e.toJson()).toList(),
       'type': instance.$type,
     };
 

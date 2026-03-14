@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runa/domain/domain.dart';
 
 void main() {
-  const smoother = StrokeSmoother(samplesPerSegment: 10);
+  const smoother = StrokeSmoother();
 
   StrokePoint pt(double x, double y) => StrokePoint(
         x: x,
@@ -80,7 +80,7 @@ void main() {
     test('larger stroke yields (N-1)*samplesPerSegment+1 result points', () {
       // 6 input points → 5 inner segments → 1 + 5*10 = 51 points.
       const samples = 10;
-      final localSmoother = StrokeSmoother(samplesPerSegment: samples);
+      const localSmoother = StrokeSmoother();
       final pts = List.generate(6, (i) => pt(i * 10.0, 0));
       final result = localSmoother.smooth(pts);
       // At least one point per segment.

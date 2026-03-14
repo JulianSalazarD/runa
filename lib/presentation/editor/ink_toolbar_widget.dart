@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:runa/domain/domain.dart';
 
 // ---------------------------------------------------------------------------
+// Shape tool metadata
+// ---------------------------------------------------------------------------
+
+const _kShapeTools = [
+  (type: ShapeType.line, icon: Icons.remove, label: 'Línea'),
+  (type: ShapeType.rect, icon: Icons.crop_square_outlined, label: 'Rectángulo'),
+  (type: ShapeType.oval, icon: Icons.circle_outlined, label: 'Óvalo'),
+  (type: ShapeType.triangle, icon: Icons.change_history_outlined, label: 'Triángulo'),
+  (type: ShapeType.arrow, icon: Icons.arrow_forward, label: 'Flecha'),
+];
+
+// ---------------------------------------------------------------------------
 // Palette constants
 // ---------------------------------------------------------------------------
 
@@ -53,6 +65,8 @@ class InkToolbarWidget extends StatelessWidget {
     this.onTextFontSizeChanged,
     this.onTextBoldChanged,
     this.onTextItalicChanged,
+    this.activeShapeType,
+    this.onShapeTypeChanged,
   });
 
   final StrokeTool activeTool;
@@ -80,6 +94,12 @@ class InkToolbarWidget extends StatelessWidget {
   final ValueChanged<double>? onTextFontSizeChanged;
   final ValueChanged<bool>? onTextBoldChanged;
   final ValueChanged<bool>? onTextItalicChanged;
+
+  /// Currently active geometric shape tool. Null = no shape tool selected.
+  final ShapeType? activeShapeType;
+
+  /// Called when the user selects or deselects a shape tool.
+  final ValueChanged<ShapeType?>? onShapeTypeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -218,6 +238,20 @@ class InkToolbarWidget extends StatelessWidget {
                   ),
                 ),
               ),
+            ],
+            if (onShapeTypeChanged != null) ...[
+              const VerticalDivider(indent: 4, endIndent: 4),
+              for (final entry in _kShapeTools)
+                _ShapeButton(
+                  icon: entry.icon,
+                  label: entry.label,
+                  shapeType: entry.type,
+                  activeShapeType: activeShapeType,
+                  onTap: (ShapeType type) {
+                    // Toggle off if already active, else activate.
+                    onShapeTypeChanged!(type == activeShapeType ? null : type);
+                  },
+                ),
             ],
             if (onBackgroundChanged != null) ...[
               const VerticalDivider(indent: 4, endIndent: 4),
@@ -723,6 +757,56 @@ class _BackgroundDialogState extends State<_BackgroundDialog> {
     final b = int.parse(h.substring(4, 6), radix: 16);
     final a = int.parse(h.substring(6, 8), radix: 16);
     return Color.fromARGB(a, r, g, b);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _ShapeButton
+// ---------------------------------------------------------------------------
+
+class _ShapeButton extends StatelessWidget {
+  const _ShapeButton({
+    required this.icon,
+    required this.label,
+    required this.shapeType,
+    required this.activeShapeType,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final ShapeType shapeType;
+  final ShapeType? activeShapeType;
+  final ValueChanged<ShapeType> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = shapeType == activeShapeType;
+    final colorScheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: () => onTap(shapeType),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          width: 32,
+          height: 32,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: isActive ? colorScheme.primaryContainer : null,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isActive
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurface,
+            semanticLabel: label,
+          ),
+        ),
+      ),
+    );
   }
 }
 

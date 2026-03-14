@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'ink_background.dart';
+import 'shape_element.dart';
 import 'stroke.dart';
 import 'text_element.dart';
 
@@ -64,6 +65,9 @@ sealed class Block with _$Block {
 
     /// Typographic text elements placed on the canvas.
     @Default([]) List<TextElement> textElements,
+
+    /// Geometric shapes placed on the canvas.
+    @Default([]) List<ShapeElement> shapes,
   }) = InkBlock;
 
   /// A block displaying an image with an ink annotation layer on top.

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:runa/domain/domain.dart';
 import 'package:uuid/uuid.dart';
 
 import 'ink_background_painter.dart';
+import 'shape_painter.dart';
 import 'text_element_painter.dart';
 
 // ---------------------------------------------------------------------------
@@ -14,9 +16,10 @@ import 'text_element_painter.dart';
 
 /// Drawing canvas for an [InkBlock].
 ///
-/// Captures raw pointer events and emits completed [Stroke]s or [TextElement]s
-/// via [onUpdate]. Renders committed strokes (smoothed), text elements, and
-/// the in-progress stroke through separate [CustomPainter]s.
+/// Captures raw pointer events and emits completed [Stroke]s, [TextElement]s,
+/// or [ShapeElement]s via [onUpdate]. Renders committed strokes (smoothed),
+/// text elements, shapes, and the in-progress stroke/shape through separate
+/// [CustomPainter]s.
 class InkCanvasWidget extends StatefulWidget {
   const InkCanvasWidget({
     super.key,
@@ -28,6 +31,7 @@ class InkCanvasWidget extends StatefulWidget {
     this.activeFontSize = 16.0,
     this.textBold = false,
     this.textItalic = false,
+    this.activeShapeType,
     this.onUpdate,
   });
 
@@ -50,8 +54,11 @@ class InkCanvasWidget extends StatefulWidget {
   /// Whether new text elements use italic style.
   final bool textItalic;
 
-  /// Called when a stroke is committed, a stroke is erased, or text elements
-  /// are updated.
+  /// When non-null, shape drawing mode is active and strokes are ignored.
+  final ShapeType? activeShapeType;
+
+  /// Called when a stroke is committed, a stroke is erased, text elements
+  /// are updated, or shapes are added.
   final ValueChanged<InkBlock>? onUpdate;
 
   @override
@@ -63,6 +70,10 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   static const _eraserRadius = 20.0;
 
   List<StrokePoint> _currentPoints = [];
+
+  // Shape tool state
+  Offset? _shapeStart;
+  ShapeElement? _previewShape;
 
   // Text tool state
   TextElement? _editingElement;
@@ -93,17 +104,48 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
 
+  // ---------------------------------------------------------------------------
+  // Pointer handling — dispatch by active mode
+  // ---------------------------------------------------------------------------
+
   void _onPointerDown(PointerDownEvent e) {
+    if (widget.activeShapeType != null) {
+      setState(() {
+        _shapeStart = e.localPosition;
+        _previewShape = null;
+      });
+      return;
+    }
     if (widget.activeTool == StrokeTool.text) return;
     setState(() => _currentPoints = [_makePoint(e)]);
   }
 
   void _onPointerMove(PointerMoveEvent e) {
+    if (widget.activeShapeType != null) {
+      if (_shapeStart != null) {
+        setState(() => _previewShape =
+            _buildShapeElement(_shapeStart!, e.localPosition));
+      }
+      return;
+    }
     if (widget.activeTool == StrokeTool.text) return;
     setState(() => _currentPoints = [..._currentPoints, _makePoint(e)]);
   }
 
   void _onPointerUp(PointerUpEvent e) {
+    if (widget.activeShapeType != null) {
+      if (_shapeStart != null) {
+        final shape = _buildShapeElement(_shapeStart!, e.localPosition);
+        setState(() {
+          _shapeStart = null;
+          _previewShape = null;
+        });
+        widget.onUpdate?.call(
+          widget.block.copyWith(shapes: [...widget.block.shapes, shape]),
+        );
+      }
+      return;
+    }
     if (widget.activeTool == StrokeTool.text) {
       _handleTextTap(e.localPosition);
       return;
@@ -117,6 +159,66 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
       _commitStroke(allPoints);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Shape helpers
+  // ---------------------------------------------------------------------------
+
+  /// Builds a [ShapeElement] from canvas-space [start] and [end] offsets.
+  /// When Shift is held, constrains to 1:1 proportion (or 45° for lines).
+  ShapeElement _buildShapeElement(Offset start, Offset end) {
+    final w = _constraints.maxWidth;
+    final h = widget.height;
+    if (w <= 0 || h <= 0) {
+      return ShapeElement(
+        id: _uuid.v4(),
+        type: widget.activeShapeType!,
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 0,
+        color: widget.activeColor,
+        strokeWidth: widget.activeWidth,
+      );
+    }
+
+    var endX = end.dx;
+    var endY = end.dy;
+
+    if (HardwareKeyboard.instance.isShiftPressed) {
+      final dx = end.dx - start.dx;
+      final dy = end.dy - start.dy;
+      if (widget.activeShapeType == ShapeType.line) {
+        // Snap to nearest 45° increment.
+        final angle = math.atan2(dy, dx);
+        final snapped =
+            (angle / (math.pi / 4)).round() * (math.pi / 4);
+        final len = math.sqrt(dx * dx + dy * dy);
+        endX = start.dx + len * math.cos(snapped);
+        endY = start.dy + len * math.sin(snapped);
+      } else {
+        // Force equal width and height (square / circle).
+        final side = math.min(dx.abs(), dy.abs());
+        endX = start.dx + (dx < 0 ? -side : side);
+        endY = start.dy + (dy < 0 ? -side : side);
+      }
+    }
+
+    return ShapeElement(
+      id: _uuid.v4(),
+      type: widget.activeShapeType!,
+      x1: (start.dx / w).clamp(0.0, 1.0),
+      y1: (start.dy / h).clamp(0.0, 1.0),
+      x2: (endX / w).clamp(0.0, 1.0),
+      y2: (endY / h).clamp(0.0, 1.0),
+      color: widget.activeColor,
+      strokeWidth: widget.activeWidth,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stroke helpers
+  // ---------------------------------------------------------------------------
 
   void _commitStroke(List<StrokePoint> points) {
     if (points.isEmpty) return;
@@ -246,6 +348,11 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   // Build
   // ---------------------------------------------------------------------------
 
+  MouseCursor get _cursor {
+    if (widget.activeShapeType != null) return SystemMouseCursors.precise;
+    return MouseCursor.defer;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Focus(
@@ -259,56 +366,66 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
         }
         return KeyEventResult.ignored;
       },
-      child: Listener(
-        onPointerDown: _onPointerDown,
-        onPointerMove: _onPointerMove,
-        onPointerUp: _onPointerUp,
-        child: SizedBox(
-          height: widget.height,
-          child: ClipRect(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                _constraints = constraints;
-                return Stack(
-                  children: [
-                    CustomPaint(
-                      painter: InkBackgroundPainter(
-                        background: widget.block.background,
-                        spacing: widget.block.backgroundSpacing,
-                        lineColor:
-                            _parseColorHex(widget.block.backgroundLineColor),
-                        defaultColor:
-                            Theme.of(context).colorScheme.outlineVariant,
-                        backgroundColor:
-                            _parseColorHex(widget.block.backgroundColor),
+      child: MouseRegion(
+        cursor: _cursor,
+        child: Listener(
+          onPointerDown: _onPointerDown,
+          onPointerMove: _onPointerMove,
+          onPointerUp: _onPointerUp,
+          child: SizedBox(
+            height: widget.height,
+            child: ClipRect(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  _constraints = constraints;
+                  return Stack(
+                    children: [
+                      CustomPaint(
+                        painter: InkBackgroundPainter(
+                          background: widget.block.background,
+                          spacing: widget.block.backgroundSpacing,
+                          lineColor:
+                              _parseColorHex(widget.block.backgroundLineColor),
+                          defaultColor:
+                              Theme.of(context).colorScheme.outlineVariant,
+                          backgroundColor:
+                              _parseColorHex(widget.block.backgroundColor),
+                        ),
+                        size: Size(constraints.maxWidth, widget.height),
                       ),
-                      size: Size(constraints.maxWidth, widget.height),
-                    ),
-                    CustomPaint(
-                      painter: TextElementPainter(
-                        elements: widget.block.textElements,
+                      CustomPaint(
+                        painter: ShapePainter(
+                          shapes: widget.block.shapes,
+                          previewShape: _previewShape,
+                        ),
+                        size: Size(constraints.maxWidth, widget.height),
                       ),
-                      size: Size(constraints.maxWidth, widget.height),
-                    ),
-                    CustomPaint(
-                      painter: InkPainter(
-                        strokes: widget.block.strokes,
-                        currentPoints: _currentPoints,
-                        activeTool: widget.activeTool,
+                      CustomPaint(
+                        painter: TextElementPainter(
+                          elements: widget.block.textElements,
+                        ),
+                        size: Size(constraints.maxWidth, widget.height),
                       ),
-                      size: Size(constraints.maxWidth, widget.height),
-                    ),
-                    if (_editingElement != null)
-                      Positioned(
-                        left: (_editingElement!.x * constraints.maxWidth)
-                            .clamp(0.0, constraints.maxWidth - 10),
-                        top: (_editingElement!.y * widget.height)
-                            .clamp(0.0, widget.height - 10),
-                        child: _buildInlineEditor(),
+                      CustomPaint(
+                        painter: InkPainter(
+                          strokes: widget.block.strokes,
+                          currentPoints: _currentPoints,
+                          activeTool: widget.activeTool,
+                        ),
+                        size: Size(constraints.maxWidth, widget.height),
                       ),
-                  ],
-                );
-              },
+                      if (_editingElement != null)
+                        Positioned(
+                          left: (_editingElement!.x * constraints.maxWidth)
+                              .clamp(0.0, constraints.maxWidth - 10),
+                          top: (_editingElement!.y * widget.height)
+                              .clamp(0.0, widget.height - 10),
+                          child: _buildInlineEditor(),
+                        ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),

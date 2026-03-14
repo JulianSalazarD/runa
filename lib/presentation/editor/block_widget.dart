@@ -42,6 +42,7 @@ class BlockWidget extends StatelessWidget {
     this.textFontSize = 16.0,
     this.textBold = false,
     this.textItalic = false,
+    this.inkShapeType,
   });
 
   final Block block;
@@ -66,6 +67,9 @@ class BlockWidget extends StatelessWidget {
   final bool textBold;
   final bool textItalic;
 
+  /// Active geometric shape tool. Null = no shape tool selected.
+  final ShapeType? inkShapeType;
+
   @override
   Widget build(BuildContext context) {
     return switch (block) {
@@ -84,6 +88,7 @@ class BlockWidget extends StatelessWidget {
           textFontSize: textFontSize,
           textBold: textBold,
           textItalic: textItalic,
+          activeShapeType: inkShapeType,
         ),
       final ImageBlock b => _ImageBlockView(
           block: b,
@@ -220,6 +225,7 @@ class _InkBlockView extends StatefulWidget {
     this.textFontSize = 16.0,
     this.textBold = false,
     this.textItalic = false,
+    this.activeShapeType,
   });
 
   final InkBlock block;
@@ -230,6 +236,7 @@ class _InkBlockView extends StatefulWidget {
   final double textFontSize;
   final bool textBold;
   final bool textItalic;
+  final ShapeType? activeShapeType;
 
   @override
   State<_InkBlockView> createState() => _InkBlockViewState();
@@ -270,6 +277,7 @@ class _InkBlockViewState extends State<_InkBlockView> {
           activeFontSize: widget.textFontSize,
           textBold: widget.textBold,
           textItalic: widget.textItalic,
+          activeShapeType: widget.activeShapeType,
           onUpdate: (updated) => widget.onUpdate?.call(updated),
         ),
         _ResizeHandle(
