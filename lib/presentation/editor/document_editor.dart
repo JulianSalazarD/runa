@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -165,28 +166,83 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     final docPath = widget.opened.path;
     final defaultName = '${p.basenameWithoutExtension(docPath)}.pdf';
 
+    String? savePath;
     try {
-      String? savePath;
       savePath = await LinuxFilePicker.saveFile(
         defaultName: defaultName,
         extension: 'pdf',
         fallbackDir: p.dirname(docPath),
       );
-      if (!mounted || savePath == null) return;
-
-      final exporter = PdfExporter();
-      final bytes = await exporter.export(document, documentPath: docPath);
-      await File(savePath).writeAsBytes(bytes);
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('PDF exportado: $savePath')),
+        SnackBar(content: Text('$e')),
       );
+      return;
+    }
+    if (!mounted || savePath == null) return;
+
+    // Progress state shared between the dialog and the export callback.
+    final progress = ValueNotifier<(int, int)>((0, 0));
+
+    // Show progress dialog (not awaited — dismissed explicitly below).
+    unawaited(showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => ValueListenableBuilder(
+        valueListenable: progress,
+        builder: (ctx, value, _) {
+          final (current, total) = value;
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Exportando PDF…'),
+                const SizedBox(height: 12),
+                LinearProgressIndicator(
+                  value: total > 0 ? current / total : null,
+                ),
+                if (total > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      'Bloque $current de $total',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    ));
+
+    try {
+      final exporter = PdfExporter();
+      final bytes = await exporter.export(
+        document,
+        documentPath: docPath,
+        onProgress: (current, total) {
+          progress.value = (current, total);
+        },
+      );
+      await File(savePath).writeAsBytes(bytes);
     } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      progress.dispose();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al exportar PDF: $e')),
       );
+      return;
     }
+
+    if (mounted) Navigator.of(context).pop();
+    progress.dispose();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('PDF exportado: $savePath')),
+    );
   }
 
   Future<void> _importPdf({String? afterBlockId}) async {
