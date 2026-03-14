@@ -39,7 +39,7 @@ class PdfExporter {
       switch (block) {
         case MarkdownBlock(:final content):
           if (content.trim().isNotEmpty) {
-            contentWidgets.addAll(_markdownRenderer.render(content));
+            contentWidgets.addAll(await _markdownRenderer.render(content));
             contentWidgets.add(pw.SizedBox(height: 8));
           }
         case InkBlock(:final strokes, :final height):

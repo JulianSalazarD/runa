@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-
 import 'package:runa/application/application.dart';
 import 'package:runa/data/data.dart';
+
+import '../utils/linux_file_picker.dart';
 
 /// Shown when no folder is open. Provides quick actions and recent files.
 class WelcomeView extends ConsumerWidget {
@@ -61,7 +61,16 @@ class WelcomeView extends ConsumerWidget {
   }
 
   Future<void> _openFolder(BuildContext context, WidgetRef ref) async {
-    final path = await FilePicker.platform.getDirectoryPath();
+    String? path;
+    try {
+      path = await LinuxFilePicker.pickDirectory();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+      return;
+    }
     if (path == null) return;
     await ref.read(workspaceNotifierProvider.notifier).openDirectory(path);
   }

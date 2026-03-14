@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +8,7 @@ import 'package:runa/data/data.dart';
 import 'package:runa/presentation/home/sidebar/name_input_dialog.dart';
 
 import '../editor/document_editor.dart';
+import '../utils/linux_file_picker.dart';
 import 'sidebar/file_sidebar_widget.dart';
 import 'tabs/document_tab_bar.dart';
 import 'welcome_view.dart';
@@ -250,7 +250,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _openFolder() async {
-    final path = await FilePicker.platform.getDirectoryPath();
+    String? path;
+    try {
+      path = await LinuxFilePicker.pickDirectory();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+      return;
+    }
     if (path == null) return;
     await ref.read(workspaceNotifierProvider.notifier).openDirectory(path);
   }

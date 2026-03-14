@@ -1,5 +1,4 @@
 import 'dart:io' show File;
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +12,7 @@ import 'block_chrome.dart';
 import 'block_widget.dart';
 import 'ink_toolbar_widget.dart';
 import 'selection_mode.dart';
+import '../utils/linux_file_picker.dart';
 
 enum _InsertBlockType { markdown, ink, image, pdf }
 
@@ -134,13 +134,20 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   // -------------------------------------------------------------------------
 
   Future<void> _importImage({String? afterBlockId}) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'],
-    );
-    if (!mounted || result == null) return;
-    final path = result.files.single.path;
-    if (path == null) return;
+    List<String>? paths;
+    try {
+      paths = await LinuxFilePicker.pickFiles(
+        extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'],
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+      return;
+    }
+    if (!mounted || paths == null) return;
+    final path = paths.first;
     try {
       await ref
           .read(editorNotifierProvider(_docId).notifier)
@@ -156,21 +163,23 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   Future<void> _exportToPdf() async {
     final document = ref.read(editorNotifierProvider(_docId)).document;
     final docPath = widget.opened.path;
-
-    final savePath = await FilePicker.platform.saveFile(
-      fileName: '${p.basenameWithoutExtension(docPath)}.pdf',
-      allowedExtensions: ['pdf'],
-      type: FileType.custom,
-    );
-    if (!mounted || savePath == null) return;
+    final defaultName = '${p.basenameWithoutExtension(docPath)}.pdf';
 
     try {
+      String? savePath;
+      savePath = await LinuxFilePicker.saveFile(
+        defaultName: defaultName,
+        extension: 'pdf',
+        fallbackDir: p.dirname(docPath),
+      );
+      if (!mounted || savePath == null) return;
+
       final exporter = PdfExporter();
       final bytes = await exporter.export(document, documentPath: docPath);
       await File(savePath).writeAsBytes(bytes);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PDF exportado correctamente')),
+        SnackBar(content: Text('PDF exportado: $savePath')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -181,13 +190,18 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   }
 
   Future<void> _importPdf({String? afterBlockId}) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
-    if (!mounted || result == null) return;
-    final path = result.files.single.path;
-    if (path == null) return;
+    List<String>? paths;
+    try {
+      paths = await LinuxFilePicker.pickFiles(extensions: ['pdf']);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+      return;
+    }
+    if (!mounted || paths == null) return;
+    final path = paths.first;
     try {
       await ref
           .read(editorNotifierProvider(_docId).notifier)
