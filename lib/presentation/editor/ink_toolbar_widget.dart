@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:runa/domain/domain.dart';
 
+import 'selection_mode.dart';
+
 // ---------------------------------------------------------------------------
 // Shape tool metadata
 // ---------------------------------------------------------------------------
@@ -67,6 +69,8 @@ class InkToolbarWidget extends StatelessWidget {
     this.onTextItalicChanged,
     this.activeShapeType,
     this.onShapeTypeChanged,
+    this.activeSelectionMode,
+    this.onSelectionModeChanged,
   });
 
   final StrokeTool activeTool;
@@ -100,6 +104,12 @@ class InkToolbarWidget extends StatelessWidget {
 
   /// Called when the user selects or deselects a shape tool.
   final ValueChanged<ShapeType?>? onShapeTypeChanged;
+
+  /// Active selection sub-mode. Null = selection tool not active.
+  final SelectionMode? activeSelectionMode;
+
+  /// Called when the user activates/changes/deactivates the selection tool.
+  final ValueChanged<SelectionMode?>? onSelectionModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +248,37 @@ class InkToolbarWidget extends StatelessWidget {
                   ),
                 ),
               ),
+            ],
+            if (onSelectionModeChanged != null) ...[
+              const VerticalDivider(indent: 4, endIndent: 4),
+              // Main selection toggle button.
+              _SelectionButton(
+                activeSelectionMode: activeSelectionMode,
+                onTap: () {
+                  // Toggle: activate rect by default, deactivate if already on.
+                  onSelectionModeChanged!(
+                    activeSelectionMode != null ? null : SelectionMode.rect,
+                  );
+                },
+              ),
+              // Rect / Lasso sub-toggle (only when selection is active).
+              if (activeSelectionMode != null) ...[
+                const SizedBox(width: 4),
+                _SelectionSubButton(
+                  icon: Icons.crop_square_outlined,
+                  label: 'Rectangular',
+                  isActive: activeSelectionMode == SelectionMode.rect,
+                  onTap: () =>
+                      onSelectionModeChanged!(SelectionMode.rect),
+                ),
+                _SelectionSubButton(
+                  icon: Icons.gesture,
+                  label: 'Lasso',
+                  isActive: activeSelectionMode == SelectionMode.lasso,
+                  onTap: () =>
+                      onSelectionModeChanged!(SelectionMode.lasso),
+                ),
+              ],
             ],
             if (onShapeTypeChanged != null) ...[
               const VerticalDivider(indent: 4, endIndent: 4),
@@ -757,6 +798,91 @@ class _BackgroundDialogState extends State<_BackgroundDialog> {
     final b = int.parse(h.substring(4, 6), radix: 16);
     final a = int.parse(h.substring(6, 8), radix: 16);
     return Color.fromARGB(a, r, g, b);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _SelectionButton / _SelectionSubButton
+// ---------------------------------------------------------------------------
+
+class _SelectionButton extends StatelessWidget {
+  const _SelectionButton({
+    required this.activeSelectionMode,
+    required this.onTap,
+  });
+
+  final SelectionMode? activeSelectionMode;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = activeSelectionMode != null;
+    final colorScheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: 'Selección',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          width: 32,
+          height: 32,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: isActive ? colorScheme.primaryContainer : null,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(
+            Icons.open_with,
+            size: 18,
+            color: isActive
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectionSubButton extends StatelessWidget {
+  const _SelectionSubButton({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          width: 28,
+          height: 28,
+          margin: const EdgeInsets.symmetric(horizontal: 1),
+          decoration: BoxDecoration(
+            color: isActive ? colorScheme.secondaryContainer : null,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: isActive
+                ? colorScheme.onSecondaryContainer
+                : colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
   }
 }
 

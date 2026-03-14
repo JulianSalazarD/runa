@@ -6,6 +6,7 @@ import 'package:runa/domain/domain.dart';
 
 import 'ink_annotation_layer.dart';
 import 'ink_canvas_widget.dart';
+import 'selection_mode.dart';
 import 'markdown/task_list_extension.dart';
 import 'markdown_editor_widget.dart';
 import 'markdown_preview_widget.dart';
@@ -43,6 +44,7 @@ class BlockWidget extends StatelessWidget {
     this.textBold = false,
     this.textItalic = false,
     this.inkShapeType,
+    this.inkSelectionMode,
   });
 
   final Block block;
@@ -70,6 +72,9 @@ class BlockWidget extends StatelessWidget {
   /// Active geometric shape tool. Null = no shape tool selected.
   final ShapeType? inkShapeType;
 
+  /// Active selection sub-mode. Null = selection tool not active.
+  final SelectionMode? inkSelectionMode;
+
   @override
   Widget build(BuildContext context) {
     return switch (block) {
@@ -89,6 +94,7 @@ class BlockWidget extends StatelessWidget {
           textBold: textBold,
           textItalic: textItalic,
           activeShapeType: inkShapeType,
+          selectionMode: inkSelectionMode,
         ),
       final ImageBlock b => _ImageBlockView(
           block: b,
@@ -226,6 +232,7 @@ class _InkBlockView extends StatefulWidget {
     this.textBold = false,
     this.textItalic = false,
     this.activeShapeType,
+    this.selectionMode,
   });
 
   final InkBlock block;
@@ -237,6 +244,7 @@ class _InkBlockView extends StatefulWidget {
   final bool textBold;
   final bool textItalic;
   final ShapeType? activeShapeType;
+  final SelectionMode? selectionMode;
 
   @override
   State<_InkBlockView> createState() => _InkBlockViewState();
@@ -278,6 +286,7 @@ class _InkBlockViewState extends State<_InkBlockView> {
           textBold: widget.textBold,
           textItalic: widget.textItalic,
           activeShapeType: widget.activeShapeType,
+          selectionMode: widget.selectionMode,
           onUpdate: (updated) => widget.onUpdate?.call(updated),
         ),
         _ResizeHandle(

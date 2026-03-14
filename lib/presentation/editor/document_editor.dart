@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import 'block_chrome.dart';
 import 'block_widget.dart';
 import 'ink_toolbar_widget.dart';
+import 'selection_mode.dart';
 
 enum _InsertBlockType { markdown, ink, image, pdf }
 
@@ -92,6 +93,9 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
 
   /// Active geometric shape tool. Null = no shape tool active.
   ShapeType? _inkShapeType;
+
+  /// Active selection sub-mode. Null = selection tool not active.
+  SelectionMode? _selectionMode;
 
   String get _docId => widget.opened.document.id;
 
@@ -279,7 +283,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   inkWidth: _inkWidth,
                   onInkToolChanged: (t) => setState(() {
                     _inkTool = t;
-                    _inkShapeType = null; // deactivate shape on stroke tool tap
+                    _inkShapeType = null;
+                    _selectionMode = null;
                   }),
                   onInkColorChanged: (c) => setState(() => _inkColor = c),
                   onInkWidthChanged: (w) => setState(() => _inkWidth = w),
@@ -313,7 +318,17 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                           selectedInkBlock.copyWith(backgroundColor: c)),
                   inkShapeType: _inkShapeType,
                   onInkShapeTypeChanged: showInkToolbar
-                      ? (ShapeType? t) => setState(() => _inkShapeType = t)
+                      ? (ShapeType? t) => setState(() {
+                            _inkShapeType = t;
+                            if (t != null) _selectionMode = null;
+                          })
+                      : null,
+                  inkSelectionMode: _selectionMode,
+                  onInkSelectionModeChanged: showInkToolbar
+                      ? (SelectionMode? m) => setState(() {
+                            _selectionMode = m;
+                            if (m != null) _inkShapeType = null;
+                          })
                       : null,
                 ),
                 Expanded(
@@ -331,6 +346,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     textBold: _textBold,
                     textItalic: _textItalic,
                     inkShapeType: _inkShapeType,
+                    inkSelectionMode: _selectionMode,
                   ),
                 ),
               ],
@@ -382,6 +398,8 @@ class _EditorToolbar extends StatelessWidget {
     required this.onTextItalicChanged,
     this.inkShapeType,
     this.onInkShapeTypeChanged,
+    this.inkSelectionMode,
+    this.onInkSelectionModeChanged,
   });
 
   final String path;
@@ -418,6 +436,8 @@ class _EditorToolbar extends StatelessWidget {
   final ValueChanged<bool> onTextItalicChanged;
   final ShapeType? inkShapeType;
   final ValueChanged<ShapeType?>? onInkShapeTypeChanged;
+  final SelectionMode? inkSelectionMode;
+  final ValueChanged<SelectionMode?>? onInkSelectionModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -548,6 +568,8 @@ class _EditorToolbar extends StatelessWidget {
               onTextItalicChanged: onTextItalicChanged,
               activeShapeType: inkShapeType,
               onShapeTypeChanged: onInkShapeTypeChanged,
+              activeSelectionMode: inkSelectionMode,
+              onSelectionModeChanged: onInkSelectionModeChanged,
             ),
           ),
         if (isImporting) const LinearProgressIndicator(minHeight: 2),
@@ -573,6 +595,7 @@ class _BlockList extends StatelessWidget {
     required this.textBold,
     required this.textItalic,
     this.inkShapeType,
+    this.inkSelectionMode,
   });
 
   final EditorState editorState;
@@ -586,6 +609,7 @@ class _BlockList extends StatelessWidget {
   final bool textBold;
   final bool textItalic;
   final ShapeType? inkShapeType;
+  final SelectionMode? inkSelectionMode;
 
   @override
   Widget build(BuildContext context) {
@@ -661,6 +685,7 @@ class _BlockList extends StatelessWidget {
                 textBold: textBold,
                 textItalic: textItalic,
                 inkShapeType: inkShapeType,
+                inkSelectionMode: inkSelectionMode,
               ),
             ),
             _InsertGap(

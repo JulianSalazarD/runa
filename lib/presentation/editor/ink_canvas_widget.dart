@@ -7,6 +7,9 @@ import 'package:runa/domain/domain.dart';
 import 'package:uuid/uuid.dart';
 
 import 'ink_background_painter.dart';
+import 'selection_helper.dart';
+import 'selection_mode.dart';
+import 'selection_overlay_painter.dart';
 import 'shape_painter.dart';
 import 'text_element_painter.dart';
 
@@ -16,10 +19,9 @@ import 'text_element_painter.dart';
 
 /// Drawing canvas for an [InkBlock].
 ///
-/// Captures raw pointer events and emits completed [Stroke]s, [TextElement]s,
-/// or [ShapeElement]s via [onUpdate]. Renders committed strokes (smoothed),
-/// text elements, shapes, and the in-progress stroke/shape through separate
-/// [CustomPainter]s.
+/// Captures raw pointer events and dispatches to the active tool:
+/// freehand strokes, text placement, geometric shapes, or element selection.
+/// Emits the updated [InkBlock] via [onUpdate] after each committed action.
 class InkCanvasWidget extends StatefulWidget {
   const InkCanvasWidget({
     super.key,
@@ -32,6 +34,7 @@ class InkCanvasWidget extends StatefulWidget {
     this.textBold = false,
     this.textItalic = false,
     this.activeShapeType,
+    this.selectionMode,
     this.onUpdate,
   });
 
@@ -54,11 +57,13 @@ class InkCanvasWidget extends StatefulWidget {
   /// Whether new text elements use italic style.
   final bool textItalic;
 
-  /// When non-null, shape drawing mode is active and strokes are ignored.
+  /// When non-null, shape drawing mode is active.
   final ShapeType? activeShapeType;
 
-  /// Called when a stroke is committed, a stroke is erased, text elements
-  /// are updated, or shapes are added.
+  /// When non-null, selection mode is active (overrides all other tools).
+  final SelectionMode? selectionMode;
+
+  /// Called when any element is committed, erased, moved, or deleted.
   final ValueChanged<InkBlock>? onUpdate;
 
   @override
@@ -69,6 +74,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   static const _uuid = Uuid();
   static const _eraserRadius = 20.0;
 
+  // Stroke tool state
   List<StrokePoint> _currentPoints = [];
 
   // Shape tool state
@@ -80,12 +86,42 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   bool _isNewElement = true;
   final TextEditingController _textController = TextEditingController();
   final FocusNode _textFocusNode = FocusNode();
+
+  // Selection tool state
+  Set<String> _selectedIds = {};
+  Rect? _selectionPreviewRect;   // rect dragged during rect-selection
+  List<Offset> _lassoPoints = []; // path during lasso
+  Rect? _selectionBounds;        // pixel bbox of selected elements
+  bool _isMovingSelection = false;
+  Offset? _moveStartPos;
+  Offset _moveDelta = Offset.zero;
+
   BoxConstraints _constraints = const BoxConstraints();
+
+  Size get _canvasSize =>
+      Size(_constraints.maxWidth, widget.height);
 
   @override
   void initState() {
     super.initState();
     _textFocusNode.addListener(_onTextFocusChanged);
+  }
+
+  @override
+  void didUpdateWidget(InkCanvasWidget old) {
+    super.didUpdateWidget(old);
+    // Clear selection state when leaving selection mode.
+    if (old.selectionMode != null && widget.selectionMode == null) {
+      _clearSelection();
+    }
+    // Reset in-progress selection when switching between rect / lasso.
+    if (old.selectionMode != widget.selectionMode &&
+        widget.selectionMode != null) {
+      setState(() {
+        _selectionPreviewRect = null;
+        _lassoPoints = [];
+      });
+    }
   }
 
   @override
@@ -96,19 +132,15 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     super.dispose();
   }
 
-  StrokePoint _makePoint(PointerEvent e) => StrokePoint(
-        x: e.localPosition.dx,
-        y: e.localPosition.dy,
-        // If the device doesn't report pressure, e.pressure == 0; fallback 1.0.
-        pressure: e.pressure > 0.0 ? e.pressure : 1.0,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
-      );
-
   // ---------------------------------------------------------------------------
-  // Pointer handling — dispatch by active mode
+  // Pointer dispatch
   // ---------------------------------------------------------------------------
 
   void _onPointerDown(PointerDownEvent e) {
+    if (widget.selectionMode != null) {
+      _onSelectionPointerDown(e.localPosition);
+      return;
+    }
     if (widget.activeShapeType != null) {
       setState(() {
         _shapeStart = e.localPosition;
@@ -121,10 +153,14 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   void _onPointerMove(PointerMoveEvent e) {
+    if (widget.selectionMode != null) {
+      _onSelectionPointerMove(e.localPosition);
+      return;
+    }
     if (widget.activeShapeType != null) {
       if (_shapeStart != null) {
-        setState(() => _previewShape =
-            _buildShapeElement(_shapeStart!, e.localPosition));
+        setState(
+            () => _previewShape = _buildShapeElement(_shapeStart!, e.localPosition));
       }
       return;
     }
@@ -133,6 +169,10 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   void _onPointerUp(PointerUpEvent e) {
+    if (widget.selectionMode != null) {
+      _onSelectionPointerUp(e.localPosition);
+      return;
+    }
     if (widget.activeShapeType != null) {
       if (_shapeStart != null) {
         final shape = _buildShapeElement(_shapeStart!, e.localPosition);
@@ -152,7 +192,6 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     }
     final allPoints = [..._currentPoints, _makePoint(e)];
     _currentPoints = [];
-
     if (widget.activeTool == StrokeTool.eraser) {
       _handleErase(allPoints);
     } else {
@@ -161,11 +200,151 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   // ---------------------------------------------------------------------------
-  // Shape helpers
+  // Selection tool
   // ---------------------------------------------------------------------------
 
-  /// Builds a [ShapeElement] from canvas-space [start] and [end] offsets.
-  /// When Shift is held, constrains to 1:1 proportion (or 45° for lines).
+  void _onSelectionPointerDown(Offset pos) {
+    // If inside current selection bounds, start a move.
+    if (_selectionBounds != null &&
+        _selectionBounds!.inflate(4).contains(pos)) {
+      setState(() {
+        _isMovingSelection = true;
+        _moveStartPos = pos;
+        _moveDelta = Offset.zero;
+      });
+    } else {
+      // Start a new selection — clear previous.
+      setState(() {
+        _selectedIds = {};
+        _selectionBounds = null;
+        _isMovingSelection = false;
+        _moveDelta = Offset.zero;
+        if (widget.selectionMode == SelectionMode.rect) {
+          _selectionPreviewRect =
+              Rect.fromLTWH(pos.dx, pos.dy, 0, 0);
+          _lassoPoints = [];
+        } else {
+          _lassoPoints = [pos];
+          _selectionPreviewRect = null;
+        }
+      });
+    }
+  }
+
+  void _onSelectionPointerMove(Offset pos) {
+    if (_isMovingSelection) {
+      setState(() => _moveDelta = pos - _moveStartPos!);
+    } else if (widget.selectionMode == SelectionMode.rect &&
+        _selectionPreviewRect != null) {
+      final origin = _selectionPreviewRect!.topLeft;
+      setState(() => _selectionPreviewRect = Rect.fromPoints(origin, pos));
+    } else if (widget.selectionMode == SelectionMode.lasso) {
+      setState(() => _lassoPoints = [..._lassoPoints, pos]);
+    }
+  }
+
+  void _onSelectionPointerUp(Offset pos) {
+    if (_isMovingSelection) {
+      _commitMove();
+    } else {
+      _finalizeSelection(pos);
+    }
+  }
+
+  void _finalizeSelection(Offset upPos) {
+    Set<String> selected;
+    if (widget.selectionMode == SelectionMode.rect &&
+        _selectionPreviewRect != null) {
+      selected = SelectionHelper.hitTestRect(
+          widget.block, _selectionPreviewRect!, _canvasSize);
+    } else if (widget.selectionMode == SelectionMode.lasso &&
+        _lassoPoints.length >= 3) {
+      selected = SelectionHelper.hitTestLasso(
+          widget.block, _lassoPoints, _canvasSize);
+    } else {
+      selected = {};
+    }
+    setState(() {
+      _selectedIds = selected;
+      _selectionPreviewRect = null;
+      _lassoPoints = [];
+      _selectionBounds = selected.isEmpty
+          ? null
+          : SelectionHelper.computeBounds(widget.block, selected, _canvasSize);
+    });
+  }
+
+  void _commitMove() {
+    final updated = SelectionHelper.moveSelection(
+        widget.block, _selectedIds, _moveDelta, _canvasSize);
+    setState(() {
+      _isMovingSelection = false;
+      _selectionBounds = _selectionBounds?.shift(_moveDelta);
+      _moveDelta = Offset.zero;
+      _moveStartPos = null;
+    });
+    if (updated != widget.block) {
+      widget.onUpdate?.call(updated);
+    }
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedIds = {};
+      _selectionBounds = null;
+      _selectionPreviewRect = null;
+      _lassoPoints = [];
+      _isMovingSelection = false;
+      _moveDelta = Offset.zero;
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delete selection
+  // ---------------------------------------------------------------------------
+
+  void _handleDeleteSelected() {
+    if (_selectedIds.isEmpty) return;
+    if (_selectedIds.length > 5) {
+      final count = _selectedIds.length;
+      showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Eliminar selección'),
+          content: Text('¿Eliminar $count elementos seleccionados?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        ),
+      ).then((confirmed) {
+        if (confirmed == true) _deleteSelected();
+      });
+    } else {
+      _deleteSelected();
+    }
+  }
+
+  void _deleteSelected() {
+    final updated =
+        SelectionHelper.deleteSelection(widget.block, _selectedIds);
+    setState(() {
+      _selectedIds = {};
+      _selectionBounds = null;
+    });
+    widget.onUpdate?.call(updated);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shape tool
+  // ---------------------------------------------------------------------------
+
   ShapeElement _buildShapeElement(Offset start, Offset end) {
     final w = _constraints.maxWidth;
     final h = widget.height;
@@ -189,7 +368,6 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
       final dx = end.dx - start.dx;
       final dy = end.dy - start.dy;
       if (widget.activeShapeType == ShapeType.line) {
-        // Snap to nearest 45° increment.
         final angle = math.atan2(dy, dx);
         final snapped =
             (angle / (math.pi / 4)).round() * (math.pi / 4);
@@ -197,7 +375,6 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
         endX = start.dx + len * math.cos(snapped);
         endY = start.dy + len * math.sin(snapped);
       } else {
-        // Force equal width and height (square / circle).
         final side = math.min(dx.abs(), dy.abs());
         endX = start.dx + (dx < 0 ? -side : side);
         endY = start.dy + (dy < 0 ? -side : side);
@@ -217,8 +394,15 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   // ---------------------------------------------------------------------------
-  // Stroke helpers
+  // Stroke tool
   // ---------------------------------------------------------------------------
+
+  StrokePoint _makePoint(PointerEvent e) => StrokePoint(
+        x: e.localPosition.dx,
+        y: e.localPosition.dy,
+        pressure: e.pressure > 0.0 ? e.pressure : 1.0,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
 
   void _commitStroke(List<StrokePoint> points) {
     if (points.isEmpty) return;
@@ -243,8 +427,6 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     }
   }
 
-  /// Returns `true` when any eraser point is within [_eraserRadius] of any
-  /// point belonging to [stroke].
   static bool _intersectsEraser(Stroke stroke, List<StrokePoint> eraser) {
     const r2 = _eraserRadius * _eraserRadius;
     for (final ep in eraser) {
@@ -258,7 +440,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   // ---------------------------------------------------------------------------
-  // Text tool handlers
+  // Text tool
   // ---------------------------------------------------------------------------
 
   void _handleTextTap(Offset pos) {
@@ -269,7 +451,6 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     final normX = (pos.dx / w).clamp(0.0, 1.0);
     final normY = (pos.dy / h).clamp(0.0, 1.0);
 
-    // Hit-test existing elements (within 20px logical).
     final existing = widget.block.textElements.where((TextElement el) {
       final ex = el.x * w;
       final ey = el.y * h;
@@ -306,7 +487,6 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     final el = _editingElement!;
 
     if (content.isEmpty) {
-      // Delete element if it existed, otherwise cancel.
       if (!_isNewElement) {
         final updated = widget.block.textElements
             .where((TextElement e) => e.id != el.id)
@@ -331,7 +511,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   // ---------------------------------------------------------------------------
-  // Color parsing
+  // Helpers
   // ---------------------------------------------------------------------------
 
   static Color? _parseColorHex(String? hex) {
@@ -344,26 +524,45 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     return Color.fromARGB(a, r, g, b);
   }
 
-  // ---------------------------------------------------------------------------
-  // Build
-  // ---------------------------------------------------------------------------
-
   MouseCursor get _cursor {
+    if (widget.selectionMode != null) {
+      return _isMovingSelection && _selectionBounds != null
+          ? SystemMouseCursors.move
+          : SystemMouseCursors.precise;
+    }
     if (widget.activeShapeType != null) return SystemMouseCursors.precise;
     return MouseCursor.defer;
   }
+
+  // ---------------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     return Focus(
       onKeyEvent: (_, event) {
-        if (event is KeyDownEvent &&
-            event.logicalKey == LogicalKeyboardKey.escape &&
-            _editingElement != null) {
-          setState(() => _editingElement = null);
-          _textController.clear();
-          return KeyEventResult.handled;
+        if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+        // Escape: cancel text edit.
+        if (event.logicalKey == LogicalKeyboardKey.escape) {
+          if (_editingElement != null) {
+            setState(() => _editingElement = null);
+            _textController.clear();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
         }
+
+        // Delete / Backspace: delete selected elements.
+        if (widget.selectionMode != null && _selectedIds.isNotEmpty) {
+          if (event.logicalKey == LogicalKeyboardKey.delete ||
+              event.logicalKey == LogicalKeyboardKey.backspace) {
+            _handleDeleteSelected();
+            return KeyEventResult.handled;
+          }
+        }
+
         return KeyEventResult.ignored;
       },
       child: MouseRegion(
@@ -378,33 +577,34 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   _constraints = constraints;
+                  final size = Size(constraints.maxWidth, widget.height);
                   return Stack(
                     children: [
                       CustomPaint(
                         painter: InkBackgroundPainter(
                           background: widget.block.background,
                           spacing: widget.block.backgroundSpacing,
-                          lineColor:
-                              _parseColorHex(widget.block.backgroundLineColor),
+                          lineColor: _parseColorHex(
+                              widget.block.backgroundLineColor),
                           defaultColor:
                               Theme.of(context).colorScheme.outlineVariant,
                           backgroundColor:
                               _parseColorHex(widget.block.backgroundColor),
                         ),
-                        size: Size(constraints.maxWidth, widget.height),
+                        size: size,
                       ),
                       CustomPaint(
                         painter: ShapePainter(
                           shapes: widget.block.shapes,
                           previewShape: _previewShape,
                         ),
-                        size: Size(constraints.maxWidth, widget.height),
+                        size: size,
                       ),
                       CustomPaint(
                         painter: TextElementPainter(
                           elements: widget.block.textElements,
                         ),
-                        size: Size(constraints.maxWidth, widget.height),
+                        size: size,
                       ),
                       CustomPaint(
                         painter: InkPainter(
@@ -412,8 +612,19 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
                           currentPoints: _currentPoints,
                           activeTool: widget.activeTool,
                         ),
-                        size: Size(constraints.maxWidth, widget.height),
+                        size: size,
                       ),
+                      // Selection overlay — topmost layer.
+                      if (widget.selectionMode != null)
+                        CustomPaint(
+                          painter: SelectionOverlayPainter(
+                            selectionRect: _selectionPreviewRect,
+                            lassoPoints: _lassoPoints,
+                            selectedBounds: _selectionBounds,
+                            moveDelta: _moveDelta,
+                          ),
+                          size: size,
+                        ),
                       if (_editingElement != null)
                         Positioned(
                           left: (_editingElement!.x * constraints.maxWidth)
@@ -443,10 +654,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
         ),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.85),
-          border: Border.all(
-            color: Colors.blueAccent,
-            width: 1.5,
-          ),
+          border: Border.all(color: Colors.blueAccent, width: 1.5),
           borderRadius: BorderRadius.circular(3),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -478,8 +686,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
 // InkPainter
 // ---------------------------------------------------------------------------
 
-/// [CustomPainter] that renders committed [Stroke]s and the in-progress
-/// stroke from [currentPoints].
+/// [CustomPainter] that renders committed [Stroke]s and the in-progress stroke.
 class InkPainter extends CustomPainter {
   const InkPainter({
     required this.strokes,
@@ -495,7 +702,6 @@ class InkPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw committed strokes (smoothed).
     for (final stroke in strokes) {
       if (stroke.tool == StrokeTool.eraser) continue;
       final smoothed = smoother.smooth(stroke.points);
@@ -503,7 +709,6 @@ class InkPainter extends CustomPainter {
       canvas.drawPath(_buildPath(smoothed), _makePaint(stroke));
     }
 
-    // Draw in-progress stroke (raw, no smoothing yet).
     if (currentPoints.length >= 2 && activeTool != StrokeTool.eraser) {
       final rawOffsets =
           currentPoints.map((p) => ui.Offset(p.x, p.y)).toList();
@@ -543,16 +748,13 @@ class InkPainter extends CustomPainter {
         paint.color = color.withValues(alpha: color.a * 0.4);
         paint.strokeWidth = stroke.width * 3;
       case StrokeTool.eraser:
-        // Eraser strokes are never rendered; they remove other strokes.
         break;
       case StrokeTool.text:
-        // Text elements are rendered by TextElementPainter, not here.
         break;
     }
     return paint;
   }
 
-  /// Parses `#RRGGBBAA` into a Flutter [Color].
   static Color _parseColor(String hex) {
     final h = hex.replaceFirst('#', '');
     final r = int.parse(h.substring(0, 2), radix: 16);
