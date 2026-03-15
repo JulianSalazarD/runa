@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:runa/application/application.dart';
 import 'package:runa/data/data.dart';
 
+import '../settings/settings_screen.dart';
 import '../utils/linux_file_picker.dart';
 
 /// Shown when no folder is open. Provides quick actions and recent files.
@@ -16,7 +17,21 @@ class WelcomeView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final entriesAsync = ref.watch(recentEntriesProvider);
 
-    return SingleChildScrollView(
+    return Stack(
+      children: [
+        Positioned(
+          top: 8,
+          right: 8,
+          child: IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Configuración',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                  builder: (_) => const SettingsScreen()),
+            ),
+          ),
+        ),
+        SingleChildScrollView(
       child: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 64),
@@ -57,6 +72,8 @@ class WelcomeView extends ConsumerWidget {
           ),
         ),
       ),
+        ),
+      ],
     );
   }
 

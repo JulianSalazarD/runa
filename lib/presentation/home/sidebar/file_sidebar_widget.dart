@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 
 import 'package:runa/application/application.dart';
 import 'package:runa/presentation/home/sidebar/name_input_dialog.dart';
+import 'package:runa/presentation/settings/settings_screen.dart';
 
 // ---------------------------------------------------------------------------
 // Public widget
@@ -145,7 +146,16 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
                       },
                     ),
         ),
+        _SidebarFooter(onSettings: _openSettings),
       ],
+    );
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const SettingsScreen(),
+      ),
     );
   }
 
@@ -469,6 +479,36 @@ class _SidebarItemTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar footer (gear icon)
+// ---------------------------------------------------------------------------
+
+class _SidebarFooter extends StatelessWidget {
+  const _SidebarFooter({required this.onSettings});
+
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: IconButton(
+          icon: const Icon(Icons.settings_outlined, size: 18),
+          tooltip: 'Configuración',
+          onPressed: onSettings,
+        ),
       ),
     );
   }

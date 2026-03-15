@@ -79,6 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(workspaceNotifierProvider.notifier).initialize();
+      ref.read(settingsNotifierProvider.notifier).initialize();
     });
   }
 

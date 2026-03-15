@@ -87,5 +87,48 @@ final assetManagerProvider = AutoDisposeProvider<AssetManager>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AssetManagerRef = AutoDisposeProviderRef<AssetManager>;
+String _$settingsRepositoryHash() =>
+    r'10f11a828f81bcf1e4139b0e5cb9070c311d2255';
+
+/// Default [SettingsRepository] — reads/writes `settings.json` on disk.
+///
+/// Copied from [settingsRepository].
+@ProviderFor(settingsRepository)
+final settingsRepositoryProvider =
+    AutoDisposeProvider<SettingsRepository>.internal(
+      settingsRepository,
+      name: r'settingsRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$settingsRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SettingsRepositoryRef = AutoDisposeProviderRef<SettingsRepository>;
+String _$defaultDirectoryServiceHash() =>
+    r'a14e86e60495f0e8f6cd0f45fb821753ce0a2eca';
+
+/// Provides the [DefaultDirectoryService] so it can be overridden in tests.
+///
+/// Copied from [defaultDirectoryService].
+@ProviderFor(defaultDirectoryService)
+final defaultDirectoryServiceProvider =
+    AutoDisposeProvider<DefaultDirectoryService>.internal(
+      defaultDirectoryService,
+      name: r'defaultDirectoryServiceProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$defaultDirectoryServiceHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DefaultDirectoryServiceRef =
+    AutoDisposeProviderRef<DefaultDirectoryService>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

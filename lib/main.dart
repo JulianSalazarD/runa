@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 
+import 'package:runa/application/application.dart';
 import 'package:runa/presentation/presentation.dart';
 
 void main() async {
@@ -15,11 +16,13 @@ void main() async {
   runApp(const ProviderScope(child: RunaApp()));
 }
 
-class RunaApp extends StatelessWidget {
+class RunaApp extends ConsumerWidget {
   const RunaApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(settingsNotifierProvider).themeMode;
+
     return MaterialApp(
       title: 'Runa',
       theme: ThemeData(
@@ -33,7 +36,7 @@ class RunaApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.dark,
+      themeMode: themeMode,
       home: const HomeScreen(),
     );
   }

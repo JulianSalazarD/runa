@@ -45,6 +45,8 @@ class BlockWidget extends StatelessWidget {
     this.textItalic = false,
     this.inkShapeType,
     this.inkSelectionMode,
+    this.markdownFontFamily,
+    this.markdownFontSize,
   });
 
   final Block block;
@@ -75,6 +77,12 @@ class BlockWidget extends StatelessWidget {
   /// Active selection sub-mode. Null = selection tool not active.
   final SelectionMode? inkSelectionMode;
 
+  /// Font family applied to Markdown editor and preview. Null = default.
+  final String? markdownFontFamily;
+
+  /// Font size applied to Markdown editor and preview. Null = default.
+  final double? markdownFontSize;
+
   @override
   Widget build(BuildContext context) {
     return switch (block) {
@@ -83,6 +91,8 @@ class BlockWidget extends StatelessWidget {
           onUpdate: onUpdate,
           onEnterAtEnd: onEnterAtEnd,
           autoFocus: autoFocus,
+          fontFamily: markdownFontFamily,
+          fontSize: markdownFontSize,
         ),
       final InkBlock b => _InkBlockView(
           block: b,
@@ -125,12 +135,16 @@ class _MarkdownBlockView extends StatefulWidget {
     this.onUpdate,
     this.onEnterAtEnd,
     this.autoFocus = false,
+    this.fontFamily,
+    this.fontSize,
   });
 
   final MarkdownBlock block;
   final ValueChanged<Block>? onUpdate;
   final VoidCallback? onEnterAtEnd;
   final bool autoFocus;
+  final String? fontFamily;
+  final double? fontSize;
 
   @override
   State<_MarkdownBlockView> createState() => _MarkdownBlockViewState();
@@ -168,6 +182,8 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
                 widget.onUpdate?.call(widget.block.copyWith(content: content)),
             autoFocus: widget.autoFocus,
             onEnterAtEnd: widget.onEnterAtEnd,
+            fontFamily: widget.fontFamily,
+            fontSize: widget.fontSize,
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 2),
@@ -182,6 +198,8 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
         ] else
           MarkdownPreviewWidget(
             content: widget.block.content,
+            fontFamily: widget.fontFamily,
+            fontSize: widget.fontSize,
             onCheckboxToggled: widget.onUpdate == null
                 ? null
                 : (idx, checked) {

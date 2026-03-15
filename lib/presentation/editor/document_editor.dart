@@ -84,8 +84,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
 
   /// Ink tool state — shown in the top toolbar when an ink/image block is selected.
   StrokeTool _inkTool = StrokeTool.pen;
-  String _inkColor = '#000000FF';
-  double _inkWidth = 2.0;
+  late String _inkColor;
+  late double _inkWidth;
 
   /// Text element state for the ink canvas text tool.
   double _textFontSize = 16.0;
@@ -100,10 +100,27 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
 
   String get _docId => widget.opened.document.id;
 
+  /// Converts a [Color] to the `#RRGGBBAA` hex format used by ink strokes.
+  static String _colorToHex(Color color) {
+    final v = color.toARGB32(); // 0xAARRGGBB
+    final a = (v >> 24) & 0xFF;
+    final r = (v >> 16) & 0xFF;
+    final g = (v >> 8) & 0xFF;
+    final b = v & 0xFF;
+    return '#'
+        '${r.toRadixString(16).padLeft(2, '0')}'
+        '${g.toRadixString(16).padLeft(2, '0')}'
+        '${b.toRadixString(16).padLeft(2, '0')}'
+        '${a.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+  }
+
   @override
   void initState() {
     super.initState();
     _editorFocusNode = FocusNode(debugLabel: 'EditorCanvas');
+    final settings = ref.read(settingsNotifierProvider);
+    _inkColor = _colorToHex(settings.defaultInkColor);
+    _inkWidth = settings.defaultInkStrokeWidth;
     _initEditor();
   }
 
@@ -339,9 +356,17 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   onAddMarkdown: () => notifier.addBlock(
                     Block.markdown(id: _uuid.v4(), content: ''),
                   ),
-                  onAddInk: () => notifier.addBlock(
-                    Block.ink(id: _uuid.v4(), strokes: const [], height: 200.0),
-                  ),
+                  onAddInk: () {
+                    final s = ref.read(settingsNotifierProvider);
+                    notifier.addBlock(Block.ink(
+                      id: _uuid.v4(),
+                      height: 200.0,
+                      background: s.defaultInkBackground,
+                      backgroundColor: s.defaultCanvasBackground != null
+                          ? _colorToHex(s.defaultCanvasBackground!)
+                          : null,
+                    ));
+                  },
                   onAddImage: _importImage,
                   onAddPdf: _importPdf,
                   onExportPdf: _exportToPdf,
@@ -417,6 +442,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     textItalic: _textItalic,
                     inkShapeType: _inkShapeType,
                     inkSelectionMode: _selectionMode,
+                    markdownFontFamily: ref.watch(settingsNotifierProvider).markdownFontFamily,
+                    markdownFontSize: ref.watch(settingsNotifierProvider).markdownFontSize,
                   ),
                 ),
               ],
@@ -666,6 +693,8 @@ class _BlockList extends StatelessWidget {
     required this.textItalic,
     this.inkShapeType,
     this.inkSelectionMode,
+    this.markdownFontFamily,
+    this.markdownFontSize,
   });
 
   final EditorState editorState;
@@ -680,6 +709,8 @@ class _BlockList extends StatelessWidget {
   final bool textItalic;
   final ShapeType? inkShapeType;
   final SelectionMode? inkSelectionMode;
+  final String? markdownFontFamily;
+  final double? markdownFontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -756,6 +787,8 @@ class _BlockList extends StatelessWidget {
                 textItalic: textItalic,
                 inkShapeType: inkShapeType,
                 inkSelectionMode: inkSelectionMode,
+                markdownFontFamily: markdownFontFamily,
+                markdownFontSize: markdownFontSize,
               ),
             ),
             _InsertGap(
@@ -763,14 +796,12 @@ class _BlockList extends StatelessWidget {
                 Block.markdown(id: const Uuid().v4(), content: ''),
                 afterId: block.id,
               ),
-              onInsertInk: () => notifier.addBlock(
-                Block.ink(
-                  id: const Uuid().v4(),
-                  strokes: const [],
-                  height: 200.0,
-                ),
-                afterId: block.id,
-              ),
+              onInsertInk: () {
+                notifier.addBlock(
+                  Block.ink(id: const Uuid().v4(), height: 200.0),
+                  afterId: block.id,
+                );
+              },
               onInsertImage: () =>
                   onImportImage(afterBlockId: block.id),
               onInsertPdf: () =>

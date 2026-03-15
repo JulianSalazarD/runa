@@ -24,6 +24,8 @@ class MarkdownPreviewWidget extends StatelessWidget {
     super.key,
     required this.content,
     this.onCheckboxToggled,
+    this.fontFamily,
+    this.fontSize,
   });
 
   final String content;
@@ -35,6 +37,12 @@ class MarkdownPreviewWidget extends StatelessWidget {
   ///
   /// When `null`, checkboxes are rendered as read-only.
   final void Function(int index, bool checked)? onCheckboxToggled;
+
+  /// Font family for rendered body text. Defaults to the theme font.
+  final String? fontFamily;
+
+  /// Base font size for rendered body text. Defaults to theme bodyLarge size.
+  final double? fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +94,10 @@ class MarkdownPreviewWidget extends StatelessWidget {
         );
       },
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-        p: theme.textTheme.bodyLarge,
+        p: (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
+          fontFamily: fontFamily,
+          fontSize: fontSize,
+        ),
         code: theme.textTheme.bodyMedium?.copyWith(
           fontFamily: 'monospace',
           backgroundColor: theme.colorScheme.surfaceContainerHighest,

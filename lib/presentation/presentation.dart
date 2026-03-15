@@ -20,3 +20,4 @@ export 'home/sidebar/file_sidebar_widget.dart';
 export 'home/sidebar/name_input_dialog.dart';
 export 'home/tabs/document_tab_bar.dart';
 export 'home/welcome_view.dart';
+export 'settings/settings_screen.dart';

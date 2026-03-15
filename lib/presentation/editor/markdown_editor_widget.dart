@@ -23,6 +23,8 @@ class MarkdownEditorWidget extends StatefulWidget {
     required this.onChanged,
     this.autoFocus = false,
     this.onEnterAtEnd,
+    this.fontFamily,
+    this.fontSize,
   });
 
   final String initialContent;
@@ -33,6 +35,12 @@ class MarkdownEditorWidget extends StatefulWidget {
 
   /// Called when Enter is pressed at the end of an empty last line.
   final VoidCallback? onEnterAtEnd;
+
+  /// Font family for the raw editor text. Defaults to monospace.
+  final String? fontFamily;
+
+  /// Font size for the raw editor text. Defaults to 16.
+  final double? fontSize;
 
   @override
   State<MarkdownEditorWidget> createState() => _MarkdownEditorWidgetState();
@@ -166,8 +174,8 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
       minLines: 1,
       maxLines: null,
       style: TextStyle(
-        fontFamily: 'monospace',
-        fontSize: 16,
+        fontFamily: widget.fontFamily ?? 'monospace',
+        fontSize: widget.fontSize ?? 16,
         color: Theme.of(context).colorScheme.onSurface,
       ),
       decoration: const InputDecoration(
