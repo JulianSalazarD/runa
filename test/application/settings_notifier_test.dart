@@ -34,7 +34,7 @@ ProviderContainer _makeContainer(FakeSettingsRepository repo) {
     ],
   );
   // Keep the auto-dispose provider alive for the test.
-  container.listen(settingsNotifierProvider, (_, next) {});
+  container.listen(settingsProvider, (_, next) {});
   return container;
 }
 
@@ -52,7 +52,7 @@ void main() {
       final container = _makeContainer(FakeSettingsRepository());
       addTearDown(container.dispose);
 
-      final settings = container.read(settingsNotifierProvider);
+      final settings = container.read(settingsProvider);
       expect(settings.themeMode, ThemeMode.system);
       expect(settings.autoSaveEnabled, isTrue);
       expect(settings.autoSaveIntervalSeconds, 30);
@@ -71,9 +71,9 @@ void main() {
       final container = _makeContainer(repo);
       addTearDown(container.dispose);
 
-      await container.read(settingsNotifierProvider.notifier).initialize();
+      await container.read(settingsProvider.notifier).initialize();
 
-      final settings = container.read(settingsNotifierProvider);
+      final settings = container.read(settingsProvider);
       expect(settings.themeMode, ThemeMode.dark);
       expect(settings.autoSaveEnabled, isFalse);
     });
@@ -82,9 +82,9 @@ void main() {
       final container = _makeContainer(FakeSettingsRepository());
       addTearDown(container.dispose);
 
-      await container.read(settingsNotifierProvider.notifier).initialize();
+      await container.read(settingsProvider.notifier).initialize();
 
-      expect(container.read(settingsNotifierProvider).themeMode, ThemeMode.system);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.system);
     });
   });
 
@@ -98,9 +98,9 @@ void main() {
       addTearDown(container.dispose);
 
       final updated = const AppSettings().copyWith(themeMode: ThemeMode.light);
-      await container.read(settingsNotifierProvider.notifier).update(updated);
+      await container.read(settingsProvider.notifier).update(updated);
 
-      expect(container.read(settingsNotifierProvider).themeMode, ThemeMode.light);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.light);
     });
 
     test('persists to repository', () async {
@@ -109,7 +109,7 @@ void main() {
       addTearDown(container.dispose);
 
       final updated = const AppSettings().copyWith(markdownFontSize: 20.0);
-      await container.read(settingsNotifierProvider.notifier).update(updated);
+      await container.read(settingsProvider.notifier).update(updated);
 
       expect(repo.saveCount, 1);
       expect(repo._stored.markdownFontSize, 20.0);
@@ -119,11 +119,11 @@ void main() {
       final container = _makeContainer(FakeSettingsRepository());
       addTearDown(container.dispose);
 
-      final notifier = container.read(settingsNotifierProvider.notifier);
+      final notifier = container.read(settingsProvider.notifier);
       await notifier.update(const AppSettings().copyWith(themeMode: ThemeMode.dark));
       await notifier.update(const AppSettings().copyWith(themeMode: ThemeMode.light));
 
-      expect(container.read(settingsNotifierProvider).themeMode, ThemeMode.light);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.light);
     });
   });
 }

@@ -8,7 +8,7 @@ part 'workspace_state.freezed.dart';
 ///
 /// Held by [WorkspaceNotifier] and rebuilt on every state change.
 @freezed
-class WorkspaceState with _$WorkspaceState {
+abstract class WorkspaceState with _$WorkspaceState {
   const factory WorkspaceState({
     /// Absolute path of the directory currently open in the sidebar, or null.
     String? openedDirectoryPath,

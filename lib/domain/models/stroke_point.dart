@@ -5,7 +5,7 @@ part 'stroke_point.g.dart';
 
 /// A single sampled input point within a [Stroke].
 @freezed
-class StrokePoint with _$StrokePoint {
+abstract class StrokePoint with _$StrokePoint {
   const factory StrokePoint({
     /// X coordinate in logical pixels relative to the [InkBlock] canvas origin.
     required double x,

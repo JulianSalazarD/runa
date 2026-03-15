@@ -98,7 +98,7 @@ void main() {
   late ProviderContainer container;
   late EditorNotifier notifier;
 
-  EditorState state() => container.read(editorNotifierProvider(_docId));
+  EditorState state() => container.read(editorProvider(_docId));
 
   setUp(() {
     fakeRepo = _FakeDocumentRepository();
@@ -114,7 +114,7 @@ void main() {
       ],
     );
 
-    notifier = container.read(editorNotifierProvider(_docId).notifier);
+    notifier = container.read(editorProvider(_docId).notifier);
     notifier.initFromDocument(_makeDoc(), _path);
   });
 

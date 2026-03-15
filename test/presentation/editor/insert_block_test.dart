@@ -127,7 +127,7 @@ Future<ProviderContainer> pumpEditor(
 }
 
 EditorState editorState(ProviderContainer c) =>
-    c.read(editorNotifierProvider(_docId));
+    c.read(editorProvider(_docId));
 
 // ---------------------------------------------------------------------------
 // Tests

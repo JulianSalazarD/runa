@@ -131,10 +131,10 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    notifier = container.read(workspaceNotifierProvider.notifier);
+    notifier = container.read(workspaceProvider.notifier);
   });
 
-  WorkspaceState state() => container.read(workspaceNotifierProvider);
+  WorkspaceState state() => container.read(workspaceProvider);
 
   // -------------------------------------------------------------------------
   // Initial state

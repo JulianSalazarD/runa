@@ -11,7 +11,7 @@ enum StrokeTool { pen, pencil, marker, eraser, text }
 
 /// A single continuous ink stroke composed of [StrokePoint]s.
 @freezed
-class Stroke with _$Stroke {
+abstract class Stroke with _$Stroke {
   @JsonSerializable(explicitToJson: true)
   const factory Stroke({
     /// Unique stroke identifier (UUID v4).

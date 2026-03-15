@@ -28,7 +28,7 @@ Future<void> confirmAndCloseDocument(
       await ref.read(documentRepositoryProvider).save(doc.document, doc.path);
     }
   }
-  ref.read(workspaceNotifierProvider.notifier).closeDocument(doc.document.id);
+  ref.read(workspaceProvider.notifier).closeDocument(doc.document.id);
 }
 
 // ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ class DocumentTabBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final workspace = ref.watch(workspaceNotifierProvider);
+    final workspace = ref.watch(workspaceProvider);
     final docs = workspace.openedDocuments;
 
     if (docs.isEmpty) return const SizedBox.shrink();
@@ -68,7 +68,7 @@ class DocumentTabBar extends ConsumerWidget {
             opened: doc,
             isActive: isActive,
             onTap: () => ref
-                .read(workspaceNotifierProvider.notifier)
+                .read(workspaceProvider.notifier)
                 .setActiveDocument(doc.document.id),
             onClose: () => confirmAndCloseDocument(context, ref, doc),
           );

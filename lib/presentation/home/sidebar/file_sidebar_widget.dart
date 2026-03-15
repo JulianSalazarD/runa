@@ -98,7 +98,7 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final workspace = ref.watch(workspaceNotifierProvider);
+    final workspace = ref.watch(workspaceProvider);
     final items = _items;
 
     return Column(
@@ -138,7 +138,7 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
                           onTap: item.isDirectory
                               ? () => _toggleExpand(item.path)
                               : () => ref
-                                  .read(workspaceNotifierProvider.notifier)
+                                  .read(workspaceProvider.notifier)
                                   .openDocument(item.path),
                           onContextMenu: (pos) =>
                               _showContextMenu(context, item, pos),
@@ -201,7 +201,7 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
     switch (selected) {
       case 'open':
         await ref
-            .read(workspaceNotifierProvider.notifier)
+            .read(workspaceProvider.notifier)
             .openDocument(item.path);
       case 'new_doc':
         await _promptNewDocument(item.path);
@@ -235,7 +235,7 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
     );
     if (name == null || name.isEmpty) return;
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .createDocument(directory, name);
   }
 
@@ -256,7 +256,7 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
     );
     if (name == null || name.isEmpty) return;
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .createSubdirectory(directory, name);
   }
 
@@ -296,7 +296,7 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
       await _reload();
     } else {
       await ref
-          .read(workspaceNotifierProvider.notifier)
+          .read(workspaceProvider.notifier)
           .renameDocument(item.path, newPath);
     }
   }
@@ -331,11 +331,11 @@ class _FileSidebarWidgetState extends ConsumerState<FileSidebarWidget> {
 
     if (item.isDirectory) {
       await ref
-          .read(workspaceNotifierProvider.notifier)
+          .read(workspaceProvider.notifier)
           .deleteDirectory(item.path);
     } else {
       await ref
-          .read(workspaceNotifierProvider.notifier)
+          .read(workspaceProvider.notifier)
           .deleteDocument(item.path);
     }
   }
@@ -409,7 +409,7 @@ class _SidebarHeader extends ConsumerWidget {
     );
     if (name == null || name.isEmpty) return;
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .createDocument(directoryPath, name);
   }
 
@@ -431,7 +431,7 @@ class _SidebarHeader extends ConsumerWidget {
     );
     if (name == null || name.isEmpty) return;
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .createSubdirectory(directoryPath, name);
   }
 }

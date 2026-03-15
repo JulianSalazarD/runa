@@ -6,15 +6,14 @@ part of 'stroke_point.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$StrokePointImpl _$$StrokePointImplFromJson(Map<String, dynamic> json) =>
-    _$StrokePointImpl(
-      x: (json['x'] as num).toDouble(),
-      y: (json['y'] as num).toDouble(),
-      pressure: (json['pressure'] as num).toDouble(),
-      timestamp: (json['timestamp'] as num).toInt(),
-    );
+_StrokePoint _$StrokePointFromJson(Map<String, dynamic> json) => _StrokePoint(
+  x: (json['x'] as num).toDouble(),
+  y: (json['y'] as num).toDouble(),
+  pressure: (json['pressure'] as num).toDouble(),
+  timestamp: (json['timestamp'] as num).toInt(),
+);
 
-Map<String, dynamic> _$$StrokePointImplToJson(_$StrokePointImpl instance) =>
+Map<String, dynamic> _$StrokePointToJson(_StrokePoint instance) =>
     <String, dynamic>{
       'x': instance.x,
       'y': instance.y,

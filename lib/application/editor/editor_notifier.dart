@@ -12,7 +12,7 @@ part 'editor_notifier.g.dart';
 
 /// Manages editing state for a single document identified by [documentId].
 ///
-/// Create the notifier via `editorNotifierProvider(documentId)`, then call
+/// Create the notifier via `editorProvider(documentId)`, then call
 /// [loadDocument] with the file path before making any mutations.
 @riverpod
 class EditorNotifier extends _$EditorNotifier {
@@ -68,7 +68,7 @@ class EditorNotifier extends _$EditorNotifier {
     await ref.read(documentRepositoryProvider).save(updated, state.path);
     state = state.copyWith(document: updated, isDirty: false);
     ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .markHasUnsavedChanges(documentId, value: false);
   }
 
@@ -251,7 +251,7 @@ class EditorNotifier extends _$EditorNotifier {
       isDirty: true,
     );
     ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .markHasUnsavedChanges(documentId);
   }
 }

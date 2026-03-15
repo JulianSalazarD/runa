@@ -6,8 +6,8 @@ part of 'shape_element.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$ShapeElementImpl _$$ShapeElementImplFromJson(Map<String, dynamic> json) =>
-    _$ShapeElementImpl(
+_ShapeElement _$ShapeElementFromJson(Map<String, dynamic> json) =>
+    _ShapeElement(
       id: json['id'] as String,
       type: $enumDecode(_$ShapeTypeEnumMap, json['type']),
       x1: (json['x1'] as num).toDouble(),
@@ -20,7 +20,7 @@ _$ShapeElementImpl _$$ShapeElementImplFromJson(Map<String, dynamic> json) =>
       fillColor: json['fillColor'] as String?,
     );
 
-Map<String, dynamic> _$$ShapeElementImplToJson(_$ShapeElementImpl instance) =>
+Map<String, dynamic> _$ShapeElementToJson(_ShapeElement instance) =>
     <String, dynamic>{
       'id': instance.id,
       'type': _$ShapeTypeEnumMap[instance.type]!,

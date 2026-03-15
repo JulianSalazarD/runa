@@ -9,7 +9,7 @@ part 'document.g.dart';
 ///
 /// Maps 1-to-1 with a `.runa` file on disk.
 @freezed
-class Document with _$Document {
+abstract class Document with _$Document {
   @JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
   const factory Document({
     /// Schema version (e.g. "0.1"). Parsers must check this first and

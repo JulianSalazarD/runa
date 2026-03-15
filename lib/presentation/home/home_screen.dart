@@ -78,14 +78,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(workspaceNotifierProvider.notifier).initialize();
-      ref.read(settingsNotifierProvider.notifier).initialize();
+      ref.read(workspaceProvider.notifier).initialize();
+      ref.read(settingsProvider.notifier).initialize();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final workspace = ref.watch(workspaceNotifierProvider);
+    final workspace = ref.watch(workspaceProvider);
 
     final Widget body = workspace.openedDirectoryPath == null
         ? const WelcomeView()
@@ -211,7 +211,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // -------------------------------------------------------------------------
 
   Future<void> _closeActiveTab() async {
-    final ws = ref.read(workspaceNotifierProvider);
+    final ws = ref.read(workspaceProvider);
     final activeId = ws.activeDocumentId;
     if (activeId == null) return;
     final doc =
@@ -220,7 +220,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _navigateTab(int delta) {
-    final ws = ref.read(workspaceNotifierProvider);
+    final ws = ref.read(workspaceProvider);
     if (ws.openedDocuments.isEmpty) return;
     final currentIndex = ws.openedDocuments
         .indexWhere((d) => d.document.id == ws.activeDocumentId);
@@ -228,12 +228,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final len = ws.openedDocuments.length;
     final nextIndex = ((currentIndex + delta) % len + len) % len;
     ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .setActiveDocument(ws.openedDocuments[nextIndex].document.id);
   }
 
   Future<void> _newDocument() async {
-    final ws = ref.read(workspaceNotifierProvider);
+    final ws = ref.read(workspaceProvider);
     final directory = ws.openedDirectoryPath;
     if (directory != null) {
       final entries =
@@ -251,23 +251,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
       if (name == null || name.isEmpty) return;
       await ref
-          .read(workspaceNotifierProvider.notifier)
+          .read(workspaceProvider.notifier)
           .createDocument(directory, name);
     } else {
       final dir = await const DefaultDirectoryService().getDefaultDirectory();
       final name = 'sin_titulo_${DateTime.now().millisecondsSinceEpoch}';
       await ref
-          .read(workspaceNotifierProvider.notifier)
+          .read(workspaceProvider.notifier)
           .createDocument(dir.path, name);
     }
   }
 
   Future<void> _saveActiveDocument() async {
-    final ws = ref.read(workspaceNotifierProvider);
+    final ws = ref.read(workspaceProvider);
     final activeId = ws.activeDocumentId;
     if (activeId == null) return;
-    await ref.read(editorNotifierProvider(activeId).notifier).saveDocument();
-    final wsNotifier = ref.read(workspaceNotifierProvider.notifier);
+    await ref.read(editorProvider(activeId).notifier).saveDocument();
+    final wsNotifier = ref.read(workspaceProvider.notifier);
     wsNotifier.showSavedIndicator(activeId);
     await Future<void>.delayed(const Duration(milliseconds: 1500));
     if (mounted) wsNotifier.showSavedIndicator(activeId, value: false);
@@ -285,7 +285,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
     if (path == null) return;
-    await ref.read(workspaceNotifierProvider.notifier).openDirectory(path);
+    await ref.read(workspaceProvider.notifier).openDirectory(path);
   }
 }
 

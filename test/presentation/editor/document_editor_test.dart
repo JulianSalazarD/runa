@@ -194,7 +194,7 @@ void main() {
 
       // Make the editor dirty by adding a block.
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .addBlock(const Block.markdown(id: 'new', content: ''));
       await tester.pump();
 
@@ -230,7 +230,7 @@ void main() {
       await tester.tap(find.text('Texto (Markdown)'));
       await tester.pumpAndSettle();
 
-      final editorState = container.read(editorNotifierProvider(_docId));
+      final editorState = container.read(editorProvider(_docId));
       expect(editorState.blocks, hasLength(2));
       expect(editorState.blocks.last, isA<MarkdownBlock>());
     });
@@ -246,7 +246,7 @@ void main() {
 
       // Make it dirty first.
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .addBlock(const Block.markdown(id: 'b2', content: ''));
       await tester.pump();
 
@@ -254,7 +254,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(fakeRepo.saves, isNotEmpty);
-      final editorState = container.read(editorNotifierProvider(_docId));
+      final editorState = container.read(editorProvider(_docId));
       expect(editorState.isDirty, isFalse);
     });
 
@@ -331,7 +331,7 @@ void main() {
       await tester.pump();
 
       expect(
-        container.read(editorNotifierProvider(_docId)).selectedBlockId,
+        container.read(editorProvider(_docId)).selectedBlockId,
         'b1',
       );
     });
@@ -347,7 +347,7 @@ void main() {
 
       // Select the first block to make controls visible.
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b1');
       await tester.pumpAndSettle();
 
@@ -356,11 +356,11 @@ void main() {
       await tester.pump();
 
       expect(
-        container.read(editorNotifierProvider(_docId)).blocks,
+        container.read(editorProvider(_docId)).blocks,
         hasLength(1),
       );
       expect(
-        container.read(editorNotifierProvider(_docId)).blocks.first.id,
+        container.read(editorProvider(_docId)).blocks.first.id,
         'b2',
       );
     });
@@ -380,7 +380,7 @@ void main() {
           await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
 
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b1');
       await tester.pumpAndSettle();
 
@@ -392,7 +392,7 @@ void main() {
 
       // Block is NOT yet removed.
       expect(
-        container.read(editorNotifierProvider(_docId)).blocks,
+        container.read(editorProvider(_docId)).blocks,
         hasLength(1),
       );
     });
@@ -407,7 +407,7 @@ void main() {
           await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
 
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b1');
       await tester.pumpAndSettle();
 
@@ -418,7 +418,7 @@ void main() {
       await tester.tap(find.text('Eliminar'));
       await tester.pumpAndSettle();
 
-      final state = container.read(editorNotifierProvider(_docId));
+      final state = container.read(editorProvider(_docId));
       expect(state.blocks, hasLength(1));
       expect(state.blocks.first.id, 'b2');
       expect(state.isDirty, isTrue);
@@ -432,7 +432,7 @@ void main() {
           await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
 
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b1');
       await tester.pumpAndSettle();
 
@@ -443,7 +443,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        container.read(editorNotifierProvider(_docId)).blocks,
+        container.read(editorProvider(_docId)).blocks,
         hasLength(1),
       );
     });
@@ -459,7 +459,7 @@ void main() {
 
       // Select via notifier — editor Focus node has autofocus so it keeps focus.
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b1');
       await tester.pump();
 
@@ -468,7 +468,7 @@ void main() {
 
       // No dialog; block removed immediately.
       expect(find.text('¿Eliminar este bloque?'), findsNothing);
-      final state = container.read(editorNotifierProvider(_docId));
+      final state = container.read(editorProvider(_docId));
       expect(state.blocks, hasLength(1));
       expect(state.blocks.first.id, 'b2');
     });
@@ -482,7 +482,7 @@ void main() {
           await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
 
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b1');
       await tester.pump();
 
@@ -492,7 +492,7 @@ void main() {
       expect(find.text('¿Eliminar este bloque?'), findsOneWidget);
       // Block still present while dialog is open.
       expect(
-        container.read(editorNotifierProvider(_docId)).blocks,
+        container.read(editorProvider(_docId)).blocks,
         hasLength(1),
       );
     });
@@ -535,7 +535,7 @@ void main() {
 
       // Select block 0 so its drag handle becomes visible (opacity → 1.0).
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b0');
       await tester.pumpAndSettle();
 
@@ -546,7 +546,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final state = container.read(editorNotifierProvider(_docId));
+      final state = container.read(editorProvider(_docId));
       expect(state.blocks.last.id, 'b0');
     });
 
@@ -559,7 +559,7 @@ void main() {
           await pumpEditor(tester, opened: _makeOpened(blocks: blocks));
 
       container
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .setSelectedBlock('b0');
       await tester.pumpAndSettle();
 
@@ -570,7 +570,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        container.read(editorNotifierProvider(_docId)).isDirty,
+        container.read(editorProvider(_docId)).isDirty,
         isTrue,
       );
     });

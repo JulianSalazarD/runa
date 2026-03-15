@@ -101,7 +101,7 @@ void main() {
   late ProviderContainer container;
   late EditorNotifier notifier;
 
-  EditorState state() => container.read(editorNotifierProvider(_docId));
+  EditorState state() => container.read(editorProvider(_docId));
 
   setUp(() {
     fakeRepo = FakeDocumentRepository();
@@ -116,7 +116,7 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    notifier = container.read(editorNotifierProvider(_docId).notifier);
+    notifier = container.read(editorProvider(_docId).notifier);
   });
 
   // -------------------------------------------------------------------------
@@ -182,14 +182,14 @@ void main() {
       // Abre el directorio y el documento en WorkspaceNotifier para que
       // exista en openedDocuments.
       final wsNotifier =
-          container.read(workspaceNotifierProvider.notifier);
+          container.read(workspaceProvider.notifier);
       await wsNotifier.openDirectory('/tmp/runa_test');
       await wsNotifier.openDocument(_path);
       wsNotifier.markHasUnsavedChanges(_docId);
 
       expect(
         container
-            .read(workspaceNotifierProvider)
+            .read(workspaceProvider)
             .openedDocuments
             .first
             .hasUnsavedChanges,
@@ -200,7 +200,7 @@ void main() {
 
       expect(
         container
-            .read(workspaceNotifierProvider)
+            .read(workspaceProvider)
             .openedDocuments
             .first
             .hasUnsavedChanges,
@@ -375,7 +375,7 @@ void main() {
       fakeRepo.seed(docPath, doc);
 
       // Abre el documento en WorkspaceNotifier para que aparezca en tabs.
-      final wsNotifier = container.read(workspaceNotifierProvider.notifier);
+      final wsNotifier = container.read(workspaceProvider.notifier);
       await wsNotifier.openDirectory(tempDir.path);
       await wsNotifier.openDocument(docPath);
 
@@ -387,7 +387,7 @@ void main() {
       if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
     });
 
-    WorkspaceState ws() => container.read(workspaceNotifierProvider);
+    WorkspaceState ws() => container.read(workspaceProvider);
 
     test('addBlock → hasUnsavedChanges true en WorkspaceNotifier', () {
       notifier.addBlock(_mdBlock('new'));

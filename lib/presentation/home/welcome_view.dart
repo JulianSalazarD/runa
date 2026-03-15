@@ -123,14 +123,14 @@ class _WelcomeViewState extends ConsumerState<WelcomeView> {
       return;
     }
     if (path == null) return;
-    await ref.read(workspaceNotifierProvider.notifier).openDirectory(path);
+    await ref.read(workspaceProvider.notifier).openDirectory(path);
   }
 
   Future<void> _newDocument() async {
     final dir = await const DefaultDirectoryService().getDefaultDirectory();
     final name = 'sin_titulo_${DateTime.now().millisecondsSinceEpoch}';
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .createDocument(dir.path, name);
   }
 }
@@ -220,7 +220,7 @@ class _DefaultDirectoryBrowserState
               icon: const Icon(Icons.folder_open, size: 18),
               tooltip: 'Abrir en editor',
               onPressed: () => ref
-                  .read(workspaceNotifierProvider.notifier)
+                  .read(workspaceProvider.notifier)
                   .openDirectory(_currentPath),
             ),
             IconButton(
@@ -267,7 +267,7 @@ class _DefaultDirectoryBrowserState
               onTap: item.isDirectory
                   ? () => _navigateInto(item.path)
                   : () => ref
-                      .read(workspaceNotifierProvider.notifier)
+                      .read(workspaceProvider.notifier)
                       .openDocument(item.path),
             ),
       ],
@@ -291,7 +291,7 @@ class _DefaultDirectoryBrowserState
     );
     if (name == null || name.isEmpty) return;
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .createSubdirectory(_currentPath, name);
     await _load();
   }
@@ -313,7 +313,7 @@ class _DefaultDirectoryBrowserState
     );
     if (name == null || name.isEmpty) return;
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .createDocument(_currentPath, name);
     await _load();
   }
@@ -349,7 +349,7 @@ class _RecentSection extends ConsumerWidget {
                   ),
                   TextButton(
                     onPressed: () => ref
-                        .read(workspaceNotifierProvider.notifier)
+                        .read(workspaceProvider.notifier)
                         .clearRecentPaths(),
                     child: const Text('Limpiar recientes'),
                   ),
@@ -416,12 +416,12 @@ class RecentEntryItem extends ConsumerWidget {
               tooltip: 'Eliminar de recientes',
               icon: const Icon(Icons.close),
               onPressed: () => ref
-                  .read(workspaceNotifierProvider.notifier)
+                  .read(workspaceProvider.notifier)
                   .removeRecentPath(entry.path),
             ),
       onTap: exists
           ? () => ref
-              .read(workspaceNotifierProvider.notifier)
+              .read(workspaceProvider.notifier)
               .openDocument(entry.path)
           : null,
     );

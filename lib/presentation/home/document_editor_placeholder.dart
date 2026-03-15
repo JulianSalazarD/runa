@@ -100,7 +100,7 @@ class _Toolbar extends ConsumerWidget {
     final repo = ref.read(documentRepositoryProvider);
     await repo.save(opened.document, opened.path);
     ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .markHasUnsavedChanges(opened.document.id, value: false);
   }
 }

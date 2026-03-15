@@ -7,7 +7,7 @@ part 'editor_state.freezed.dart';
 ///
 /// Held by [EditorNotifier]. All mutations return a new instance.
 @freezed
-class EditorState with _$EditorState {
+abstract class EditorState with _$EditorState {
   const EditorState._();
 
   const factory EditorState({

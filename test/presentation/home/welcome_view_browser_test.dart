@@ -110,7 +110,7 @@ class _WorkspaceStateSpy extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final path =
-        ref.watch(workspaceNotifierProvider.select((s) => s.openedDirectoryPath));
+        ref.watch(workspaceProvider.select((s) => s.openedDirectoryPath));
     return Text(path ?? '', key: const Key('workspace_spy'));
   }
 }

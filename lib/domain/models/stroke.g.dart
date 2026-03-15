@@ -6,7 +6,7 @@ part of 'stroke.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$StrokeImpl _$$StrokeImplFromJson(Map<String, dynamic> json) => _$StrokeImpl(
+_Stroke _$StrokeFromJson(Map<String, dynamic> json) => _Stroke(
   id: json['id'] as String,
   color: json['color'] as String,
   width: (json['width'] as num).toDouble(),
@@ -16,14 +16,13 @@ _$StrokeImpl _$$StrokeImplFromJson(Map<String, dynamic> json) => _$StrokeImpl(
       .toList(),
 );
 
-Map<String, dynamic> _$$StrokeImplToJson(_$StrokeImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'color': instance.color,
-      'width': instance.width,
-      'tool': _$StrokeToolEnumMap[instance.tool]!,
-      'points': instance.points.map((e) => e.toJson()).toList(),
-    };
+Map<String, dynamic> _$StrokeToJson(_Stroke instance) => <String, dynamic>{
+  'id': instance.id,
+  'color': instance.color,
+  'width': instance.width,
+  'tool': _$StrokeToolEnumMap[instance.tool]!,
+  'points': instance.points.map((e) => e.toJson()).toList(),
+};
 
 const _$StrokeToolEnumMap = {
   StrokeTool.pen: 'pen',

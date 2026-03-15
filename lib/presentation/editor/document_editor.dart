@@ -119,7 +119,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   void initState() {
     super.initState();
     _editorFocusNode = FocusNode(debugLabel: 'EditorCanvas');
-    final settings = ref.read(settingsNotifierProvider);
+    final settings = ref.read(settingsProvider);
     _inkColor = _colorToHex(settings.defaultInkColor);
     _inkWidth = settings.defaultInkStrokeWidth;
     _initEditor();
@@ -143,7 +143,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .initFromDocument(widget.opened.document, widget.opened.path);
     });
   }
@@ -173,7 +173,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
 
     final newPath = p.join(dir, '$name.runa');
     await ref
-        .read(workspaceNotifierProvider.notifier)
+        .read(workspaceProvider.notifier)
         .renameDocument(oldPath, newPath);
   }
 
@@ -198,7 +198,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     final path = paths.first;
     try {
       await ref
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .importImage(path, afterBlockId: afterBlockId);
     } catch (e) {
       if (!mounted) return;
@@ -209,7 +209,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   }
 
   Future<void> _exportToPdf() async {
-    final document = ref.read(editorNotifierProvider(_docId)).document;
+    final document = ref.read(editorProvider(_docId)).document;
     final docPath = widget.opened.path;
     final defaultName = '${p.basenameWithoutExtension(docPath)}.pdf';
 
@@ -307,7 +307,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     final path = paths.first;
     try {
       await ref
-          .read(editorNotifierProvider(_docId).notifier)
+          .read(editorProvider(_docId).notifier)
           .importPdf(path, afterBlockId: afterBlockId);
     } catch (e) {
       if (!mounted) return;
@@ -319,8 +319,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final editorState = ref.watch(editorNotifierProvider(_docId));
-    final notifier = ref.read(editorNotifierProvider(_docId).notifier);
+    final editorState = ref.watch(editorProvider(_docId));
+    final notifier = ref.read(editorProvider(_docId).notifier);
 
     final selectedBlock = editorState.selectedBlockId == null
         ? null
@@ -388,7 +388,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     Block.markdown(id: _uuid.v4(), content: ''),
                   ),
                   onAddInk: () {
-                    final s = ref.read(settingsNotifierProvider);
+                    final s = ref.read(settingsProvider);
                     notifier.addBlock(Block.ink(
                       id: _uuid.v4(),
                       height: 200.0,
@@ -402,7 +402,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   onAddPdf: _importPdf,
                   onExportPdf: _exportToPdf,
                   onGoHome: () =>
-                      ref.read(workspaceNotifierProvider.notifier).closeDirectory(),
+                      ref.read(workspaceProvider.notifier).closeDirectory(),
                   showInkToolbar: showInkToolbar,
                   inkTool: _inkTool,
                   inkColor: _inkColor,
@@ -473,8 +473,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     textItalic: _textItalic,
                     inkShapeType: _inkShapeType,
                     inkSelectionMode: _selectionMode,
-                    markdownFontFamily: ref.watch(settingsNotifierProvider).markdownFontFamily,
-                    markdownFontSize: ref.watch(settingsNotifierProvider).markdownFontSize,
+                    markdownFontFamily: ref.watch(settingsProvider).markdownFontFamily,
+                    markdownFontSize: ref.watch(settingsProvider).markdownFontSize,
                   ),
                 ),
               ],

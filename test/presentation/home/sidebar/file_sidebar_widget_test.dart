@@ -212,7 +212,7 @@ void main() {
       // After opening, the document should be in the workspace state.
       final element = tester.element(find.byType(FileSidebarWidget));
       final ref = ProviderScope.containerOf(element);
-      final workspace = ref.read(workspaceNotifierProvider);
+      final workspace = ref.read(workspaceProvider);
       expect(workspace.openedDocuments.length, 1);
       expect(workspace.openedDocuments.first.path, pathA);
     });
@@ -281,7 +281,7 @@ void main() {
       // Open the document to make it active.
       final element = tester.element(find.byType(FileSidebarWidget));
       final ref = ProviderScope.containerOf(element);
-      await ref.read(workspaceNotifierProvider.notifier).openDocument(pathA);
+      await ref.read(workspaceProvider.notifier).openDocument(pathA);
       await tester.pumpAndSettle();
 
       final tile = tester.widget<ListTile>(

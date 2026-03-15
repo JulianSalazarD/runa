@@ -266,7 +266,7 @@ void main() {
             home: Scaffold(
               body: Consumer(
                 builder: (context, ref, _) {
-                  final ws = ref.watch(workspaceNotifierProvider);
+                  final ws = ref.watch(workspaceProvider);
                   final active = ws.openedDocuments
                       .where((d) => d.document.id == ws.activeDocumentId)
                       .firstOrNull;
@@ -282,7 +282,7 @@ void main() {
       // Seed state: open the document and mark it as unsaved.
       final element = tester.element(find.byType(Consumer));
       final ref = ProviderScope.containerOf(element);
-      final notifier = ref.read(workspaceNotifierProvider.notifier);
+      final notifier = ref.read(workspaceProvider.notifier);
       await notifier.openDirectory('/tmp');
       await notifier.openDocument(path);
       notifier.markHasUnsavedChanges(doc.id);
@@ -342,7 +342,7 @@ void main() {
             home: Scaffold(
               body: Consumer(
                 builder: (context, ref, _) {
-                  final ws = ref.watch(workspaceNotifierProvider);
+                  final ws = ref.watch(workspaceProvider);
                   final active = ws.openedDocuments
                       .where((d) => d.document.id == ws.activeDocumentId)
                       .firstOrNull;
@@ -357,7 +357,7 @@ void main() {
 
       final element = tester.element(find.byType(Consumer));
       final ref = ProviderScope.containerOf(element);
-      final notifier = ref.read(workspaceNotifierProvider.notifier);
+      final notifier = ref.read(workspaceProvider.notifier);
 
       await notifier.openDirectory(tempDir.path);
       await notifier.openDocument(pathA);

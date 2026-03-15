@@ -5,7 +5,7 @@ part 'opened_document.freezed.dart';
 
 /// Represents a document that is currently open in a tab.
 @freezed
-class OpenedDocument with _$OpenedDocument {
+abstract class OpenedDocument with _$OpenedDocument {
   const factory OpenedDocument({
     /// The in-memory document model.
     required Document document,

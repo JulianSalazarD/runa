@@ -7,7 +7,7 @@ part 'text_element.g.dart';
 ///
 /// [x] and [y] are normalised to `[0.0, 1.0]` relative to the canvas size.
 @freezed
-class TextElement with _$TextElement {
+abstract class TextElement with _$TextElement {
   const factory TextElement({
     required String id,
     required double x,

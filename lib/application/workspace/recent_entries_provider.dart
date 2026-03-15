@@ -10,6 +10,6 @@ import 'workspace_notifier.dart';
 /// [WorkspaceState.recentPaths] changes (document opened, closed, or removed).
 final recentEntriesProvider = FutureProvider<List<RecentEntry>>((ref) async {
   // Depend on recentPaths so this provider reruns on any change.
-  ref.watch(workspaceNotifierProvider.select((ws) => ws.recentPaths));
+  ref.watch(workspaceProvider.select((ws) => ws.recentPaths));
   return ref.watch(recentFilesServiceProvider).loadRecentEntries();
 });

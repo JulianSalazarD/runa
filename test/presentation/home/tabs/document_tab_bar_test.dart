@@ -136,7 +136,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await notifier.openDocument(pathB);
       await tester.pumpAndSettle();
@@ -155,7 +155,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await notifier.openDocument(pathB);
       // pathB is now active (last opened)
@@ -181,7 +181,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await notifier.openDocument(pathB);
       // pathB is active now
@@ -191,7 +191,7 @@ void main() {
       await tester.tap(find.text('alpha'));
       await tester.pumpAndSettle();
 
-      final workspace = container.read(workspaceNotifierProvider);
+      final workspace = container.read(workspaceProvider);
       expect(workspace.activeDocumentId, idA);
     });
 
@@ -204,7 +204,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await tester.pumpAndSettle();
 
@@ -213,7 +213,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.close).first);
       await tester.pumpAndSettle();
 
-      final workspace = container.read(workspaceNotifierProvider);
+      final workspace = container.read(workspaceProvider);
       expect(workspace.openedDocuments, isEmpty);
       // No dialog should appear
       expect(find.text('Cambios sin guardar'), findsNothing);
@@ -229,7 +229,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await tester.pumpAndSettle();
 
@@ -250,7 +250,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await tester.pumpAndSettle();
 
@@ -265,7 +265,7 @@ void main() {
       await tester.tap(find.text('Descartar'));
       await tester.pumpAndSettle();
 
-      final workspace = container.read(workspaceNotifierProvider);
+      final workspace = container.read(workspaceProvider);
       expect(workspace.openedDocuments, isEmpty);
     });
 
@@ -277,7 +277,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await tester.pumpAndSettle();
 
@@ -292,7 +292,7 @@ void main() {
       await tester.tap(find.text('Cancelar'));
       await tester.pumpAndSettle();
 
-      final workspace = container.read(workspaceNotifierProvider);
+      final workspace = container.read(workspaceProvider);
       expect(workspace.openedDocuments.length, 1);
     });
 
@@ -305,7 +305,7 @@ void main() {
 
       final container =
           ProviderScope.containerOf(tester.element(find.byType(DocumentTabBar)));
-      final notifier = container.read(workspaceNotifierProvider.notifier);
+      final notifier = container.read(workspaceProvider.notifier);
       await notifier.openDocument(pathA);
       await tester.pumpAndSettle();
 

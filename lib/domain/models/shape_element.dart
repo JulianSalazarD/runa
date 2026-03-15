@@ -9,7 +9,7 @@ part 'shape_element.g.dart';
 ///
 /// [x1],[y1],[x2],[y2] are normalised to [0.0, 1.0] relative to canvas size.
 @freezed
-class ShapeElement with _$ShapeElement {
+abstract class ShapeElement with _$ShapeElement {
   const factory ShapeElement({
     required String id,
     required ShapeType type,

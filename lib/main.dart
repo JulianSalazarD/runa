@@ -21,7 +21,7 @@ class RunaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(settingsNotifierProvider).themeMode;
+    final themeMode = ref.watch(settingsProvider).themeMode;
 
     return MaterialApp(
       title: 'Runa',

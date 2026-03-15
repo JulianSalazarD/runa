@@ -264,7 +264,7 @@ void main() {
       // We pump after updating state to trigger a rebuild.
       final element = tester.element(find.byType(HomeScreen));
       final ref = ProviderScope.containerOf(element);
-      await ref.read(workspaceNotifierProvider.notifier).openDirectory('/home/user/Runa');
+      await ref.read(workspaceProvider.notifier).openDirectory('/home/user/Runa');
       await tester.pumpAndSettle();
 
       // Sidebar header shows the directory basename.
@@ -280,7 +280,7 @@ void main() {
 
       final element = tester.element(find.byType(HomeScreen));
       final ref = ProviderScope.containerOf(element);
-      await ref.read(workspaceNotifierProvider.notifier).openDirectory('/home/user/Runa');
+      await ref.read(workspaceProvider.notifier).openDirectory('/home/user/Runa');
       await tester.pumpAndSettle();
 
       expect(find.text('Selecciona un documento del sidebar'), findsOneWidget);
@@ -318,8 +318,8 @@ void main() {
 
       final element = tester.element(find.byType(HomeScreen));
       final container = ProviderScope.containerOf(element);
-      await container.read(workspaceNotifierProvider.notifier).openDirectory(tempDir.path);
-      await container.read(workspaceNotifierProvider.notifier).openDocument(docPath);
+      await container.read(workspaceProvider.notifier).openDirectory(tempDir.path);
+      await container.read(workspaceProvider.notifier).openDocument(docPath);
       await tester.pumpAndSettle();
       return container;
     }
@@ -378,14 +378,14 @@ void main() {
       await tester.pump(); // let _saveActiveDocument start
 
       // Indicator should be visible immediately after save.
-      final ws = container.read(workspaceNotifierProvider);
+      final ws = container.read(workspaceProvider);
       final opened = ws.openedDocuments
           .firstWhere((d) => d.document.id == docId);
       expect(opened.showSavedIndicator, isTrue);
 
       // After 1.5 s the indicator should be gone.
       await tester.pump(const Duration(milliseconds: 1500));
-      final ws2 = container.read(workspaceNotifierProvider);
+      final ws2 = container.read(workspaceProvider);
       final opened2 = ws2.openedDocuments
           .firstWhere((d) => d.document.id == docId);
       expect(opened2.showSavedIndicator, isFalse);
@@ -430,8 +430,8 @@ void main() {
 
       final element = tester.element(find.byType(HomeScreen));
       final ref = ProviderScope.containerOf(element);
-      await ref.read(workspaceNotifierProvider.notifier).openDirectory(tempDir.path);
-      await ref.read(workspaceNotifierProvider.notifier).openDocument(docPath);
+      await ref.read(workspaceProvider.notifier).openDirectory(tempDir.path);
+      await ref.read(workspaceProvider.notifier).openDocument(docPath);
       await tester.pumpAndSettle();
 
       expect(find.text('my_notes'), findsWidgets);
@@ -461,8 +461,8 @@ void main() {
 
       final element = tester.element(find.byType(HomeScreen));
       final ref = ProviderScope.containerOf(element);
-      await ref.read(workspaceNotifierProvider.notifier).openDirectory(tempDir.path);
-      await ref.read(workspaceNotifierProvider.notifier).openDocument(docPath);
+      await ref.read(workspaceProvider.notifier).openDirectory(tempDir.path);
+      await ref.read(workspaceProvider.notifier).openDocument(docPath);
       await tester.pumpAndSettle();
 
       expect(find.text('Guardar'), findsOneWidget);

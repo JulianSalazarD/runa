@@ -6,20 +6,19 @@ part of 'text_element.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TextElementImpl _$$TextElementImplFromJson(Map<String, dynamic> json) =>
-    _$TextElementImpl(
-      id: json['id'] as String,
-      x: (json['x'] as num).toDouble(),
-      y: (json['y'] as num).toDouble(),
-      content: json['content'] as String,
-      fontSize: (json['fontSize'] as num?)?.toDouble() ?? 16.0,
-      color: json['color'] as String? ?? '#000000FF',
-      fontFamily: json['fontFamily'] as String?,
-      bold: json['bold'] as bool? ?? false,
-      italic: json['italic'] as bool? ?? false,
-    );
+_TextElement _$TextElementFromJson(Map<String, dynamic> json) => _TextElement(
+  id: json['id'] as String,
+  x: (json['x'] as num).toDouble(),
+  y: (json['y'] as num).toDouble(),
+  content: json['content'] as String,
+  fontSize: (json['fontSize'] as num?)?.toDouble() ?? 16.0,
+  color: json['color'] as String? ?? '#000000FF',
+  fontFamily: json['fontFamily'] as String?,
+  bold: json['bold'] as bool? ?? false,
+  italic: json['italic'] as bool? ?? false,
+);
 
-Map<String, dynamic> _$$TextElementImplToJson(_$TextElementImpl instance) =>
+Map<String, dynamic> _$TextElementToJson(_TextElement instance) =>
     <String, dynamic>{
       'id': instance.id,
       'x': instance.x,

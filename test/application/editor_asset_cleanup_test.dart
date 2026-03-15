@@ -150,7 +150,7 @@ void main() {
   late ProviderContainer container;
   late EditorNotifier notifier;
 
-  EditorState state() => container.read(editorNotifierProvider(_docId));
+  EditorState state() => container.read(editorProvider(_docId));
 
   setUp(() {
     fakeRepo = FakeDocumentRepository()..seed(_docPath, _makeDoc());
@@ -167,7 +167,7 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    notifier = container.read(editorNotifierProvider(_docId).notifier);
+    notifier = container.read(editorProvider(_docId).notifier);
   });
 
   group('removeBlock — limpieza de assets', () {

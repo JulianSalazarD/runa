@@ -6,188 +6,129 @@ part of 'editor_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$editorNotifierHash() => r'977ab427610a68c2e9cd03d09708a2594d781304';
-
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-abstract class _$EditorNotifier
-    extends BuildlessAutoDisposeNotifier<EditorState> {
-  late final String documentId;
-
-  EditorState build(String documentId);
-}
-
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 /// Manages editing state for a single document identified by [documentId].
 ///
 /// Create the notifier via `editorNotifierProvider(documentId)`, then call
 /// [loadDocument] with the file path before making any mutations.
-///
-/// Copied from [EditorNotifier].
+
 @ProviderFor(EditorNotifier)
-const editorNotifierProvider = EditorNotifierFamily();
+final editorProvider = EditorNotifierFamily._();
 
 /// Manages editing state for a single document identified by [documentId].
 ///
 /// Create the notifier via `editorNotifierProvider(documentId)`, then call
 /// [loadDocument] with the file path before making any mutations.
-///
-/// Copied from [EditorNotifier].
-class EditorNotifierFamily extends Family<EditorState> {
+final class EditorNotifierProvider
+    extends $NotifierProvider<EditorNotifier, EditorState> {
   /// Manages editing state for a single document identified by [documentId].
   ///
   /// Create the notifier via `editorNotifierProvider(documentId)`, then call
   /// [loadDocument] with the file path before making any mutations.
-  ///
-  /// Copied from [EditorNotifier].
-  const EditorNotifierFamily();
+  EditorNotifierProvider._({
+    required EditorNotifierFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'editorProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
-  /// Manages editing state for a single document identified by [documentId].
-  ///
-  /// Create the notifier via `editorNotifierProvider(documentId)`, then call
-  /// [loadDocument] with the file path before making any mutations.
-  ///
-  /// Copied from [EditorNotifier].
-  EditorNotifierProvider call(String documentId) {
-    return EditorNotifierProvider(documentId);
+  @override
+  String debugGetCreateSourceHash() => _$editorNotifierHash();
+
+  @override
+  String toString() {
+    return r'editorProvider'
+        ''
+        '($argument)';
   }
 
+  @$internal
   @override
-  EditorNotifierProvider getProviderOverride(
-    covariant EditorNotifierProvider provider,
-  ) {
-    return call(provider.documentId);
-  }
+  EditorNotifier create() => EditorNotifier();
 
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'editorNotifierProvider';
-}
-
-/// Manages editing state for a single document identified by [documentId].
-///
-/// Create the notifier via `editorNotifierProvider(documentId)`, then call
-/// [loadDocument] with the file path before making any mutations.
-///
-/// Copied from [EditorNotifier].
-class EditorNotifierProvider
-    extends AutoDisposeNotifierProviderImpl<EditorNotifier, EditorState> {
-  /// Manages editing state for a single document identified by [documentId].
-  ///
-  /// Create the notifier via `editorNotifierProvider(documentId)`, then call
-  /// [loadDocument] with the file path before making any mutations.
-  ///
-  /// Copied from [EditorNotifier].
-  EditorNotifierProvider(String documentId)
-    : this._internal(
-        () => EditorNotifier()..documentId = documentId,
-        from: editorNotifierProvider,
-        name: r'editorNotifierProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$editorNotifierHash,
-        dependencies: EditorNotifierFamily._dependencies,
-        allTransitiveDependencies:
-            EditorNotifierFamily._allTransitiveDependencies,
-        documentId: documentId,
-      );
-
-  EditorNotifierProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.documentId,
-  }) : super.internal();
-
-  final String documentId;
-
-  @override
-  EditorState runNotifierBuild(covariant EditorNotifier notifier) {
-    return notifier.build(documentId);
-  }
-
-  @override
-  Override overrideWith(EditorNotifier Function() create) {
-    return ProviderOverride(
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EditorState value) {
+    return $ProviderOverride(
       origin: this,
-      override: EditorNotifierProvider._internal(
-        () => create()..documentId = documentId,
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        documentId: documentId,
-      ),
+      providerOverride: $SyncValueProvider<EditorState>(value),
     );
   }
 
   @override
-  AutoDisposeNotifierProviderElement<EditorNotifier, EditorState>
-  createElement() {
-    return _EditorNotifierProviderElement(this);
-  }
-
-  @override
   bool operator ==(Object other) {
-    return other is EditorNotifierProvider && other.documentId == documentId;
+    return other is EditorNotifierProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, documentId.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin EditorNotifierRef on AutoDisposeNotifierProviderRef<EditorState> {
-  /// The parameter `documentId` of this provider.
-  String get documentId;
-}
+String _$editorNotifierHash() => r'977ab427610a68c2e9cd03d09708a2594d781304';
 
-class _EditorNotifierProviderElement
-    extends AutoDisposeNotifierProviderElement<EditorNotifier, EditorState>
-    with EditorNotifierRef {
-  _EditorNotifierProviderElement(super.provider);
+/// Manages editing state for a single document identified by [documentId].
+///
+/// Create the notifier via `editorNotifierProvider(documentId)`, then call
+/// [loadDocument] with the file path before making any mutations.
+
+final class EditorNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          EditorNotifier,
+          EditorState,
+          EditorState,
+          EditorState,
+          String
+        > {
+  EditorNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'editorProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Manages editing state for a single document identified by [documentId].
+  ///
+  /// Create the notifier via `editorNotifierProvider(documentId)`, then call
+  /// [loadDocument] with the file path before making any mutations.
+
+  EditorNotifierProvider call(String documentId) =>
+      EditorNotifierProvider._(argument: documentId, from: this);
 
   @override
-  String get documentId => (origin as EditorNotifierProvider).documentId;
+  String toString() => r'editorProvider';
 }
 
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+/// Manages editing state for a single document identified by [documentId].
+///
+/// Create the notifier via `editorNotifierProvider(documentId)`, then call
+/// [loadDocument] with the file path before making any mutations.
+
+abstract class _$EditorNotifier extends $Notifier<EditorState> {
+  late final _$args = ref.$arg as String;
+  String get documentId => _$args;
+
+  EditorState build(String documentId);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<EditorState, EditorState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<EditorState, EditorState>,
+              EditorState,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, () => build(_$args));
+  }
+}

@@ -52,7 +52,7 @@ class _NullableColorConverter extends JsonConverter<Color?, int?> {
 // ---------------------------------------------------------------------------
 
 @freezed
-class AppSettings with _$AppSettings {
+abstract class AppSettings with _$AppSettings {
   @JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
   const factory AppSettings({
     /// Light / dark / system theme.
