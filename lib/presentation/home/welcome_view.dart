@@ -8,13 +8,38 @@ import 'package:runa/data/data.dart';
 
 import '../settings/settings_screen.dart';
 import '../utils/linux_file_picker.dart';
+import 'sidebar/name_input_dialog.dart';
 
 /// Shown when no folder is open. Provides quick actions and recent files.
-class WelcomeView extends ConsumerWidget {
+class WelcomeView extends ConsumerStatefulWidget {
   const WelcomeView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WelcomeView> createState() => _WelcomeViewState();
+}
+
+class _WelcomeViewState extends ConsumerState<WelcomeView> {
+  /// Absolute path to `~/Runa/` once resolved. Null while loading or on error.
+  String? _rootPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaultDir();
+  }
+
+  Future<void> _loadDefaultDir() async {
+    try {
+      final dir =
+          await ref.read(defaultDirectoryServiceProvider).getDefaultDirectory();
+      if (mounted) setState(() => _rootPath = dir.path);
+    } catch (_) {
+      // If the home directory cannot be determined, skip the browser.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final entriesAsync = ref.watch(recentEntriesProvider);
 
     return Stack(
@@ -32,52 +57,61 @@ class WelcomeView extends ConsumerWidget {
           ),
         ),
         SingleChildScrollView(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 64),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Runa', style: Theme.of(context).textTheme.headlineLarge),
-              const SizedBox(height: 8),
-              Text(
-                'Editor de documentos por bloques',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 48),
-              Row(
+          child: Center(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 40, vertical: 64),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  FilledButton.icon(
-                    onPressed: () => _openFolder(context, ref),
-                    icon: const Icon(Icons.folder_open),
-                    label: const Text('Abrir carpeta'),
+                  Text('Runa',
+                      style: Theme.of(context).textTheme.headlineLarge),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Editor de documentos por bloques',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(width: 16),
-                  OutlinedButton.icon(
-                    onPressed: () => _newDocument(ref),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Nuevo documento'),
+                  const SizedBox(height: 48),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => _openFolder(context),
+                        icon: const Icon(Icons.folder_open),
+                        label: const Text('Abrir carpeta'),
+                      ),
+                      const SizedBox(width: 16),
+                      OutlinedButton.icon(
+                        onPressed: _newDocument,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Nuevo documento'),
+                      ),
+                    ],
+                  ),
+                  if (_rootPath != null) ...[
+                    const SizedBox(height: 40),
+                    SizedBox(
+                      width: 480,
+                      child: _DefaultDirectoryBrowser(rootPath: _rootPath!),
+                    ),
+                  ],
+                  entriesAsync.when(
+                    data: (entries) => entries.isEmpty
+                        ? const SizedBox.shrink()
+                        : _RecentSection(entries: entries.take(10).toList()),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
                   ),
                 ],
               ),
-              entriesAsync.when(
-                data: (entries) => entries.isEmpty
-                    ? const SizedBox.shrink()
-                    : _RecentSection(entries: entries.take(10).toList()),
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => const SizedBox.shrink(),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
         ),
       ],
     );
   }
 
-  Future<void> _openFolder(BuildContext context, WidgetRef ref) async {
+  Future<void> _openFolder(BuildContext context) async {
     String? path;
     try {
       path = await LinuxFilePicker.pickDirectory();
@@ -92,12 +126,189 @@ class WelcomeView extends ConsumerWidget {
     await ref.read(workspaceNotifierProvider.notifier).openDirectory(path);
   }
 
-  Future<void> _newDocument(WidgetRef ref) async {
+  Future<void> _newDocument() async {
     final dir = await const DefaultDirectoryService().getDefaultDirectory();
     final name = 'sin_titulo_${DateTime.now().millisecondsSinceEpoch}';
     await ref
         .read(workspaceNotifierProvider.notifier)
         .createDocument(dir.path, name);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Default directory browser
+// ---------------------------------------------------------------------------
+
+/// Browses the default Runa directory (`~/Runa/`) showing folders and
+/// `.runa` documents. Folders can be navigated into; documents open in the
+/// editor. Provides "Nueva carpeta" and "Nuevo documento" actions.
+class _DefaultDirectoryBrowser extends ConsumerStatefulWidget {
+  const _DefaultDirectoryBrowser({required this.rootPath});
+
+  final String rootPath;
+
+  @override
+  ConsumerState<_DefaultDirectoryBrowser> createState() =>
+      _DefaultDirectoryBrowserState();
+}
+
+class _DefaultDirectoryBrowserState
+    extends ConsumerState<_DefaultDirectoryBrowser> {
+  late String _currentPath;
+  List<DirectoryItem>? _items;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPath = widget.rootPath;
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    try {
+      final items = await ref
+          .read(fileSystemServiceProvider)
+          .listDirectory(_currentPath);
+      if (mounted) setState(() { _items = items; _isLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _items = const []; _isLoading = false; });
+    }
+  }
+
+  void _navigateInto(String folderPath) {
+    setState(() {
+      _currentPath = folderPath;
+      _items = null;
+    });
+    _load();
+  }
+
+  void _navigateUp() {
+    if (_currentPath == widget.rootPath) return;
+    _navigateInto(p.dirname(_currentPath));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isAtRoot = _currentPath == widget.rootPath;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 56),
+        Row(
+          children: [
+            if (!isAtRoot)
+              IconButton(
+                icon: const Icon(Icons.arrow_back, size: 16),
+                tooltip: 'Atrás',
+                onPressed: _navigateUp,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            Expanded(
+              child: Text(
+                isAtRoot ? 'Documentos' : p.basename(_currentPath),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+              tooltip: 'Nueva carpeta',
+              onPressed: () => _promptNewFolder(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.note_add_outlined, size: 18),
+              tooltip: 'Nuevo documento',
+              onPressed: () => _promptNewDocument(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (_items == null || _items!.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Text(
+              'Carpeta vacía',
+              style: TextStyle(color: colorScheme.outline),
+            ),
+          )
+        else
+          for (final item in _items!)
+            ListTile(
+              dense: true,
+              leading: Icon(
+                item.isDirectory ? Icons.folder : Icons.description_outlined,
+                size: 18,
+              ),
+              title: Text(
+                item.isDirectory
+                    ? p.basename(item.path)
+                    : p.basenameWithoutExtension(item.path),
+              ),
+              onTap: item.isDirectory
+                  ? () => _navigateInto(item.path)
+                  : () => ref
+                      .read(workspaceNotifierProvider.notifier)
+                      .openDocument(item.path),
+            ),
+      ],
+    );
+  }
+
+  Future<void> _promptNewFolder(BuildContext context) async {
+    final entries = await ref
+        .read(fileSystemServiceProvider)
+        .listDirectory(_currentPath);
+    final existingNames = entries
+        .where((e) => e.isDirectory)
+        .map((e) => p.basename(e.path))
+        .toSet();
+    if (!context.mounted) return;
+    final name = await showNameInputDialog(
+      context,
+      title: 'Nueva carpeta',
+      hint: 'nombre_carpeta',
+      existingNames: existingNames,
+    );
+    if (name == null || name.isEmpty) return;
+    await ref
+        .read(workspaceNotifierProvider.notifier)
+        .createSubdirectory(_currentPath, name);
+    await _load();
+  }
+
+  Future<void> _promptNewDocument(BuildContext context) async {
+    final entries = await ref
+        .read(fileSystemServiceProvider)
+        .listDirectory(_currentPath);
+    final existingNames = entries
+        .where((e) => !e.isDirectory)
+        .map((e) => p.basenameWithoutExtension(e.path))
+        .toSet();
+    if (!context.mounted) return;
+    final name = await showNameInputDialog(
+      context,
+      title: 'Nuevo documento',
+      hint: 'nombre_documento',
+      existingNames: existingNames,
+    );
+    if (name == null || name.isEmpty) return;
+    await ref
+        .read(workspaceNotifierProvider.notifier)
+        .createDocument(_currentPath, name);
+    await _load();
   }
 }
 

@@ -13,6 +13,7 @@ import 'block_chrome.dart';
 import 'block_widget.dart';
 import 'ink_toolbar_widget.dart';
 import 'selection_mode.dart';
+import '../home/sidebar/name_input_dialog.dart';
 import '../utils/linux_file_picker.dart';
 
 enum _InsertBlockType { markdown, ink, image, pdf }
@@ -145,6 +146,35 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
           .read(editorNotifierProvider(_docId).notifier)
           .initFromDocument(widget.opened.document, widget.opened.path);
     });
+  }
+
+  Future<void> _renameDocument() async {
+    final oldPath = widget.opened.path;
+    final currentName = p.basenameWithoutExtension(oldPath);
+    final dir = p.dirname(oldPath);
+
+    final entries =
+        await ref.read(fileSystemServiceProvider).listDirectory(dir);
+    final existingNames = entries
+        .where((e) => !e.isDirectory)
+        .map((e) => p.basenameWithoutExtension(e.path))
+        .where((n) => n != currentName)
+        .toSet();
+
+    if (!mounted) return;
+    final name = await showNameInputDialog(
+      context,
+      title: 'Renombrar',
+      hint: currentName,
+      initial: currentName,
+      existingNames: existingNames,
+    );
+    if (name == null || name.isEmpty || name == currentName) return;
+
+    final newPath = p.join(dir, '$name.runa');
+    await ref
+        .read(workspaceNotifierProvider.notifier)
+        .renameDocument(oldPath, newPath);
   }
 
   // -------------------------------------------------------------------------
@@ -353,6 +383,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   isImporting: editorState.isImporting,
                   autosaveMessage: editorState.autosaveMessage,
                   onSave: notifier.saveDocument,
+                  onRename: _renameDocument,
                   onAddMarkdown: () => notifier.addBlock(
                     Block.markdown(id: _uuid.v4(), content: ''),
                   ),
@@ -466,6 +497,7 @@ class _EditorToolbar extends StatelessWidget {
     required this.isImporting,
     required this.autosaveMessage,
     required this.onSave,
+    required this.onRename,
     required this.onAddMarkdown,
     required this.onAddInk,
     required this.onAddImage,
@@ -504,6 +536,7 @@ class _EditorToolbar extends StatelessWidget {
   final bool isImporting;
   final bool autosaveMessage;
   final VoidCallback onSave;
+  final VoidCallback onRename;
   final VoidCallback onAddMarkdown;
   final VoidCallback onAddInk;
   final VoidCallback onAddImage;
@@ -566,6 +599,12 @@ class _EditorToolbar extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.drive_file_rename_outline),
+                tooltip: 'Renombrar',
+                onPressed: onRename,
+                iconSize: 20,
               ),
               if (autosaveMessage)
                 Padding(

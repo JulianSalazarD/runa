@@ -54,6 +54,8 @@ class FakeRecentFilesService implements RecentFilesService {
 }
 
 class FakeFileSystemService implements FileSystemService {
+  final List<({String oldPath, String newPath})> renames = [];
+
   @override
   Future<List<String>> listRunaFiles(String directory) async => const [];
 
@@ -68,7 +70,8 @@ class FakeFileSystemService implements FileSystemService {
   Future<void> createDirectory(String path) async {}
 
   @override
-  Future<void> renameEntry(String oldPath, String newPath) async {}
+  Future<void> renameEntry(String oldPath, String newPath) async =>
+      renames.add((oldPath: oldPath, newPath: newPath));
 
   @override
   Future<void> deleteFile(String path) async {}
@@ -103,6 +106,7 @@ Future<ProviderContainer> pumpEditor(
   WidgetTester tester, {
   required OpenedDocument opened,
   FakeDocumentRepository? repo,
+  FakeFileSystemService? fakeFs,
 }) async {
   final fakeRepo = repo ?? FakeDocumentRepository();
 
@@ -114,7 +118,8 @@ Future<ProviderContainer> pumpEditor(
         documentRepositoryProvider.overrideWith((_) => fakeRepo),
         recentFilesServiceProvider
             .overrideWith((_) => FakeRecentFilesService()),
-        fileSystemServiceProvider.overrideWith((_) => FakeFileSystemService()),
+        fileSystemServiceProvider
+            .overrideWith((_) => fakeFs ?? FakeFileSystemService()),
       ],
       child: MaterialApp(
         home: Scaffold(
@@ -251,6 +256,61 @@ void main() {
       expect(fakeRepo.saves, isNotEmpty);
       final editorState = container.read(editorNotifierProvider(_docId));
       expect(editorState.isDirty, isFalse);
+    });
+
+    testWidgets('rename button is present with tooltip "Renombrar"',
+        (tester) async {
+      await pumpEditor(tester, opened: _makeOpened());
+
+      expect(find.byTooltip('Renombrar'), findsOneWidget);
+    });
+
+    testWidgets('tapping rename button opens dialog pre-filled with name',
+        (tester) async {
+      await pumpEditor(tester, opened: _makeOpened());
+
+      await tester.tap(find.byTooltip('Renombrar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      // The TextField inside the dialog is pre-filled with the current name.
+      final field = tester.widget<TextField>(
+        find.descendant(
+            of: find.byType(AlertDialog), matching: find.byType(TextField)),
+      );
+      expect(field.controller?.text, 'doc');
+    });
+
+    testWidgets('submitting new name via rename dialog renames the document',
+        (tester) async {
+      final fakeFs = FakeFileSystemService();
+      await pumpEditor(tester, opened: _makeOpened(), fakeFs: fakeFs);
+
+      await tester.tap(find.byTooltip('Renombrar'));
+      await tester.pumpAndSettle();
+
+      final field = find.descendant(
+          of: find.byType(AlertDialog), matching: find.byType(TextField));
+      await tester.enterText(field, 'nuevo_nombre');
+      await tester.tap(find.text('Aceptar'));
+      await tester.pumpAndSettle();
+
+      expect(fakeFs.renames, hasLength(1));
+      expect(fakeFs.renames.first.oldPath, _docPath);
+      expect(fakeFs.renames.first.newPath,
+          endsWith('nuevo_nombre.runa'));
+    });
+
+    testWidgets('cancelling rename dialog makes no rename call', (tester) async {
+      final fakeFs = FakeFileSystemService();
+      await pumpEditor(tester, opened: _makeOpened(), fakeFs: fakeFs);
+
+      await tester.tap(find.byTooltip('Renombrar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(fakeFs.renames, isEmpty);
     });
   });
 
