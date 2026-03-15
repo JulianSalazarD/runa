@@ -37,6 +37,10 @@ class OpenDirectoryIntent extends Intent {
   const OpenDirectoryIntent();
 }
 
+class SaveDocumentIntent extends Intent {
+  const SaveDocumentIntent();
+}
+
 const _kShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyW, control: true):
       CloseActiveTabIntent(),
@@ -47,6 +51,8 @@ const _kShortcuts = <ShortcutActivator, Intent>{
       NewDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyO, control: true):
       OpenDirectoryIntent(),
+  SingleActivator(LogicalKeyboardKey.keyS, control: true):
+      SaveDocumentIntent(),
 };
 
 // ---------------------------------------------------------------------------
@@ -115,6 +121,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           OpenDirectoryIntent: CallbackAction<OpenDirectoryIntent>(
             onInvoke: (_) {
               _openFolder();
+              return null;
+            },
+          ),
+          SaveDocumentIntent: CallbackAction<SaveDocumentIntent>(
+            onInvoke: (_) {
+              _saveActiveDocument();
               return null;
             },
           ),
@@ -247,6 +259,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(workspaceNotifierProvider.notifier)
           .createDocument(dir.path, name);
     }
+  }
+
+  Future<void> _saveActiveDocument() async {
+    final ws = ref.read(workspaceNotifierProvider);
+    final activeId = ws.activeDocumentId;
+    if (activeId == null) return;
+    await ref.read(editorNotifierProvider(activeId).notifier).saveDocument();
+    final wsNotifier = ref.read(workspaceNotifierProvider.notifier);
+    wsNotifier.showSavedIndicator(activeId);
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (mounted) wsNotifier.showSavedIndicator(activeId, value: false);
   }
 
   Future<void> _openFolder() async {

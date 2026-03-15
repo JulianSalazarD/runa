@@ -118,7 +118,17 @@ class _Tab extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (opened.hasUnsavedChanges)
+            if (opened.showSavedIndicator)
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Icon(
+                  Icons.check,
+                  size: 12,
+                  color: colorScheme.primary,
+                  semanticLabel: 'Guardado',
+                ),
+              )
+            else if (opened.hasUnsavedChanges)
               Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: Text(

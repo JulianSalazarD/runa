@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runa/application/application.dart';
@@ -283,6 +284,111 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Selecciona un documento del sidebar'), findsOneWidget);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Ctrl+S — save shortcut
+  // -------------------------------------------------------------------------
+
+  group('Ctrl+S shortcut', () {
+    late Directory tempDir;
+    late FakeDocumentRepository fakeRepo;
+
+    setUp(() {
+      tempDir = Directory.systemTemp.createTempSync('runa_ctrls_test_');
+      fakeRepo = FakeDocumentRepository();
+    });
+
+    tearDown(() {
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+    });
+
+    Future<ProviderContainer> openDoc(
+      WidgetTester tester,
+      String docPath,
+      Document doc,
+    ) async {
+      fakeRepo.seed(docPath, doc);
+      await tester.pumpWidget(_appWith(
+        fakeRecents: FakeRecentFilesService(),
+        fakeRepo: fakeRepo,
+      ));
+      await tester.pumpAndSettle();
+
+      final element = tester.element(find.byType(HomeScreen));
+      final container = ProviderScope.containerOf(element);
+      await container.read(workspaceNotifierProvider.notifier).openDirectory(tempDir.path);
+      await container.read(workspaceNotifierProvider.notifier).openDocument(docPath);
+      await tester.pumpAndSettle();
+      return container;
+    }
+
+    testWidgets('Ctrl+S with no active document does not throw', (tester) async {
+      await tester.pumpWidget(_appWith(fakeRecents: FakeRecentFilesService()));
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+      // No exception = pass.
+    });
+
+    testWidgets('Ctrl+S with active document saves to repository', (tester) async {
+      const docId = 'ctrl-s-save-doc-id';
+      final docPath = '${tempDir.path}/ctrl_s_doc.runa';
+      final doc = Document(
+        version: '0.1',
+        id: docId,
+        createdAt: DateTime.utc(2024),
+        updatedAt: DateTime.utc(2024),
+        blocks: const [],
+      );
+
+      await openDoc(tester, docPath, doc);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump(); // let save start
+      await tester.pump(const Duration(milliseconds: 1500)); // drain indicator timer
+
+      // Repository received a save call for this path.
+      expect(fakeRepo._store.containsKey(docPath), isTrue);
+    });
+
+    testWidgets('Ctrl+S shows saved indicator in tab, disappears after 1.5 s',
+        (tester) async {
+      const docId = 'ctrl-s-indicator-doc-id';
+      final docPath = '${tempDir.path}/indicator_doc.runa';
+      final doc = Document(
+        version: '0.1',
+        id: docId,
+        createdAt: DateTime.utc(2024),
+        updatedAt: DateTime.utc(2024),
+        blocks: const [],
+      );
+
+      final container = await openDoc(tester, docPath, doc);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump(); // let _saveActiveDocument start
+
+      // Indicator should be visible immediately after save.
+      final ws = container.read(workspaceNotifierProvider);
+      final opened = ws.openedDocuments
+          .firstWhere((d) => d.document.id == docId);
+      expect(opened.showSavedIndicator, isTrue);
+
+      // After 1.5 s the indicator should be gone.
+      await tester.pump(const Duration(milliseconds: 1500));
+      final ws2 = container.read(workspaceNotifierProvider);
+      final opened2 = ws2.openedDocuments
+          .firstWhere((d) => d.document.id == docId);
+      expect(opened2.showSavedIndicator, isFalse);
     });
   });
 

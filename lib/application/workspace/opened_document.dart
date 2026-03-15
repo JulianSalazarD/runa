@@ -15,5 +15,10 @@ class OpenedDocument with _$OpenedDocument {
 
     /// Whether the in-memory [document] differs from the saved version.
     @Default(false) bool hasUnsavedChanges,
+
+    /// Whether to briefly show the "Guardado" indicator in the tab.
+    ///
+    /// Set to true after a manual Ctrl+S save; automatically cleared after 1.5 s.
+    @Default(false) bool showSavedIndicator,
   }) = _OpenedDocument;
 }

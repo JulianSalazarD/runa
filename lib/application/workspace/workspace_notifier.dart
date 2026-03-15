@@ -149,6 +149,17 @@ class WorkspaceNotifier extends _$WorkspaceNotifier {
     );
   }
 
+  /// Briefly flags the document with [id] as just saved (for the tab indicator).
+  ///
+  /// Pass [value] = false to clear the indicator.
+  void showSavedIndicator(String id, {bool value = true}) {
+    state = state.copyWith(
+      openedDocuments: state.openedDocuments.map((d) {
+        return d.document.id == id ? d.copyWith(showSavedIndicator: value) : d;
+      }).toList(),
+    );
+  }
+
   /// Removes [path] from the recents list (both service and state).
   Future<void> removeRecentPath(String path) async {
     await _recents.remove(path);

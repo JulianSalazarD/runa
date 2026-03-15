@@ -26,6 +26,11 @@ mixin _$OpenedDocument {
   /// Whether the in-memory [document] differs from the saved version.
   bool get hasUnsavedChanges => throw _privateConstructorUsedError;
 
+  /// Whether to briefly show the "Guardado" indicator in the tab.
+  ///
+  /// Set to true after a manual Ctrl+S save; automatically cleared after 1.5 s.
+  bool get showSavedIndicator => throw _privateConstructorUsedError;
+
   /// Create a copy of OpenedDocument
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -40,7 +45,12 @@ abstract class $OpenedDocumentCopyWith<$Res> {
     $Res Function(OpenedDocument) then,
   ) = _$OpenedDocumentCopyWithImpl<$Res, OpenedDocument>;
   @useResult
-  $Res call({Document document, String path, bool hasUnsavedChanges});
+  $Res call({
+    Document document,
+    String path,
+    bool hasUnsavedChanges,
+    bool showSavedIndicator,
+  });
 
   $DocumentCopyWith<$Res> get document;
 }
@@ -63,6 +73,7 @@ class _$OpenedDocumentCopyWithImpl<$Res, $Val extends OpenedDocument>
     Object? document = null,
     Object? path = null,
     Object? hasUnsavedChanges = null,
+    Object? showSavedIndicator = null,
   }) {
     return _then(
       _value.copyWith(
@@ -77,6 +88,10 @@ class _$OpenedDocumentCopyWithImpl<$Res, $Val extends OpenedDocument>
             hasUnsavedChanges: null == hasUnsavedChanges
                 ? _value.hasUnsavedChanges
                 : hasUnsavedChanges // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            showSavedIndicator: null == showSavedIndicator
+                ? _value.showSavedIndicator
+                : showSavedIndicator // ignore: cast_nullable_to_non_nullable
                       as bool,
           )
           as $Val,
@@ -103,7 +118,12 @@ abstract class _$$OpenedDocumentImplCopyWith<$Res>
   ) = __$$OpenedDocumentImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Document document, String path, bool hasUnsavedChanges});
+  $Res call({
+    Document document,
+    String path,
+    bool hasUnsavedChanges,
+    bool showSavedIndicator,
+  });
 
   @override
   $DocumentCopyWith<$Res> get document;
@@ -126,6 +146,7 @@ class __$$OpenedDocumentImplCopyWithImpl<$Res>
     Object? document = null,
     Object? path = null,
     Object? hasUnsavedChanges = null,
+    Object? showSavedIndicator = null,
   }) {
     return _then(
       _$OpenedDocumentImpl(
@@ -141,6 +162,10 @@ class __$$OpenedDocumentImplCopyWithImpl<$Res>
             ? _value.hasUnsavedChanges
             : hasUnsavedChanges // ignore: cast_nullable_to_non_nullable
                   as bool,
+        showSavedIndicator: null == showSavedIndicator
+            ? _value.showSavedIndicator
+            : showSavedIndicator // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -153,6 +178,7 @@ class _$OpenedDocumentImpl implements _OpenedDocument {
     required this.document,
     required this.path,
     this.hasUnsavedChanges = false,
+    this.showSavedIndicator = false,
   });
 
   /// The in-memory document model.
@@ -168,9 +194,16 @@ class _$OpenedDocumentImpl implements _OpenedDocument {
   @JsonKey()
   final bool hasUnsavedChanges;
 
+  /// Whether to briefly show the "Guardado" indicator in the tab.
+  ///
+  /// Set to true after a manual Ctrl+S save; automatically cleared after 1.5 s.
+  @override
+  @JsonKey()
+  final bool showSavedIndicator;
+
   @override
   String toString() {
-    return 'OpenedDocument(document: $document, path: $path, hasUnsavedChanges: $hasUnsavedChanges)';
+    return 'OpenedDocument(document: $document, path: $path, hasUnsavedChanges: $hasUnsavedChanges, showSavedIndicator: $showSavedIndicator)';
   }
 
   @override
@@ -182,12 +215,19 @@ class _$OpenedDocumentImpl implements _OpenedDocument {
                 other.document == document) &&
             (identical(other.path, path) || other.path == path) &&
             (identical(other.hasUnsavedChanges, hasUnsavedChanges) ||
-                other.hasUnsavedChanges == hasUnsavedChanges));
+                other.hasUnsavedChanges == hasUnsavedChanges) &&
+            (identical(other.showSavedIndicator, showSavedIndicator) ||
+                other.showSavedIndicator == showSavedIndicator));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, document, path, hasUnsavedChanges);
+  int get hashCode => Object.hash(
+    runtimeType,
+    document,
+    path,
+    hasUnsavedChanges,
+    showSavedIndicator,
+  );
 
   /// Create a copy of OpenedDocument
   /// with the given fields replaced by the non-null parameter values.
@@ -206,6 +246,7 @@ abstract class _OpenedDocument implements OpenedDocument {
     required final Document document,
     required final String path,
     final bool hasUnsavedChanges,
+    final bool showSavedIndicator,
   }) = _$OpenedDocumentImpl;
 
   /// The in-memory document model.
@@ -219,6 +260,12 @@ abstract class _OpenedDocument implements OpenedDocument {
   /// Whether the in-memory [document] differs from the saved version.
   @override
   bool get hasUnsavedChanges;
+
+  /// Whether to briefly show the "Guardado" indicator in the tab.
+  ///
+  /// Set to true after a manual Ctrl+S save; automatically cleared after 1.5 s.
+  @override
+  bool get showSavedIndicator;
 
   /// Create a copy of OpenedDocument
   /// with the given fields replaced by the non-null parameter values.
