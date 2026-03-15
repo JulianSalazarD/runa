@@ -646,6 +646,10 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
 
   Widget _buildInlineEditor() {
     final el = _editingElement!;
+    // Use the canvas background if set, otherwise fall back to the theme surface.
+    final canvasBg = _parseColorHex(widget.block.backgroundColor) ??
+        Theme.of(context).colorScheme.surface;
+    final borderColor = Theme.of(context).colorScheme.primary;
     return IntrinsicWidth(
       child: Container(
         constraints: BoxConstraints(
@@ -653,8 +657,8 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
           maxWidth: _constraints.maxWidth * 0.8,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.85),
-          border: Border.all(color: Colors.blueAccent, width: 1.5),
+          color: canvasBg.withValues(alpha: 0.92),
+          border: Border.all(color: borderColor, width: 1.5),
           borderRadius: BorderRadius.circular(3),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

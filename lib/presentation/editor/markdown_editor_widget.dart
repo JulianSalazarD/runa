@@ -166,23 +166,32 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      onChanged: _onTextChanged,
-      autofocus: widget.autoFocus,
-      minLines: 1,
-      maxLines: null,
-      style: TextStyle(
-        fontFamily: widget.fontFamily ?? 'monospace',
-        fontSize: widget.fontSize ?? 16,
-        color: Theme.of(context).colorScheme.onSurface,
-      ),
-      decoration: const InputDecoration(
-        hintText: 'Escribe Markdown aquí…',
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.symmetric(vertical: 8),
-        isDense: true,
+    final selectionColor = Theme.of(context)
+        .colorScheme
+        .primary
+        .withValues(alpha: 0.25);
+
+    return TextSelectionTheme(
+      data: TextSelectionThemeData(selectionColor: selectionColor),
+      child: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        onChanged: _onTextChanged,
+        autofocus: widget.autoFocus,
+        minLines: 1,
+        maxLines: null,
+        style: TextStyle(
+          fontFamily: widget.fontFamily ?? 'monospace',
+          fontSize: widget.fontSize ?? 16,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        decoration: const InputDecoration(
+          hintText: 'Escribe Markdown aquí…',
+          border: InputBorder.none,
+          filled: false,
+          contentPadding: EdgeInsets.symmetric(vertical: 8),
+          isDense: true,
+        ),
       ),
     );
   }
