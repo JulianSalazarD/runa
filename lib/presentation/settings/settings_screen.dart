@@ -170,6 +170,15 @@ class SettingsScreen extends ConsumerWidget {
                   notifier.update(settings.copyWith(defaultCanvasBackground: c)),
             ),
           ),
+          _SettingsTile(
+            label: 'Color de líneas del canvas',
+            child: _NullableColorSwatchRow(
+              colors: _kInkColors,
+              selected: settings.defaultLineColor,
+              onSelected: (c) =>
+                  notifier.update(settings.copyWith(defaultLineColor: c)),
+            ),
+          ),
           const Divider(height: 32),
 
           // ---------------------------------------------------------------

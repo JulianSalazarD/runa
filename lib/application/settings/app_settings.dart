@@ -77,6 +77,10 @@ abstract class AppSettings with _$AppSettings {
     /// Default canvas background. `null` → derived from current theme.
     @_NullableColorConverter() Color? defaultCanvasBackground,
 
+    /// Default line color for ruled/grid/dotted/isometric backgrounds.
+    /// `null` → derived from theme (outlineVariant at 20% opacity).
+    @_NullableColorConverter() Color? defaultLineColor,
+
     /// Whether auto-save is enabled.
     @Default(true) bool autoSaveEnabled,
 

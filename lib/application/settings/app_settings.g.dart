@@ -22,6 +22,9 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   defaultCanvasBackground: const _NullableColorConverter().fromJson(
     (json['default_canvas_background'] as num?)?.toInt(),
   ),
+  defaultLineColor: const _NullableColorConverter().fromJson(
+    (json['default_line_color'] as num?)?.toInt(),
+  ),
   autoSaveEnabled: json['auto_save_enabled'] as bool? ?? true,
   autoSaveIntervalSeconds:
       (json['auto_save_interval_seconds'] as num?)?.toInt() ?? 30,
@@ -44,6 +47,9 @@ Map<String, dynamic> _$AppSettingsToJson(
   'default_ink_stroke_width': instance.defaultInkStrokeWidth,
   'default_canvas_background': const _NullableColorConverter().toJson(
     instance.defaultCanvasBackground,
+  ),
+  'default_line_color': const _NullableColorConverter().toJson(
+    instance.defaultLineColor,
   ),
   'auto_save_enabled': instance.autoSaveEnabled,
   'auto_save_interval_seconds': instance.autoSaveIntervalSeconds,

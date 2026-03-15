@@ -396,6 +396,9 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                       backgroundColor: s.defaultCanvasBackground != null
                           ? _colorToHex(s.defaultCanvasBackground!)
                           : null,
+                      backgroundLineColor: s.defaultLineColor != null
+                          ? _colorToHex(s.defaultLineColor!)
+                          : null,
                     ));
                   },
                   onAddImage: _importImage,
@@ -473,6 +476,13 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     textItalic: _textItalic,
                     inkShapeType: _inkShapeType,
                     inkSelectionMode: _selectionMode,
+                    defaultInkBackground: ref.watch(settingsProvider).defaultInkBackground,
+                    defaultCanvasBackgroundHex: ref.watch(settingsProvider).defaultCanvasBackground != null
+                        ? _colorToHex(ref.watch(settingsProvider).defaultCanvasBackground!)
+                        : null,
+                    defaultLineColorHex: ref.watch(settingsProvider).defaultLineColor != null
+                        ? _colorToHex(ref.watch(settingsProvider).defaultLineColor!)
+                        : null,
                     markdownFontFamily: ref.watch(settingsProvider).markdownFontFamily,
                     markdownFontSize: ref.watch(settingsProvider).markdownFontSize,
                   ),
@@ -730,6 +740,9 @@ class _BlockList extends StatelessWidget {
     required this.textFontSize,
     required this.textBold,
     required this.textItalic,
+    required this.defaultInkBackground,
+    this.defaultCanvasBackgroundHex,
+    this.defaultLineColorHex,
     this.inkShapeType,
     this.inkSelectionMode,
     this.markdownFontFamily,
@@ -740,6 +753,9 @@ class _BlockList extends StatelessWidget {
   final EditorNotifier notifier;
   final Future<void> Function({String? afterBlockId}) onImportImage;
   final Future<void> Function({String? afterBlockId}) onImportPdf;
+  final InkBackground defaultInkBackground;
+  final String? defaultCanvasBackgroundHex;
+  final String? defaultLineColorHex;
   final StrokeTool inkTool;
   final String inkColor;
   final double inkWidth;
@@ -837,7 +853,13 @@ class _BlockList extends StatelessWidget {
               ),
               onInsertInk: () {
                 notifier.addBlock(
-                  Block.ink(id: const Uuid().v4(), height: 200.0),
+                  Block.ink(
+                    id: const Uuid().v4(),
+                    height: 200.0,
+                    background: defaultInkBackground,
+                    backgroundColor: defaultCanvasBackgroundHex,
+                    backgroundLineColor: defaultLineColorHex,
+                  ),
                   afterId: block.id,
                 );
               },

@@ -21,7 +21,9 @@ mixin _$AppSettings {
  double get markdownFontSize;/// Default ink stroke color.
 @_ColorConverter() Color get defaultInkColor;/// Default ink stroke width.
  double get defaultInkStrokeWidth;/// Default canvas background. `null` → derived from current theme.
-@_NullableColorConverter() Color? get defaultCanvasBackground;/// Whether auto-save is enabled.
+@_NullableColorConverter() Color? get defaultCanvasBackground;/// Default line color for ruled/grid/dotted/isometric backgrounds.
+/// `null` → derived from theme (outlineVariant at 20% opacity).
+@_NullableColorConverter() Color? get defaultLineColor;/// Whether auto-save is enabled.
  bool get autoSaveEnabled;/// Auto-save interval in seconds (ignored when [autoSaveEnabled] is false).
  int get autoSaveIntervalSeconds;/// Default background pattern for new ink canvas blocks.
  InkBackground get defaultInkBackground;/// Default workspace directory path. `null` → ~/Runa.
@@ -38,16 +40,16 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.markdownFontFamily, markdownFontFamily) || other.markdownFontFamily == markdownFontFamily)&&(identical(other.markdownFontSize, markdownFontSize) || other.markdownFontSize == markdownFontSize)&&(identical(other.defaultInkColor, defaultInkColor) || other.defaultInkColor == defaultInkColor)&&(identical(other.defaultInkStrokeWidth, defaultInkStrokeWidth) || other.defaultInkStrokeWidth == defaultInkStrokeWidth)&&(identical(other.defaultCanvasBackground, defaultCanvasBackground) || other.defaultCanvasBackground == defaultCanvasBackground)&&(identical(other.autoSaveEnabled, autoSaveEnabled) || other.autoSaveEnabled == autoSaveEnabled)&&(identical(other.autoSaveIntervalSeconds, autoSaveIntervalSeconds) || other.autoSaveIntervalSeconds == autoSaveIntervalSeconds)&&(identical(other.defaultInkBackground, defaultInkBackground) || other.defaultInkBackground == defaultInkBackground)&&(identical(other.defaultWorkspacePath, defaultWorkspacePath) || other.defaultWorkspacePath == defaultWorkspacePath));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.markdownFontFamily, markdownFontFamily) || other.markdownFontFamily == markdownFontFamily)&&(identical(other.markdownFontSize, markdownFontSize) || other.markdownFontSize == markdownFontSize)&&(identical(other.defaultInkColor, defaultInkColor) || other.defaultInkColor == defaultInkColor)&&(identical(other.defaultInkStrokeWidth, defaultInkStrokeWidth) || other.defaultInkStrokeWidth == defaultInkStrokeWidth)&&(identical(other.defaultCanvasBackground, defaultCanvasBackground) || other.defaultCanvasBackground == defaultCanvasBackground)&&(identical(other.defaultLineColor, defaultLineColor) || other.defaultLineColor == defaultLineColor)&&(identical(other.autoSaveEnabled, autoSaveEnabled) || other.autoSaveEnabled == autoSaveEnabled)&&(identical(other.autoSaveIntervalSeconds, autoSaveIntervalSeconds) || other.autoSaveIntervalSeconds == autoSaveIntervalSeconds)&&(identical(other.defaultInkBackground, defaultInkBackground) || other.defaultInkBackground == defaultInkBackground)&&(identical(other.defaultWorkspacePath, defaultWorkspacePath) || other.defaultWorkspacePath == defaultWorkspacePath));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,markdownFontFamily,markdownFontSize,defaultInkColor,defaultInkStrokeWidth,defaultCanvasBackground,autoSaveEnabled,autoSaveIntervalSeconds,defaultInkBackground,defaultWorkspacePath);
+int get hashCode => Object.hash(runtimeType,themeMode,markdownFontFamily,markdownFontSize,defaultInkColor,defaultInkStrokeWidth,defaultCanvasBackground,defaultLineColor,autoSaveEnabled,autoSaveIntervalSeconds,defaultInkBackground,defaultWorkspacePath);
 
 @override
 String toString() {
-  return 'AppSettings(themeMode: $themeMode, markdownFontFamily: $markdownFontFamily, markdownFontSize: $markdownFontSize, defaultInkColor: $defaultInkColor, defaultInkStrokeWidth: $defaultInkStrokeWidth, defaultCanvasBackground: $defaultCanvasBackground, autoSaveEnabled: $autoSaveEnabled, autoSaveIntervalSeconds: $autoSaveIntervalSeconds, defaultInkBackground: $defaultInkBackground, defaultWorkspacePath: $defaultWorkspacePath)';
+  return 'AppSettings(themeMode: $themeMode, markdownFontFamily: $markdownFontFamily, markdownFontSize: $markdownFontSize, defaultInkColor: $defaultInkColor, defaultInkStrokeWidth: $defaultInkStrokeWidth, defaultCanvasBackground: $defaultCanvasBackground, defaultLineColor: $defaultLineColor, autoSaveEnabled: $autoSaveEnabled, autoSaveIntervalSeconds: $autoSaveIntervalSeconds, defaultInkBackground: $defaultInkBackground, defaultWorkspacePath: $defaultWorkspacePath)';
 }
 
 
@@ -58,7 +60,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
-@_ThemeModeConverter() ThemeMode themeMode, String markdownFontFamily, double markdownFontSize,@_ColorConverter() Color defaultInkColor, double defaultInkStrokeWidth,@_NullableColorConverter() Color? defaultCanvasBackground, bool autoSaveEnabled, int autoSaveIntervalSeconds, InkBackground defaultInkBackground, String? defaultWorkspacePath
+@_ThemeModeConverter() ThemeMode themeMode, String markdownFontFamily, double markdownFontSize,@_ColorConverter() Color defaultInkColor, double defaultInkStrokeWidth,@_NullableColorConverter() Color? defaultCanvasBackground,@_NullableColorConverter() Color? defaultLineColor, bool autoSaveEnabled, int autoSaveIntervalSeconds, InkBackground defaultInkBackground, String? defaultWorkspacePath
 });
 
 
@@ -75,7 +77,7 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? markdownFontFamily = null,Object? markdownFontSize = null,Object? defaultInkColor = null,Object? defaultInkStrokeWidth = null,Object? defaultCanvasBackground = freezed,Object? autoSaveEnabled = null,Object? autoSaveIntervalSeconds = null,Object? defaultInkBackground = null,Object? defaultWorkspacePath = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? markdownFontFamily = null,Object? markdownFontSize = null,Object? defaultInkColor = null,Object? defaultInkStrokeWidth = null,Object? defaultCanvasBackground = freezed,Object? defaultLineColor = freezed,Object? autoSaveEnabled = null,Object? autoSaveIntervalSeconds = null,Object? defaultInkBackground = null,Object? defaultWorkspacePath = freezed,}) {
   return _then(_self.copyWith(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,markdownFontFamily: null == markdownFontFamily ? _self.markdownFontFamily : markdownFontFamily // ignore: cast_nullable_to_non_nullable
@@ -83,6 +85,7 @@ as String,markdownFontSize: null == markdownFontSize ? _self.markdownFontSize : 
 as double,defaultInkColor: null == defaultInkColor ? _self.defaultInkColor : defaultInkColor // ignore: cast_nullable_to_non_nullable
 as Color,defaultInkStrokeWidth: null == defaultInkStrokeWidth ? _self.defaultInkStrokeWidth : defaultInkStrokeWidth // ignore: cast_nullable_to_non_nullable
 as double,defaultCanvasBackground: freezed == defaultCanvasBackground ? _self.defaultCanvasBackground : defaultCanvasBackground // ignore: cast_nullable_to_non_nullable
+as Color?,defaultLineColor: freezed == defaultLineColor ? _self.defaultLineColor : defaultLineColor // ignore: cast_nullable_to_non_nullable
 as Color?,autoSaveEnabled: null == autoSaveEnabled ? _self.autoSaveEnabled : autoSaveEnabled // ignore: cast_nullable_to_non_nullable
 as bool,autoSaveIntervalSeconds: null == autoSaveIntervalSeconds ? _self.autoSaveIntervalSeconds : autoSaveIntervalSeconds // ignore: cast_nullable_to_non_nullable
 as int,defaultInkBackground: null == defaultInkBackground ? _self.defaultInkBackground : defaultInkBackground // ignore: cast_nullable_to_non_nullable
@@ -172,10 +175,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@_ThemeModeConverter()  ThemeMode themeMode,  String markdownFontFamily,  double markdownFontSize, @_ColorConverter()  Color defaultInkColor,  double defaultInkStrokeWidth, @_NullableColorConverter()  Color? defaultCanvasBackground,  bool autoSaveEnabled,  int autoSaveIntervalSeconds,  InkBackground defaultInkBackground,  String? defaultWorkspacePath)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@_ThemeModeConverter()  ThemeMode themeMode,  String markdownFontFamily,  double markdownFontSize, @_ColorConverter()  Color defaultInkColor,  double defaultInkStrokeWidth, @_NullableColorConverter()  Color? defaultCanvasBackground, @_NullableColorConverter()  Color? defaultLineColor,  bool autoSaveEnabled,  int autoSaveIntervalSeconds,  InkBackground defaultInkBackground,  String? defaultWorkspacePath)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,_that.defaultInkColor,_that.defaultInkStrokeWidth,_that.defaultCanvasBackground,_that.autoSaveEnabled,_that.autoSaveIntervalSeconds,_that.defaultInkBackground,_that.defaultWorkspacePath);case _:
+return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,_that.defaultInkColor,_that.defaultInkStrokeWidth,_that.defaultCanvasBackground,_that.defaultLineColor,_that.autoSaveEnabled,_that.autoSaveIntervalSeconds,_that.defaultInkBackground,_that.defaultWorkspacePath);case _:
   return orElse();
 
 }
@@ -193,10 +196,10 @@ return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@_ThemeModeConverter()  ThemeMode themeMode,  String markdownFontFamily,  double markdownFontSize, @_ColorConverter()  Color defaultInkColor,  double defaultInkStrokeWidth, @_NullableColorConverter()  Color? defaultCanvasBackground,  bool autoSaveEnabled,  int autoSaveIntervalSeconds,  InkBackground defaultInkBackground,  String? defaultWorkspacePath)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@_ThemeModeConverter()  ThemeMode themeMode,  String markdownFontFamily,  double markdownFontSize, @_ColorConverter()  Color defaultInkColor,  double defaultInkStrokeWidth, @_NullableColorConverter()  Color? defaultCanvasBackground, @_NullableColorConverter()  Color? defaultLineColor,  bool autoSaveEnabled,  int autoSaveIntervalSeconds,  InkBackground defaultInkBackground,  String? defaultWorkspacePath)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,_that.defaultInkColor,_that.defaultInkStrokeWidth,_that.defaultCanvasBackground,_that.autoSaveEnabled,_that.autoSaveIntervalSeconds,_that.defaultInkBackground,_that.defaultWorkspacePath);case _:
+return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,_that.defaultInkColor,_that.defaultInkStrokeWidth,_that.defaultCanvasBackground,_that.defaultLineColor,_that.autoSaveEnabled,_that.autoSaveIntervalSeconds,_that.defaultInkBackground,_that.defaultWorkspacePath);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -213,10 +216,10 @@ return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@_ThemeModeConverter()  ThemeMode themeMode,  String markdownFontFamily,  double markdownFontSize, @_ColorConverter()  Color defaultInkColor,  double defaultInkStrokeWidth, @_NullableColorConverter()  Color? defaultCanvasBackground,  bool autoSaveEnabled,  int autoSaveIntervalSeconds,  InkBackground defaultInkBackground,  String? defaultWorkspacePath)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@_ThemeModeConverter()  ThemeMode themeMode,  String markdownFontFamily,  double markdownFontSize, @_ColorConverter()  Color defaultInkColor,  double defaultInkStrokeWidth, @_NullableColorConverter()  Color? defaultCanvasBackground, @_NullableColorConverter()  Color? defaultLineColor,  bool autoSaveEnabled,  int autoSaveIntervalSeconds,  InkBackground defaultInkBackground,  String? defaultWorkspacePath)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,_that.defaultInkColor,_that.defaultInkStrokeWidth,_that.defaultCanvasBackground,_that.autoSaveEnabled,_that.autoSaveIntervalSeconds,_that.defaultInkBackground,_that.defaultWorkspacePath);case _:
+return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,_that.defaultInkColor,_that.defaultInkStrokeWidth,_that.defaultCanvasBackground,_that.defaultLineColor,_that.autoSaveEnabled,_that.autoSaveIntervalSeconds,_that.defaultInkBackground,_that.defaultWorkspacePath);case _:
   return null;
 
 }
@@ -228,7 +231,7 @@ return $default(_that.themeMode,_that.markdownFontFamily,_that.markdownFontSize,
 
 @JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class _AppSettings implements AppSettings {
-  const _AppSettings({@_ThemeModeConverter() this.themeMode = ThemeMode.system, this.markdownFontFamily = 'Roboto', this.markdownFontSize = 16.0, @_ColorConverter() this.defaultInkColor = const Color(0xFF000000), this.defaultInkStrokeWidth = 2.0, @_NullableColorConverter() this.defaultCanvasBackground, this.autoSaveEnabled = true, this.autoSaveIntervalSeconds = 30, this.defaultInkBackground = InkBackground.plain, this.defaultWorkspacePath});
+  const _AppSettings({@_ThemeModeConverter() this.themeMode = ThemeMode.system, this.markdownFontFamily = 'Roboto', this.markdownFontSize = 16.0, @_ColorConverter() this.defaultInkColor = const Color(0xFF000000), this.defaultInkStrokeWidth = 2.0, @_NullableColorConverter() this.defaultCanvasBackground, @_NullableColorConverter() this.defaultLineColor, this.autoSaveEnabled = true, this.autoSaveIntervalSeconds = 30, this.defaultInkBackground = InkBackground.plain, this.defaultWorkspacePath});
   factory _AppSettings.fromJson(Map<String, dynamic> json) => _$AppSettingsFromJson(json);
 
 /// Light / dark / system theme.
@@ -243,6 +246,9 @@ class _AppSettings implements AppSettings {
 @override@JsonKey() final  double defaultInkStrokeWidth;
 /// Default canvas background. `null` → derived from current theme.
 @override@_NullableColorConverter() final  Color? defaultCanvasBackground;
+/// Default line color for ruled/grid/dotted/isometric backgrounds.
+/// `null` → derived from theme (outlineVariant at 20% opacity).
+@override@_NullableColorConverter() final  Color? defaultLineColor;
 /// Whether auto-save is enabled.
 @override@JsonKey() final  bool autoSaveEnabled;
 /// Auto-save interval in seconds (ignored when [autoSaveEnabled] is false).
@@ -265,16 +271,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.markdownFontFamily, markdownFontFamily) || other.markdownFontFamily == markdownFontFamily)&&(identical(other.markdownFontSize, markdownFontSize) || other.markdownFontSize == markdownFontSize)&&(identical(other.defaultInkColor, defaultInkColor) || other.defaultInkColor == defaultInkColor)&&(identical(other.defaultInkStrokeWidth, defaultInkStrokeWidth) || other.defaultInkStrokeWidth == defaultInkStrokeWidth)&&(identical(other.defaultCanvasBackground, defaultCanvasBackground) || other.defaultCanvasBackground == defaultCanvasBackground)&&(identical(other.autoSaveEnabled, autoSaveEnabled) || other.autoSaveEnabled == autoSaveEnabled)&&(identical(other.autoSaveIntervalSeconds, autoSaveIntervalSeconds) || other.autoSaveIntervalSeconds == autoSaveIntervalSeconds)&&(identical(other.defaultInkBackground, defaultInkBackground) || other.defaultInkBackground == defaultInkBackground)&&(identical(other.defaultWorkspacePath, defaultWorkspacePath) || other.defaultWorkspacePath == defaultWorkspacePath));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.markdownFontFamily, markdownFontFamily) || other.markdownFontFamily == markdownFontFamily)&&(identical(other.markdownFontSize, markdownFontSize) || other.markdownFontSize == markdownFontSize)&&(identical(other.defaultInkColor, defaultInkColor) || other.defaultInkColor == defaultInkColor)&&(identical(other.defaultInkStrokeWidth, defaultInkStrokeWidth) || other.defaultInkStrokeWidth == defaultInkStrokeWidth)&&(identical(other.defaultCanvasBackground, defaultCanvasBackground) || other.defaultCanvasBackground == defaultCanvasBackground)&&(identical(other.defaultLineColor, defaultLineColor) || other.defaultLineColor == defaultLineColor)&&(identical(other.autoSaveEnabled, autoSaveEnabled) || other.autoSaveEnabled == autoSaveEnabled)&&(identical(other.autoSaveIntervalSeconds, autoSaveIntervalSeconds) || other.autoSaveIntervalSeconds == autoSaveIntervalSeconds)&&(identical(other.defaultInkBackground, defaultInkBackground) || other.defaultInkBackground == defaultInkBackground)&&(identical(other.defaultWorkspacePath, defaultWorkspacePath) || other.defaultWorkspacePath == defaultWorkspacePath));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,markdownFontFamily,markdownFontSize,defaultInkColor,defaultInkStrokeWidth,defaultCanvasBackground,autoSaveEnabled,autoSaveIntervalSeconds,defaultInkBackground,defaultWorkspacePath);
+int get hashCode => Object.hash(runtimeType,themeMode,markdownFontFamily,markdownFontSize,defaultInkColor,defaultInkStrokeWidth,defaultCanvasBackground,defaultLineColor,autoSaveEnabled,autoSaveIntervalSeconds,defaultInkBackground,defaultWorkspacePath);
 
 @override
 String toString() {
-  return 'AppSettings(themeMode: $themeMode, markdownFontFamily: $markdownFontFamily, markdownFontSize: $markdownFontSize, defaultInkColor: $defaultInkColor, defaultInkStrokeWidth: $defaultInkStrokeWidth, defaultCanvasBackground: $defaultCanvasBackground, autoSaveEnabled: $autoSaveEnabled, autoSaveIntervalSeconds: $autoSaveIntervalSeconds, defaultInkBackground: $defaultInkBackground, defaultWorkspacePath: $defaultWorkspacePath)';
+  return 'AppSettings(themeMode: $themeMode, markdownFontFamily: $markdownFontFamily, markdownFontSize: $markdownFontSize, defaultInkColor: $defaultInkColor, defaultInkStrokeWidth: $defaultInkStrokeWidth, defaultCanvasBackground: $defaultCanvasBackground, defaultLineColor: $defaultLineColor, autoSaveEnabled: $autoSaveEnabled, autoSaveIntervalSeconds: $autoSaveIntervalSeconds, defaultInkBackground: $defaultInkBackground, defaultWorkspacePath: $defaultWorkspacePath)';
 }
 
 
@@ -285,7 +291,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
-@_ThemeModeConverter() ThemeMode themeMode, String markdownFontFamily, double markdownFontSize,@_ColorConverter() Color defaultInkColor, double defaultInkStrokeWidth,@_NullableColorConverter() Color? defaultCanvasBackground, bool autoSaveEnabled, int autoSaveIntervalSeconds, InkBackground defaultInkBackground, String? defaultWorkspacePath
+@_ThemeModeConverter() ThemeMode themeMode, String markdownFontFamily, double markdownFontSize,@_ColorConverter() Color defaultInkColor, double defaultInkStrokeWidth,@_NullableColorConverter() Color? defaultCanvasBackground,@_NullableColorConverter() Color? defaultLineColor, bool autoSaveEnabled, int autoSaveIntervalSeconds, InkBackground defaultInkBackground, String? defaultWorkspacePath
 });
 
 
@@ -302,7 +308,7 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? markdownFontFamily = null,Object? markdownFontSize = null,Object? defaultInkColor = null,Object? defaultInkStrokeWidth = null,Object? defaultCanvasBackground = freezed,Object? autoSaveEnabled = null,Object? autoSaveIntervalSeconds = null,Object? defaultInkBackground = null,Object? defaultWorkspacePath = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? markdownFontFamily = null,Object? markdownFontSize = null,Object? defaultInkColor = null,Object? defaultInkStrokeWidth = null,Object? defaultCanvasBackground = freezed,Object? defaultLineColor = freezed,Object? autoSaveEnabled = null,Object? autoSaveIntervalSeconds = null,Object? defaultInkBackground = null,Object? defaultWorkspacePath = freezed,}) {
   return _then(_AppSettings(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,markdownFontFamily: null == markdownFontFamily ? _self.markdownFontFamily : markdownFontFamily // ignore: cast_nullable_to_non_nullable
@@ -310,6 +316,7 @@ as String,markdownFontSize: null == markdownFontSize ? _self.markdownFontSize : 
 as double,defaultInkColor: null == defaultInkColor ? _self.defaultInkColor : defaultInkColor // ignore: cast_nullable_to_non_nullable
 as Color,defaultInkStrokeWidth: null == defaultInkStrokeWidth ? _self.defaultInkStrokeWidth : defaultInkStrokeWidth // ignore: cast_nullable_to_non_nullable
 as double,defaultCanvasBackground: freezed == defaultCanvasBackground ? _self.defaultCanvasBackground : defaultCanvasBackground // ignore: cast_nullable_to_non_nullable
+as Color?,defaultLineColor: freezed == defaultLineColor ? _self.defaultLineColor : defaultLineColor // ignore: cast_nullable_to_non_nullable
 as Color?,autoSaveEnabled: null == autoSaveEnabled ? _self.autoSaveEnabled : autoSaveEnabled // ignore: cast_nullable_to_non_nullable
 as bool,autoSaveIntervalSeconds: null == autoSaveIntervalSeconds ? _self.autoSaveIntervalSeconds : autoSaveIntervalSeconds // ignore: cast_nullable_to_non_nullable
 as int,defaultInkBackground: null == defaultInkBackground ? _self.defaultInkBackground : defaultInkBackground // ignore: cast_nullable_to_non_nullable

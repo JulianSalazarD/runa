@@ -10,7 +10,7 @@ part of 'editor_notifier.dart';
 // ignore_for_file: type=lint, type=warning
 /// Manages editing state for a single document identified by [documentId].
 ///
-/// Create the notifier via `editorNotifierProvider(documentId)`, then call
+/// Create the notifier via `editorProvider(documentId)`, then call
 /// [loadDocument] with the file path before making any mutations.
 
 @ProviderFor(EditorNotifier)
@@ -18,13 +18,13 @@ final editorProvider = EditorNotifierFamily._();
 
 /// Manages editing state for a single document identified by [documentId].
 ///
-/// Create the notifier via `editorNotifierProvider(documentId)`, then call
+/// Create the notifier via `editorProvider(documentId)`, then call
 /// [loadDocument] with the file path before making any mutations.
 final class EditorNotifierProvider
     extends $NotifierProvider<EditorNotifier, EditorState> {
   /// Manages editing state for a single document identified by [documentId].
   ///
-  /// Create the notifier via `editorNotifierProvider(documentId)`, then call
+  /// Create the notifier via `editorProvider(documentId)`, then call
   /// [loadDocument] with the file path before making any mutations.
   EditorNotifierProvider._({
     required EditorNotifierFamily super.from,
@@ -70,11 +70,11 @@ final class EditorNotifierProvider
   }
 }
 
-String _$editorNotifierHash() => r'977ab427610a68c2e9cd03d09708a2594d781304';
+String _$editorNotifierHash() => r'd3a6eea2dd4825173f329837a358a09bb8ad5ad8';
 
 /// Manages editing state for a single document identified by [documentId].
 ///
-/// Create the notifier via `editorNotifierProvider(documentId)`, then call
+/// Create the notifier via `editorProvider(documentId)`, then call
 /// [loadDocument] with the file path before making any mutations.
 
 final class EditorNotifierFamily extends $Family
@@ -97,7 +97,7 @@ final class EditorNotifierFamily extends $Family
 
   /// Manages editing state for a single document identified by [documentId].
   ///
-  /// Create the notifier via `editorNotifierProvider(documentId)`, then call
+  /// Create the notifier via `editorProvider(documentId)`, then call
   /// [loadDocument] with the file path before making any mutations.
 
   EditorNotifierProvider call(String documentId) =>
@@ -109,7 +109,7 @@ final class EditorNotifierFamily extends $Family
 
 /// Manages editing state for a single document identified by [documentId].
 ///
-/// Create the notifier via `editorNotifierProvider(documentId)`, then call
+/// Create the notifier via `editorProvider(documentId)`, then call
 /// [loadDocument] with the file path before making any mutations.
 
 abstract class _$EditorNotifier extends $Notifier<EditorState> {
