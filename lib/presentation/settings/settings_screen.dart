@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:runa/application/application.dart';
 import 'package:runa/domain/domain.dart';
+import 'package:runa/presentation/shared/canvas_colors.dart';
 
 // ---------------------------------------------------------------------------
 // Preset palettes
@@ -23,17 +24,6 @@ const _kInkColors = [
   Color(0xFF9E9E9E), // grey
 ];
 
-const _kCanvasColors = [
-  Color(0xFFFFFFFF), // white
-  Color(0xFFFFFDE7), // cream
-  Color(0xFFF3E5F5), // lavender
-  Color(0xFFE8F5E9), // mint
-  Color(0xFFE3F2FD), // light blue
-  Color(0xFFFCE4EC), // light pink
-  Color(0xFF212121), // dark grey
-  Color(0xFF1A1A2E), // dark navy
-  Color(0xFF1B1B1B), // near-black
-];
 
 const _kFontFamilies = [
   'Roboto',
@@ -164,7 +154,7 @@ class SettingsScreen extends ConsumerWidget {
           _SettingsTile(
             label: 'Color de fondo del canvas',
             child: _NullableColorSwatchRow(
-              colors: _kCanvasColors,
+              colors: kCanvasColors,
               selected: settings.defaultCanvasBackground,
               onSelected: (c) =>
                   notifier.update(settings.copyWith(defaultCanvasBackground: c)),

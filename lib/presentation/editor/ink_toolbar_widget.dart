@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:runa/domain/domain.dart';
+import 'package:runa/presentation/shared/canvas_colors.dart';
 
 import 'selection_mode.dart';
 
@@ -755,7 +756,7 @@ class _BackgroundDialogState extends State<_BackgroundDialog> {
                       child: Icon(Icons.do_not_disturb_alt, size: 12, color: colorScheme.onSurface),
                     ),
                   ),
-                  ..._kColors.map((color) {
+                  ...kCanvasColorsHex.map((color) {
                     final isSelected = color == widget.canvasColor;
                     final c = _hexToColor(color);
                     return GestureDetector(
