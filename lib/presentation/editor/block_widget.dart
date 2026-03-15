@@ -171,66 +171,73 @@ class _MarkdownBlockViewState extends State<_MarkdownBlockView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_isEditing) ...[
-          MarkdownEditorWidget(
-            key: ValueKey('editor_${widget.block.id}'),
-            initialContent: widget.block.content,
-            onChanged: (content) =>
-                widget.onUpdate?.call(widget.block.copyWith(content: content)),
-            autoFocus: widget.autoFocus,
-            onEnterAtEnd: widget.onEnterAtEnd,
-            fontFamily: widget.fontFamily,
-            fontSize: widget.fontSize,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 2),
-            child: Text(
-              _wordCountText(widget.block.content),
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.outline,
+    return ColoredBox(
+      key: ValueKey('md_bg_${widget.block.id}'),
+      color: markdownBlockBackground(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_isEditing) ...[
+              MarkdownEditorWidget(
+                key: ValueKey('editor_${widget.block.id}'),
+                initialContent: widget.block.content,
+                onChanged: (content) =>
+                    widget.onUpdate?.call(widget.block.copyWith(content: content)),
+                autoFocus: widget.autoFocus,
+                onEnterAtEnd: widget.onEnterAtEnd,
+                fontFamily: widget.fontFamily,
+                fontSize: widget.fontSize,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
+                  _wordCountText(widget.block.content),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
+              ),
+            ] else
+              MarkdownPreviewWidget(
+                content: widget.block.content,
+                fontFamily: widget.fontFamily,
+                fontSize: widget.fontSize,
+                onCheckboxToggled: widget.onUpdate == null
+                    ? null
+                    : (idx, checked) {
+                        final newContent = toggleCheckboxAt(
+                          widget.block.content,
+                          idx,
+                          checked,
+                        );
+                        widget.onUpdate!(widget.block.copyWith(content: newContent));
+                      },
+              ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _toggle,
+                icon: Icon(
+                  _isEditing ? Icons.visibility_outlined : Icons.edit_outlined,
+                  size: 14,
+                ),
+                label: Text(
+                  _isEditing ? 'Vista previa' : 'Editar',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ),
-          ),
-        ] else
-          MarkdownPreviewWidget(
-            content: widget.block.content,
-            fontFamily: widget.fontFamily,
-            fontSize: widget.fontSize,
-            onCheckboxToggled: widget.onUpdate == null
-                ? null
-                : (idx, checked) {
-                    final newContent = toggleCheckboxAt(
-                      widget.block.content,
-                      idx,
-                      checked,
-                    );
-                    widget.onUpdate!(widget.block.copyWith(content: newContent));
-                  },
-          ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: _toggle,
-            icon: Icon(
-              _isEditing ? Icons.visibility_outlined : Icons.edit_outlined,
-              size: 14,
-            ),
-            label: Text(
-              _isEditing ? 'Vista previa' : 'Editar',
-              style: const TextStyle(fontSize: 12),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -472,4 +479,23 @@ class _ResizeHandle extends StatelessWidget {
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Markdown block background colour
+// ---------------------------------------------------------------------------
+
+/// Returns a background colour for a [MarkdownBlock] that contrasts slightly
+/// with the editor surface:
+/// - **Dark theme**: +12 lightness (lighter than surface)
+/// - **Light theme**: −9 lightness (darker than surface)
+Color markdownBlockBackground(BuildContext context) {
+  final base = Theme.of(context).colorScheme.surface;
+  final hsl = HSLColor.fromColor(base);
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return hsl
+      .withLightness(
+        (hsl.lightness + (isDark ? 0.12 : -0.09)).clamp(0.0, 1.0),
+      )
+      .toColor();
 }

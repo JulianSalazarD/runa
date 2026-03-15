@@ -5,6 +5,7 @@ import 'package:runa/presentation/editor/block_widget.dart';
 import 'package:runa/presentation/editor/markdown_editor_widget.dart';
 import 'package:runa/presentation/editor/markdown_preview_widget.dart';
 
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -244,6 +245,52 @@ code block
 
       expect(updated, isNotNull);
       expect((updated as MarkdownBlock).content, 'nuevo contenido');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 3.4 — MarkdownBlock background contrast
+  // -------------------------------------------------------------------------
+
+  group('MarkdownBlock background contrast', () {
+    const block = Block.markdown(id: 'bg_test', content: 'Hola');
+
+    testWidgets('dark theme: block background is lighter than surface',
+        (tester) async {
+      final darkTheme = ThemeData.dark(useMaterial3: true);
+      await tester.pumpWidget(MaterialApp(
+        theme: darkTheme,
+        home: const Scaffold(body: BlockWidget(block: block)),
+      ));
+      await tester.pumpAndSettle();
+
+      final coloredBox = tester.widget<ColoredBox>(
+        find.byKey(const ValueKey('md_bg_bg_test')),
+      );
+      final surfaceHsl =
+          HSLColor.fromColor(darkTheme.colorScheme.surface);
+      final bgHsl = HSLColor.fromColor(coloredBox.color);
+
+      expect(bgHsl.lightness, greaterThan(surfaceHsl.lightness));
+    });
+
+    testWidgets('light theme: block background is darker than surface',
+        (tester) async {
+      final lightTheme = ThemeData.light(useMaterial3: true);
+      await tester.pumpWidget(MaterialApp(
+        theme: lightTheme,
+        home: const Scaffold(body: BlockWidget(block: block)),
+      ));
+      await tester.pumpAndSettle();
+
+      final coloredBox = tester.widget<ColoredBox>(
+        find.byKey(const ValueKey('md_bg_bg_test')),
+      );
+      final surfaceHsl =
+          HSLColor.fromColor(lightTheme.colorScheme.surface);
+      final bgHsl = HSLColor.fromColor(coloredBox.color);
+
+      expect(bgHsl.lightness, lessThan(surfaceHsl.lightness));
     });
   });
 }
