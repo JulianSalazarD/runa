@@ -217,6 +217,13 @@ class _DefaultDirectoryBrowserState
               ),
             ),
             IconButton(
+              icon: const Icon(Icons.folder_open, size: 18),
+              tooltip: 'Abrir en editor',
+              onPressed: () => ref
+                  .read(workspaceNotifierProvider.notifier)
+                  .openDirectory(_currentPath),
+            ),
+            IconButton(
               icon: const Icon(Icons.create_new_folder_outlined, size: 18),
               tooltip: 'Nueva carpeta',
               onPressed: () => _promptNewFolder(context),

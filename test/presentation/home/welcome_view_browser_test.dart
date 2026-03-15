@@ -99,6 +99,23 @@ class _FakeFileSystemService implements FileSystemService {
 }
 
 // ---------------------------------------------------------------------------
+// Workspace state spy
+// ---------------------------------------------------------------------------
+
+/// Renders the current [WorkspaceState.openedDirectoryPath] as plain text so
+/// tests can assert on it with [find.text].
+class _WorkspaceStateSpy extends ConsumerWidget {
+  const _WorkspaceStateSpy();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final path =
+        ref.watch(workspaceNotifierProvider.select((s) => s.openedDirectoryPath));
+    return Text(path ?? '', key: const Key('workspace_spy'));
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Test helpers
 // ---------------------------------------------------------------------------
 
@@ -127,7 +144,14 @@ Future<void> pumpBrowser(
             .overrideWith((_) => repo ?? _FakeDocumentRepository()),
       ],
       child: const MaterialApp(
-        home: Scaffold(body: WelcomeView()),
+        home: Scaffold(
+          body: Column(
+            children: [
+              Expanded(child: WelcomeView()),
+              _WorkspaceStateSpy(),
+            ],
+          ),
+        ),
       ),
     ),
   );
@@ -327,6 +351,41 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AlertDialog), findsOneWidget);
+    });
+  });
+
+  group('default directory browser — open in editor', () {
+    testWidgets('"Abrir en editor" button is present', (tester) async {
+      await pumpBrowser(tester, rootPath: rootPath);
+
+      expect(find.byTooltip('Abrir en editor'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Abrir en editor" at root sets openedDirectoryPath',
+        (tester) async {
+      await pumpBrowser(tester, rootPath: rootPath);
+
+      await tester.tap(find.byTooltip('Abrir en editor'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(rootPath), findsOneWidget);
+    });
+
+    testWidgets('tapping "Abrir en editor" inside subfolder opens subfolder',
+        (tester) async {
+      final subDir = p.join(rootPath, 'carpeta');
+      await pumpBrowser(tester, rootPath: rootPath, dirs: {
+        rootPath: [DirectoryItem(path: subDir, isDirectory: true)],
+        subDir: [],
+      });
+
+      await tester.tap(find.text('carpeta'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Abrir en editor'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(subDir), findsOneWidget);
     });
   });
 }
