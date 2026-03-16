@@ -25,22 +25,14 @@ Pre-built binaries are available in the [`dist/`](dist/) folder:
 
 | Platform | File | Notes |
 |----------|------|-------|
-| Linux x64 | `dist/linux/runa-0.1.0-linux-x64.tar.gz` | Extract and run `bundle/runa` |
-| Android APK | `dist/android/runa-0.1.0-android.apk` | Direct install |
+| Linux — AppImage | `dist/linux/runa-0.1.0-x86_64.AppImage` | Any distro, no install needed |
+| Linux — deb | `dist/linux/runa-0.1.0-amd64.deb` | Debian, Ubuntu, Mint… |
+| Linux — rpm | `dist/linux/runa-0.1.0-1.x86_64.rpm` | Fedora, openSUSE, RHEL… |
+| Linux — tar.gz | `dist/linux/runa-0.1.0-linux-x64.tar.gz` | Manual / any distro |
+| Android APK | `dist/android/runa-0.1.0-android.apk` | Direct sideload install |
 | Android AAB | `dist/android/runa-0.1.0-android.aab` | For Play Store submission |
 
-### Linux — running the binary
-
-```bash
-tar -xzf runa-0.1.0-linux-x64.tar.gz
-./bundle/runa
-```
-
-> **Requirement:** `zenity` or `kdialog` must be installed for the file picker dialogs.
-> ```bash
-> sudo apt install zenity      # Debian/Ubuntu
-> sudo pacman -S zenity        # Arch
-> ```
+For detailed installation instructions see **[INSTALL.md](INSTALL.md)**.
 
 ## Building from source
 
