@@ -20,6 +20,7 @@ class PdfPageBlockView extends StatefulWidget {
     this.activeTool = StrokeTool.pen,
     this.activeColor = '#000000FF',
     this.activeWidth = 3.0,
+    this.stylusOnly = false,
   });
 
   final PdfPageBlock block;
@@ -35,6 +36,7 @@ class PdfPageBlockView extends StatefulWidget {
   final StrokeTool activeTool;
   final String activeColor;
   final double activeWidth;
+  final bool stylusOnly;
 
   @override
   State<PdfPageBlockView> createState() => _PdfPageBlockViewState();
@@ -172,6 +174,7 @@ class _PdfPageBlockViewState extends State<PdfPageBlockView> {
                   activeColor: widget.activeColor,
                   activeWidth: widget.activeWidth,
                   readOnly: !widget.isSelected,
+                  stylusOnly: widget.stylusOnly,
                 ),
               ],
             ),

@@ -47,6 +47,7 @@ class BlockWidget extends StatelessWidget {
     this.inkSelectionMode,
     this.markdownFontFamily,
     this.markdownFontSize,
+    this.stylusOnly = false,
   });
 
   final Block block;
@@ -83,6 +84,9 @@ class BlockWidget extends StatelessWidget {
   /// Font size applied to Markdown editor and preview. Null = default.
   final double? markdownFontSize;
 
+  /// When `true`, only stylus/pen draws on ink/image/pdf layers.
+  final bool stylusOnly;
+
   @override
   Widget build(BuildContext context) {
     return switch (block) {
@@ -105,6 +109,7 @@ class BlockWidget extends StatelessWidget {
           textItalic: textItalic,
           activeShapeType: inkShapeType,
           selectionMode: inkSelectionMode,
+          stylusOnly: stylusOnly,
         ),
       final ImageBlock b => _ImageBlockView(
           block: b,
@@ -114,6 +119,7 @@ class BlockWidget extends StatelessWidget {
           activeTool: inkTool,
           activeColor: inkColor,
           activeWidth: inkWidth,
+          stylusOnly: stylusOnly,
         ),
       final PdfPageBlock b => PdfPageBlockView(
           block: b,
@@ -123,6 +129,7 @@ class BlockWidget extends StatelessWidget {
           activeTool: inkTool,
           activeColor: inkColor,
           activeWidth: inkWidth,
+          stylusOnly: stylusOnly,
         ),
     };
   }
@@ -261,6 +268,7 @@ class _InkBlockView extends StatefulWidget {
     this.textItalic = false,
     this.activeShapeType,
     this.selectionMode,
+    this.stylusOnly = false,
   });
 
   final InkBlock block;
@@ -273,6 +281,7 @@ class _InkBlockView extends StatefulWidget {
   final bool textItalic;
   final ShapeType? activeShapeType;
   final SelectionMode? selectionMode;
+  final bool stylusOnly;
 
   @override
   State<_InkBlockView> createState() => _InkBlockViewState();
@@ -315,6 +324,7 @@ class _InkBlockViewState extends State<_InkBlockView> {
           textItalic: widget.textItalic,
           activeShapeType: widget.activeShapeType,
           selectionMode: widget.selectionMode,
+          stylusOnly: widget.stylusOnly,
           onUpdate: (updated) => widget.onUpdate?.call(updated),
         ),
         _ResizeHandle(
@@ -346,6 +356,7 @@ class _ImageBlockView extends StatelessWidget {
     required this.activeTool,
     required this.activeColor,
     required this.activeWidth,
+    this.stylusOnly = false,
   });
 
   final ImageBlock block;
@@ -355,6 +366,7 @@ class _ImageBlockView extends StatelessWidget {
   final StrokeTool activeTool;
   final String activeColor;
   final double activeWidth;
+  final bool stylusOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -401,6 +413,7 @@ class _ImageBlockView extends StatelessWidget {
                 activeColor: activeColor,
                 activeWidth: activeWidth,
                 readOnly: !isSelected,
+                stylusOnly: stylusOnly,
               ),
             ],
           ),

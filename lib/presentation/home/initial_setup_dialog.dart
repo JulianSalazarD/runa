@@ -45,6 +45,7 @@ Future<void> _configureAndroid(WidgetRef ref) async {
         settings.copyWith(
           defaultWorkspacePath: dir.path,
           workspaceConfigured: true,
+          stylusOnlyMode: true,
         ),
       );
   await ref.read(workspaceProvider.notifier).openDirectory(dir.path);

@@ -35,6 +35,7 @@ class InkCanvasWidget extends StatefulWidget {
     this.textItalic = false,
     this.activeShapeType,
     this.selectionMode,
+    this.stylusOnly = false,
     this.onUpdate,
   });
 
@@ -62,6 +63,10 @@ class InkCanvasWidget extends StatefulWidget {
 
   /// When non-null, selection mode is active (overrides all other tools).
   final SelectionMode? selectionMode;
+
+  /// When `true`, only stylus/pen/mouse input draws; touch events are ignored
+  /// so the finger can scroll the parent list.
+  final bool stylusOnly;
 
   /// Called when any element is committed, erased, moved, or deleted.
   final ValueChanged<InkBlock>? onUpdate;
@@ -149,7 +154,11 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     _scrollHold = null;
   }
 
+  bool _isBlockedTouch(PointerEvent e) =>
+      widget.stylusOnly && e.kind == ui.PointerDeviceKind.touch;
+
   void _onPointerDown(PointerDownEvent e) {
+    if (_isBlockedTouch(e)) return;
     _holdScroll();
     if (widget.selectionMode != null) {
       _onSelectionPointerDown(e.localPosition);
@@ -167,6 +176,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   void _onPointerMove(PointerMoveEvent e) {
+    if (_isBlockedTouch(e)) return;
     if (widget.selectionMode != null) {
       _onSelectionPointerMove(e.localPosition);
       return;
@@ -183,6 +193,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   void _onPointerUp(PointerUpEvent e) {
+    if (_isBlockedTouch(e)) return;
     _releaseScrollHold();
     if (widget.selectionMode != null) {
       _onSelectionPointerUp(e.localPosition);
@@ -585,9 +596,16 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
         child: GestureDetector(
           // Compete in the gesture arena for vertical drags so the parent
           // ReorderableListView cannot start a scroll while the user draws.
-          // Empty handlers are enough to claim the gesture and reject the
-          // parent's scroll recognizer.
+          // When stylusOnly, exclude touch so finger events reach the parent
+          // scroll recognizer and can scroll the document normally.
           behavior: HitTestBehavior.opaque,
+          supportedDevices: widget.stylusOnly
+              ? {
+                  ui.PointerDeviceKind.stylus,
+                  ui.PointerDeviceKind.invertedStylus,
+                  ui.PointerDeviceKind.mouse,
+                }
+              : null,
           onVerticalDragStart: (_) {},
           onVerticalDragUpdate: (_) {},
           onVerticalDragEnd: (_) {},

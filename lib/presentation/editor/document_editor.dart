@@ -1,5 +1,5 @@
 import 'dart:async' show unawaited;
-import 'dart:io' show File;
+import 'dart:io' show File, Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -462,6 +462,13 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                             if (m != null) _inkShapeType = null;
                           })
                       : null,
+                  stylusOnly: ref.read(settingsProvider).stylusOnlyMode,
+                  onStylusOnlyToggle: () {
+                    final s = ref.read(settingsProvider);
+                    ref.read(settingsProvider.notifier).update(
+                          s.copyWith(stylusOnlyMode: !s.stylusOnlyMode),
+                        );
+                  },
                 ),
                 Expanded(
                   child: _BlockList(
@@ -488,6 +495,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                         : null,
                     markdownFontFamily: ref.watch(settingsProvider).markdownFontFamily,
                     markdownFontSize: ref.watch(settingsProvider).markdownFontSize,
+                    stylusOnly: ref.watch(settingsProvider).stylusOnlyMode,
                   ),
                 ),
               ],
@@ -542,6 +550,8 @@ class _EditorToolbar extends StatelessWidget {
     this.onInkShapeTypeChanged,
     this.inkSelectionMode,
     this.onInkSelectionModeChanged,
+    this.stylusOnly = false,
+    this.onStylusOnlyToggle,
   });
 
   final String path;
@@ -581,6 +591,8 @@ class _EditorToolbar extends StatelessWidget {
   final ValueChanged<ShapeType?>? onInkShapeTypeChanged;
   final SelectionMode? inkSelectionMode;
   final ValueChanged<SelectionMode?>? onInkSelectionModeChanged;
+  final bool stylusOnly;
+  final VoidCallback? onStylusOnlyToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -639,6 +651,20 @@ class _EditorToolbar extends StatelessWidget {
                         color: Theme.of(context).colorScheme.primary),
                     semanticsLabel: 'Cambios sin guardar',
                   ),
+                ),
+              if (Platform.isAndroid || Platform.isIOS)
+                IconButton(
+                  icon: Icon(
+                    stylusOnly ? Icons.draw : Icons.touch_app,
+                    color: stylusOnly
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  tooltip: stylusOnly
+                      ? 'Modo lápiz (toca para activar dedo)'
+                      : 'Modo dedo (toca para activar solo lápiz)',
+                  onPressed: onStylusOnlyToggle,
+                  iconSize: 20,
                 ),
               IconButton(
                 icon: const Icon(Icons.picture_as_pdf_outlined),
@@ -750,6 +776,7 @@ class _BlockList extends StatelessWidget {
     this.inkSelectionMode,
     this.markdownFontFamily,
     this.markdownFontSize,
+    this.stylusOnly = false,
   });
 
   final EditorState editorState;
@@ -769,6 +796,7 @@ class _BlockList extends StatelessWidget {
   final SelectionMode? inkSelectionMode;
   final String? markdownFontFamily;
   final double? markdownFontSize;
+  final bool stylusOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -847,6 +875,7 @@ class _BlockList extends StatelessWidget {
                 inkSelectionMode: inkSelectionMode,
                 markdownFontFamily: markdownFontFamily,
                 markdownFontSize: markdownFontSize,
+                stylusOnly: stylusOnly,
               ),
             ),
             _InsertGap(

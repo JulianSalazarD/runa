@@ -96,6 +96,11 @@ abstract class AppSettings with _$AppSettings {
     /// Whether the initial workspace setup has been completed.
     /// `false` on first launch → triggers the setup flow.
     @Default(false) bool workspaceConfigured,
+
+    /// When `true`, only stylus/pen input draws on ink canvases; touch
+    /// events are ignored so the finger can scroll the document.
+    /// Defaults to `false`; set to `true` automatically on Android first launch.
+    @Default(false) bool stylusOnlyMode,
   }) = _AppSettings;
 
   factory AppSettings.fromJson(Map<String, dynamic> json) =>

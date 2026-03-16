@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:runa/domain/domain.dart';
 import 'package:uuid/uuid.dart';
@@ -26,6 +27,7 @@ class InkAnnotationLayer extends StatefulWidget {
     required this.activeColor,
     required this.activeWidth,
     this.readOnly = false,
+    this.stylusOnly = false,
   });
 
   /// Committed strokes with normalised coordinates [0.0, 1.0].
@@ -44,6 +46,9 @@ class InkAnnotationLayer extends StatefulWidget {
 
   /// When `true`, pointer events are ignored (block not selected).
   final bool readOnly;
+
+  /// When `true`, only stylus/pen/mouse input draws; touch events are ignored.
+  final bool stylusOnly;
 
   @override
   State<InkAnnotationLayer> createState() => _InkAnnotationLayerState();
@@ -78,16 +83,22 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
 
+  bool _isBlockedTouch(PointerEvent e) =>
+      widget.stylusOnly && e.kind == PointerDeviceKind.touch;
+
   void _onPointerDown(PointerDownEvent e) {
+    if (_isBlockedTouch(e)) return;
     _holdScroll();
     setState(() => _currentPoints = [_makePoint(e)]);
   }
 
   void _onPointerMove(PointerMoveEvent e) {
+    if (_isBlockedTouch(e)) return;
     setState(() => _currentPoints = [..._currentPoints, _makePoint(e)]);
   }
 
   void _onPointerUp(PointerUpEvent e) {
+    if (_isBlockedTouch(e)) return;
     _releaseScrollHold();
     final allPoints = [..._currentPoints, _makePoint(e)];
     setState(() => _currentPoints = []);
@@ -162,6 +173,13 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
         }
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
+          supportedDevices: (widget.readOnly || !widget.stylusOnly)
+              ? null
+              : {
+                  PointerDeviceKind.stylus,
+                  PointerDeviceKind.invertedStylus,
+                  PointerDeviceKind.mouse,
+                },
           onVerticalDragStart: widget.readOnly ? null : (_) {},
           onVerticalDragUpdate: widget.readOnly ? null : (_) {},
           onVerticalDragEnd: widget.readOnly ? null : (_) {},

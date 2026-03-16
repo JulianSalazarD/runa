@@ -36,6 +36,7 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
       InkBackground.plain,
   defaultWorkspacePath: json['default_workspace_path'] as String?,
   workspaceConfigured: json['workspace_configured'] as bool? ?? false,
+  stylusOnlyMode: json['stylus_only_mode'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$AppSettingsToJson(
@@ -58,6 +59,7 @@ Map<String, dynamic> _$AppSettingsToJson(
       _$InkBackgroundEnumMap[instance.defaultInkBackground]!,
   'default_workspace_path': instance.defaultWorkspacePath,
   'workspace_configured': instance.workspaceConfigured,
+  'stylus_only_mode': instance.stylusOnlyMode,
 };
 
 const _$InkBackgroundEnumMap = {

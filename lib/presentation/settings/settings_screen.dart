@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -169,6 +171,14 @@ class SettingsScreen extends ConsumerWidget {
                   notifier.update(settings.copyWith(defaultLineColor: c)),
             ),
           ),
+          if (Platform.isAndroid || Platform.isIOS)
+            SwitchListTile(
+              title: const Text('Dibujar solo con lápiz'),
+              subtitle: const Text('El dedo hace scroll, el lápiz dibuja'),
+              value: settings.stylusOnlyMode,
+              onChanged: (v) =>
+                  notifier.update(settings.copyWith(stylusOnlyMode: v)),
+            ),
           const Divider(height: 32),
 
           // ---------------------------------------------------------------
