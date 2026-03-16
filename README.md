@@ -1,64 +1,89 @@
 # Runa
 
-Editor de documentos por bloques para Linux, macOS y Windows, construido con Flutter.
+A block-based document editor for Linux and Android, built with Flutter.
 
-## Características
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Android-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0.1.0-orange)
 
-- **Bloques de markdown** — escribe con formato Markdown con vista previa en tiempo real, resaltado de sintaxis y soporte para fórmulas matemáticas (LaTeX).
-- **Bloques de dibujo a mano** — canvas de tinta libre con herramienta de texto integrada, soporte para lápiz óptico (presión) y formas geométricas.
-- **Gestión de documentos** — crea, renombra, organiza y navega documentos y carpetas desde la pantalla de inicio o la barra lateral del editor.
-- **Exportación a PDF** — exporta cualquier documento a PDF conservando bloques de markdown, matemáticas e imágenes.
-- **Archivos recientes** — acceso rápido a los últimos documentos abiertos.
-- **Auto-guardado** — guarda cambios automáticamente con intervalo configurable.
-- **Temas** — modo claro, oscuro o según el sistema.
-- **Atajos de teclado** — `Ctrl+S` para guardar, `Tab` para navegar entre bloques, y más.
+## Features
 
-## Requisitos
+- **Markdown blocks** — write with Markdown formatting, live preview, syntax highlighting, and math formula support (LaTeX).
+- **Ink/drawing blocks** — freehand ink canvas with a built-in text tool, stylus pressure support, geometric shapes, and a stylus-only mode that ignores touch input.
+- **PDF blocks** — embed PDF pages directly into documents with ink annotation support.
+- **Image blocks** — insert and annotate images with the same ink tools.
+- **Document management** — create, rename, organize and navigate documents and folders from the home screen or editor sidebar.
+- **PDF export** — export any document to PDF preserving markdown, math, images and ink strokes. On Android shares via the system share sheet.
+- **Recent files** — quick access to the last opened documents.
+- **Auto-save** — saves changes automatically at a configurable interval.
+- **Themes** — light, dark or system-default.
+- **Keyboard shortcuts** — `Ctrl+S` to save, `Tab` to navigate between blocks, and more.
 
-- [Flutter](https://flutter.dev) 3.x o superior
-- Dart SDK 3.11 o superior
-- **Linux**: `zenity` o `kdialog` instalado (para el selector de archivos)
+## Downloads
 
-## Instalación y ejecución
+Pre-built binaries are available in the [`dist/`](dist/) folder:
+
+| Platform | File | Notes |
+|----------|------|-------|
+| Linux x64 | `dist/linux/runa-0.1.0-linux-x64.tar.gz` | Extract and run `bundle/runa` |
+| Android APK | `dist/android/runa-0.1.0-android.apk` | Direct install |
+| Android AAB | `dist/android/runa-0.1.0-android.aab` | For Play Store submission |
+
+### Linux — running the binary
 
 ```bash
-# Clonar el repositorio
-git clone <url-del-repo>
+tar -xzf runa-0.1.0-linux-x64.tar.gz
+./bundle/runa
+```
+
+> **Requirement:** `zenity` or `kdialog` must be installed for the file picker dialogs.
+> ```bash
+> sudo apt install zenity      # Debian/Ubuntu
+> sudo pacman -S zenity        # Arch
+> ```
+
+## Building from source
+
+### Requirements
+
+- [Flutter](https://flutter.dev) 3.x or later
+- Dart SDK 3.11 or later
+- **Linux:** `zenity` or `kdialog` installed
+
+```bash
+# Clone the repository
+git clone <repo-url>
 cd runa
 
-# Obtener dependencias
+# Get dependencies
 flutter pub get
 
-# Ejecutar en modo debug
-flutter run -d linux        # Linux
-flutter run -d macos        # macOS
-flutter run -d windows      # Windows
-```
+# Run in debug mode
+flutter run -d linux
+flutter run -d android
 
-## Compilar para producción
-
-```bash
+# Build release
 flutter build linux --release
-flutter build macos --release
-flutter build windows --release
+flutter build apk --release
+flutter build appbundle --release
 ```
 
-## Regenerar código generado
+### Regenerate code
 
-El proyecto usa `build_runner` para generar código de Riverpod, Freezed y JSON. Si modificas modelos o notificadores:
+The project uses `build_runner` for Riverpod, Freezed and JSON code generation. Run this after modifying models or notifiers:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-## Estructura del proyecto
+## Project structure
 
 ```
 lib/
-├── application/   # Lógica de negocio: notificadores Riverpod, servicios, modelos de estado
-├── data/          # Implementaciones de repositorios e I/O
-├── domain/        # Modelos de dominio (Document, Block, Stroke…)
-└── presentation/  # Widgets: editor, pantalla de inicio, barra lateral, ajustes
+├── application/   # Business logic: Riverpod notifiers, services, state models
+├── data/          # Repository implementations and I/O
+├── domain/        # Domain models (Document, Block, Stroke…)
+└── presentation/  # Widgets: editor, home screen, sidebar, settings
 ```
 
 ## Tests
@@ -67,18 +92,23 @@ lib/
 flutter test
 ```
 
-## Dependencias principales
+## Main dependencies
 
-| Paquete | Uso |
-|---------|-----|
-| `flutter_riverpod` | Gestión de estado |
-| `freezed` | Modelos inmutables |
-| `pdf` / `pdfrx` | Generación y visualización de PDF |
-| `flutter_markdown_plus` | Renderizado de Markdown |
-| `flutter_math_fork` | Fórmulas matemáticas (LaTeX) |
-| `flutter_highlight` | Resaltado de sintaxis |
-| `path_provider` | Directorio de documentos por defecto |
+| Package | Purpose |
+|---------|---------|
+| `flutter_riverpod` | State management |
+| `freezed` | Immutable models |
+| `pdf` / `pdfrx` | PDF generation and rendering |
+| `flutter_markdown_plus` | Markdown rendering |
+| `flutter_math_fork` | Math formulas (LaTeX) |
+| `flutter_highlight` | Syntax highlighting |
+| `share_plus` | Android/iOS share sheet |
+| `path_provider` | Default documents directory |
 
-## Licencia
+## License
 
-MIT — ver [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
+
+---
+
+*This project was largely built with the assistance of an LLM to get a first working prototype off the ground. It's been a fun experiment — in the future I'd like to have more hands-on control over the development and grow it from here.*
