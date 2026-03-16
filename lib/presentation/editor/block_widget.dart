@@ -1,4 +1,4 @@
-import 'dart:io' show File;
+import 'dart:io' show File, Platform;
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -454,6 +454,7 @@ class _ResizeHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Platform.isAndroid || Platform.isIOS;
     return MouseRegion(
       cursor: SystemMouseCursors.resizeRow,
       child: GestureDetector(
@@ -461,14 +462,14 @@ class _ResizeHandle extends StatelessWidget {
         onVerticalDragUpdate: onDragUpdate,
         onVerticalDragEnd: onDragEnd,
         child: SizedBox(
-          height: 10,
+          height: isMobile ? 36 : 10,
           child: Center(
             child: Container(
-              width: 32,
-              height: 3,
+              width: isMobile ? 48 : 32,
+              height: isMobile ? 5 : 3,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(1.5),
+                borderRadius: BorderRadius.circular(isMobile ? 2.5 : 1.5),
               ),
             ),
           ),
