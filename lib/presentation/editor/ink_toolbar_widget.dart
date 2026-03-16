@@ -114,12 +114,12 @@ class InkToolbarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+      child: Wrap(
+        spacing: 2,
+        runSpacing: 4,
+        children: [
             // Tool buttons.
             _ToolButton(
               icon: Icons.edit,
@@ -156,7 +156,7 @@ class InkToolbarWidget extends StatelessWidget {
               activeTool: activeTool,
               onTap: onToolChanged,
             ),
-            const VerticalDivider(indent: 4, endIndent: 4),
+            const SizedBox(width: 8),
             // Color swatches.
             for (final color in _kColors)
               _ColorSwatch(
@@ -164,7 +164,7 @@ class InkToolbarWidget extends StatelessWidget {
                 isSelected: color == activeColor,
                 onTap: () => onColorChanged(color),
               ),
-            const VerticalDivider(indent: 4, endIndent: 4),
+            const SizedBox(width: 8),
             // Width options.
             for (int i = 0; i < _kWidths.length; i++)
               _WidthButton(
@@ -175,7 +175,7 @@ class InkToolbarWidget extends StatelessWidget {
               ),
             if (activeTool == StrokeTool.text &&
                 onTextFontSizeChanged != null) ...[
-              const VerticalDivider(indent: 4, endIndent: 4),
+              const SizedBox(width: 8),
               for (final size in [10.0, 14.0, 18.0, 24.0, 32.0])
                 _FontSizeButton(
                   fontSize: size,
@@ -251,7 +251,7 @@ class InkToolbarWidget extends StatelessWidget {
               ),
             ],
             if (onSelectionModeChanged != null) ...[
-              const VerticalDivider(indent: 4, endIndent: 4),
+              const SizedBox(width: 8),
               // Main selection toggle button.
               _SelectionButton(
                 activeSelectionMode: activeSelectionMode,
@@ -282,7 +282,7 @@ class InkToolbarWidget extends StatelessWidget {
               ],
             ],
             if (onShapeTypeChanged != null) ...[
-              const VerticalDivider(indent: 4, endIndent: 4),
+              const SizedBox(width: 8),
               for (final entry in _kShapeTools)
                 _ShapeButton(
                   icon: entry.icon,
@@ -296,7 +296,7 @@ class InkToolbarWidget extends StatelessWidget {
                 ),
             ],
             if (onBackgroundChanged != null) ...[
-              const VerticalDivider(indent: 4, endIndent: 4),
+              const SizedBox(width: 8),
               _BackgroundButton(
                 background: activeBackground!,
                 spacing: backgroundSpacing!,
@@ -308,8 +308,7 @@ class InkToolbarWidget extends StatelessWidget {
                 onCanvasColorChanged: onBackgroundCanvasColorChanged,
               ),
             ],
-          ],
-        ),
+        ],
       ),
     );
   }

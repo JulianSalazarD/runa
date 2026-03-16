@@ -6,11 +6,11 @@ import 'package:runa/domain/domain.dart';
 
 import 'ink_annotation_layer.dart';
 import 'ink_canvas_widget.dart';
-import 'selection_mode.dart';
 import 'markdown/task_list_extension.dart';
 import 'markdown_editor_widget.dart';
 import 'markdown_preview_widget.dart';
 import 'pdf_page_block_view.dart';
+import 'selection_mode.dart';
 
 /// Dispatches to the appropriate block renderer based on [block] type.
 ///
@@ -120,6 +120,9 @@ class BlockWidget extends StatelessWidget {
           documentPath: documentPath,
           isSelected: isSelected,
           onUpdate: onUpdate,
+          activeTool: inkTool,
+          activeColor: inkColor,
+          activeWidth: inkWidth,
         ),
     };
   }
@@ -346,14 +349,8 @@ class _ImageBlockView extends StatelessWidget {
   });
 
   final ImageBlock block;
-
-  /// Absolute path to the `.runa` file. Used to resolve the relative asset
-  /// path stored in [block.path].
   final String documentPath;
-
-  /// When `true`, the [InkAnnotationLayer] accepts pointer input.
   final bool isSelected;
-
   final ValueChanged<Block>? onUpdate;
   final StrokeTool activeTool;
   final String activeColor;
@@ -367,24 +364,24 @@ class _ImageBlockView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: block.strokes.isEmpty
-                ? null
-                : () => onUpdate?.call(block.copyWith(strokes: const [])),
-            icon: const Icon(Icons.clear, size: 14),
-            label: const Text(
-              'Limpiar anotaciones',
-              style: TextStyle(fontSize: 12),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        if (block.strokes.isNotEmpty)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () =>
+                  onUpdate?.call(block.copyWith(strokes: const [])),
+              icon: const Icon(Icons.clear, size: 14),
+              label: const Text(
+                'Limpiar anotaciones',
+                style: TextStyle(fontSize: 12),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
             ),
           ),
-        ),
         AspectRatio(
           aspectRatio: block.naturalWidth / block.naturalHeight,
           child: Stack(

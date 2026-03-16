@@ -327,8 +327,11 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
         : editorState.blocks
             .where((b) => b.id == editorState.selectedBlockId)
             .firstOrNull;
-    final showInkToolbar =
-        selectedBlock is InkBlock || selectedBlock is ImageBlock;
+    final showInkToolbar = selectedBlock is InkBlock ||
+        selectedBlock is ImageBlock ||
+        selectedBlock is PdfPageBlock;
+    // Shapes, selection and background options are only available for ink blocks.
+    final showAdvancedTools = selectedBlock is InkBlock;
     final InkBlock? selectedInkBlock =
         selectedBlock is InkBlock ? selectedBlock : null;
 
@@ -446,14 +449,14 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                       : (String? c) => notifier.updateBlock(
                           selectedInkBlock.copyWith(backgroundColor: c)),
                   inkShapeType: _inkShapeType,
-                  onInkShapeTypeChanged: showInkToolbar
+                  onInkShapeTypeChanged: showAdvancedTools
                       ? (ShapeType? t) => setState(() {
                             _inkShapeType = t;
                             if (t != null) _selectionMode = null;
                           })
                       : null,
                   inkSelectionMode: _selectionMode,
-                  onInkSelectionModeChanged: showInkToolbar
+                  onInkSelectionModeChanged: showAdvancedTools
                       ? (SelectionMode? m) => setState(() {
                             _selectionMode = m;
                             if (m != null) _inkShapeType = null;

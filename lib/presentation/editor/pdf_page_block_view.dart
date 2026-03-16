@@ -4,7 +4,6 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:runa/domain/domain.dart';
 
 import 'ink_annotation_layer.dart';
-import 'ink_toolbar_widget.dart';
 
 /// Renders a single PDF page ([block.pageIndex]) with an ink annotation layer.
 ///
@@ -18,6 +17,9 @@ class PdfPageBlockView extends StatefulWidget {
     required this.documentPath,
     required this.isSelected,
     this.onUpdate,
+    this.activeTool = StrokeTool.pen,
+    this.activeColor = '#000000FF',
+    this.activeWidth = 3.0,
   });
 
   final PdfPageBlock block;
@@ -30,6 +32,9 @@ class PdfPageBlockView extends StatefulWidget {
   final bool isSelected;
 
   final ValueChanged<Block>? onUpdate;
+  final StrokeTool activeTool;
+  final String activeColor;
+  final double activeWidth;
 
   @override
   State<PdfPageBlockView> createState() => _PdfPageBlockViewState();
@@ -39,10 +44,6 @@ class _PdfPageBlockViewState extends State<PdfPageBlockView> {
   PdfDocument? _pdf;
   bool _loading = true;
   String? _error;
-
-  StrokeTool _activeTool = StrokeTool.pen;
-  String _activeColor = '#000000FF';
-  double _activeWidth = 3.0;
 
   @override
   void initState() {
@@ -136,15 +137,6 @@ class _PdfPageBlockViewState extends State<PdfPageBlockView> {
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ),
-          // Ink toolbar.
-          InkToolbarWidget(
-            activeTool: _activeTool,
-            activeColor: _activeColor,
-            activeWidth: _activeWidth,
-            onToolChanged: (t) => setState(() => _activeTool = t),
-            onColorChanged: (c) => setState(() => _activeColor = c),
-            onWidthChanged: (w) => setState(() => _activeWidth = w),
-          ),
           // "Limpiar anotaciones" button (only when strokes exist).
           if (widget.block.strokes.isNotEmpty)
             Align(
@@ -176,9 +168,9 @@ class _PdfPageBlockViewState extends State<PdfPageBlockView> {
                   strokes: widget.block.strokes,
                   onStrokesChanged: (strokes) =>
                       widget.onUpdate?.call(widget.block.copyWith(strokes: strokes)),
-                  activeTool: _activeTool,
-                  activeColor: _activeColor,
-                  activeWidth: _activeWidth,
+                  activeTool: widget.activeTool,
+                  activeColor: widget.activeColor,
+                  activeWidth: widget.activeWidth,
                   readOnly: !widget.isSelected,
                 ),
               ],
