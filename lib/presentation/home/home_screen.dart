@@ -1,14 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:runa/application/application.dart';
-import 'package:runa/data/data.dart';
 import 'package:runa/presentation/home/sidebar/name_input_dialog.dart';
 
 import '../editor/document_editor.dart';
 import '../utils/linux_file_picker.dart';
+import 'initial_setup_dialog.dart';
 import 'sidebar/file_sidebar_widget.dart';
 import 'tabs/document_tab_bar.dart';
 import 'welcome_view.dart';
@@ -77,9 +79,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(workspaceProvider.notifier).initialize();
-      ref.read(settingsProvider.notifier).initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.wait([
+        ref.read(workspaceProvider.notifier).initialize(),
+        ref.read(settingsProvider.notifier).initialize(),
+      ]);
+      if (!mounted) return;
+      final settings = ref.read(settingsProvider);
+      if (!settings.workspaceConfigured) {
+        await runInitialSetup(context, ref);
+      }
     });
   }
 
@@ -254,11 +263,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(workspaceProvider.notifier)
           .createDocument(directory, name);
     } else {
-      final dir = await const DefaultDirectoryService().getDefaultDirectory();
+      final configuredPath = ref.read(settingsProvider).defaultWorkspacePath;
+      final String dirPath;
+      if (configuredPath != null && configuredPath.isNotEmpty) {
+        await Directory(configuredPath).create(recursive: true);
+        dirPath = configuredPath;
+      } else {
+        final dir = await ref
+            .read(defaultDirectoryServiceProvider)
+            .getDefaultDirectory();
+        dirPath = dir.path;
+      }
       final name = 'sin_titulo_${DateTime.now().millisecondsSinceEpoch}';
-      await ref
-          .read(workspaceProvider.notifier)
-          .createDocument(dir.path, name);
+      await ref.read(workspaceProvider.notifier).createDocument(dirPath, name);
     }
   }
 

@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart'
+    show getApplicationDocumentsDirectory;
 
 /// Thrown when the home directory cannot be resolved.
 final class DefaultDirectoryException implements Exception {
@@ -36,12 +38,26 @@ class DefaultDirectoryService {
 
   static const _dirName = 'Runa';
 
-  /// Returns the `~/Runa/` [Directory], creating it on disk if absent.
+  /// Returns the default Runa [Directory], creating it on disk if absent.
+  ///
+  /// - Android / iOS: `<app-documents>/Runa/`
+  /// - Desktop: `~/Runa/`
   ///
   /// Throws [DefaultDirectoryException] if the home directory cannot be
-  /// determined from the environment.
+  /// determined from the environment (desktop only).
   Future<Directory> getDefaultDirectory() async {
-    final home = _homeOverride ?? _resolveHome();
+    if (_homeOverride != null) {
+      final dir = Directory(p.join(_homeOverride, _dirName));
+      await dir.create(recursive: true);
+      return dir;
+    }
+    if (Platform.isAndroid || Platform.isIOS) {
+      final docs = await getApplicationDocumentsDirectory();
+      final dir = Directory(p.join(docs.path, _dirName));
+      await dir.create(recursive: true);
+      return dir;
+    }
+    final home = _resolveHome();
     final dir = Directory(p.join(home, _dirName));
     await dir.create(recursive: true);
     return dir;

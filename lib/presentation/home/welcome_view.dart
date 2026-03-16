@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:runa/application/application.dart';
-import 'package:runa/data/data.dart';
 
 import '../settings/settings_screen.dart';
 import '../utils/linux_file_picker.dart';
@@ -30,9 +29,17 @@ class _WelcomeViewState extends ConsumerState<WelcomeView> {
 
   Future<void> _loadDefaultDir() async {
     try {
-      final dir =
-          await ref.read(defaultDirectoryServiceProvider).getDefaultDirectory();
-      if (mounted) setState(() => _rootPath = dir.path);
+      final configuredPath = ref.read(settingsProvider).defaultWorkspacePath;
+      final String dirPath;
+      if (configuredPath != null && configuredPath.isNotEmpty) {
+        dirPath = configuredPath;
+      } else {
+        final dir = await ref
+            .read(defaultDirectoryServiceProvider)
+            .getDefaultDirectory();
+        dirPath = dir.path;
+      }
+      if (mounted) setState(() => _rootPath = dirPath);
     } catch (_) {
       // If the home directory cannot be determined, skip the browser.
     }
@@ -127,11 +134,19 @@ class _WelcomeViewState extends ConsumerState<WelcomeView> {
   }
 
   Future<void> _newDocument() async {
-    final dir = await const DefaultDirectoryService().getDefaultDirectory();
+    final configuredPath = ref.read(settingsProvider).defaultWorkspacePath;
+    final String dirPath;
+    if (configuredPath != null && configuredPath.isNotEmpty) {
+      await Directory(configuredPath).create(recursive: true);
+      dirPath = configuredPath;
+    } else {
+      final dir = await ref
+          .read(defaultDirectoryServiceProvider)
+          .getDefaultDirectory();
+      dirPath = dir.path;
+    }
     final name = 'sin_titulo_${DateTime.now().millisecondsSinceEpoch}';
-    await ref
-        .read(workspaceProvider.notifier)
-        .createDocument(dir.path, name);
+    await ref.read(workspaceProvider.notifier).createDocument(dirPath, name);
   }
 }
 

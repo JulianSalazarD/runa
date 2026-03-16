@@ -92,6 +92,10 @@ abstract class AppSettings with _$AppSettings {
 
     /// Default workspace directory path. `null` → ~/Runa.
     String? defaultWorkspacePath,
+
+    /// Whether the initial workspace setup has been completed.
+    /// `false` on first launch → triggers the setup flow.
+    @Default(false) bool workspaceConfigured,
   }) = _AppSettings;
 
   factory AppSettings.fromJson(Map<String, dynamic> json) =>
