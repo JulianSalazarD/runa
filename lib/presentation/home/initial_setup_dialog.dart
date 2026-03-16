@@ -8,18 +8,14 @@ import '../utils/linux_file_picker.dart';
 
 /// Runs the first-launch workspace setup.
 ///
-/// - Android / iOS: silently resolves and stores the default app-documents
-///   directory, then returns.
-/// - Desktop: shows a modal dialog asking the user to confirm the default
-///   `~/Runa` path or pick a custom folder.
+/// On all platforms shows a modal dialog with the default path.
+/// - Android: path pre-filled with external app-scoped storage; no folder
+///   picker (SAF content:// URIs are incompatible with `File()`).
+/// - Desktop: path pre-filled with `~/Runa`; user can pick a custom folder.
 ///
 /// Always marks [AppSettings.workspaceConfigured] = `true` when done and
 /// opens the chosen directory in the workspace.
 Future<void> runInitialSetup(BuildContext context, WidgetRef ref) async {
-  if (Platform.isAndroid || Platform.isIOS) {
-    await _configureAndroid(ref);
-    return;
-  }
   if (!context.mounted) return;
   await showDialog<void>(
     context: context,
@@ -27,36 +23,21 @@ Future<void> runInitialSetup(BuildContext context, WidgetRef ref) async {
     builder: (_) => ProviderScope.containerOf(context).let(
       (container) => UncontrolledProviderScope(
         container: container,
-        child: const _SetupDialog(),
+        child: _SetupDialog(allowPicker: !Platform.isAndroid && !Platform.isIOS),
       ),
     ),
   );
 }
 
 // ---------------------------------------------------------------------------
-// Android / iOS — auto configure
-// ---------------------------------------------------------------------------
-
-Future<void> _configureAndroid(WidgetRef ref) async {
-  final dir =
-      await ref.read(defaultDirectoryServiceProvider).getDefaultDirectory();
-  final settings = ref.read(settingsProvider);
-  await ref.read(settingsProvider.notifier).update(
-        settings.copyWith(
-          defaultWorkspacePath: dir.path,
-          workspaceConfigured: true,
-          stylusOnlyMode: true,
-        ),
-      );
-  await ref.read(workspaceProvider.notifier).openDirectory(dir.path);
-}
-
-// ---------------------------------------------------------------------------
-// Desktop dialog
+// Setup dialog (all platforms)
 // ---------------------------------------------------------------------------
 
 class _SetupDialog extends ConsumerStatefulWidget {
-  const _SetupDialog();
+  const _SetupDialog({required this.allowPicker});
+
+  /// When false, the "Cambiar" folder-picker button is hidden (Android/iOS).
+  final bool allowPicker;
 
   @override
   ConsumerState<_SetupDialog> createState() => _SetupDialogState();
@@ -103,7 +84,6 @@ class _SetupDialogState extends ConsumerState<_SetupDialog> {
     if (_selectedPath == null) return;
     setState(() => _saving = true);
 
-    // Ensure the directory exists.
     await Directory(_selectedPath!).create(recursive: true);
 
     final settings = ref.read(settingsProvider);
@@ -111,6 +91,10 @@ class _SetupDialogState extends ConsumerState<_SetupDialog> {
           settings.copyWith(
             defaultWorkspacePath: _selectedPath,
             workspaceConfigured: true,
+            // Enable stylus-only mode by default on mobile.
+            stylusOnlyMode: Platform.isAndroid || Platform.isIOS
+                ? true
+                : settings.stylusOnlyMode,
           ),
         );
     await ref.read(workspaceProvider.notifier).openDirectory(_selectedPath!);
@@ -154,12 +138,14 @@ class _SetupDialogState extends ConsumerState<_SetupDialog> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: _saving ? null : _pickFolder,
-                        icon: const Icon(Icons.folder_open, size: 16),
-                        label: const Text('Cambiar'),
-                      ),
+                      if (widget.allowPicker) ...[
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          onPressed: _saving ? null : _pickFolder,
+                          icon: const Icon(Icons.folder_open, size: 16),
+                          label: const Text('Cambiar'),
+                        ),
+                      ],
                     ],
                   ),
                 ],

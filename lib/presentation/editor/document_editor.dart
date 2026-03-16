@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
 import 'package:runa/application/application.dart';
 import 'package:runa/application/services/pdf_exporter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:runa/domain/domain.dart';
 import 'package:uuid/uuid.dart';
 
@@ -209,6 +211,60 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
   }
 
   Future<void> _exportToPdf() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      await _exportToPdfMobile();
+    } else {
+      await _exportToPdfDesktop();
+    }
+  }
+
+  Future<void> _exportToPdfMobile() async {
+    final document = ref.read(editorProvider(_docId)).document;
+    final docPath = widget.opened.path;
+    final defaultName = '${p.basenameWithoutExtension(docPath)}.pdf';
+
+    final progress = ValueNotifier<(int, int)>((0, 0));
+
+    unawaited(showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _buildProgressDialog(progress),
+    ));
+
+    late final Uint8List bytes;
+    try {
+      final exporter = PdfExporter();
+      bytes = await exporter.export(
+        document,
+        documentPath: docPath,
+        onProgress: (current, total) {
+          progress.value = (current, total);
+        },
+      );
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      progress.dispose();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al exportar PDF: $e')),
+      );
+      return;
+    }
+
+    if (mounted) Navigator.of(context).pop();
+    progress.dispose();
+
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/$defaultName');
+    await tempFile.writeAsBytes(bytes);
+
+    await Share.shareXFiles(
+      [XFile(tempFile.path, mimeType: 'application/pdf')],
+      subject: defaultName,
+    );
+  }
+
+  Future<void> _exportToPdfDesktop() async {
     final document = ref.read(editorProvider(_docId)).document;
     final docPath = widget.opened.path;
     final defaultName = '${p.basenameWithoutExtension(docPath)}.pdf';
@@ -229,39 +285,12 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     }
     if (!mounted || savePath == null) return;
 
-    // Progress state shared between the dialog and the export callback.
     final progress = ValueNotifier<(int, int)>((0, 0));
 
-    // Show progress dialog (not awaited — dismissed explicitly below).
     unawaited(showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => ValueListenableBuilder(
-        valueListenable: progress,
-        builder: (ctx, value, _) {
-          final (current, total) = value;
-          return AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Exportando PDF…'),
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: total > 0 ? current / total : null,
-                ),
-                if (total > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      'Bloque $current de $total',
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
+      builder: (ctx) => _buildProgressDialog(progress),
     ));
 
     try {
@@ -289,6 +318,35 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('PDF exportado: $savePath')),
+    );
+  }
+
+  Widget _buildProgressDialog(ValueNotifier<(int, int)> progress) {
+    return ValueListenableBuilder(
+      valueListenable: progress,
+      builder: (ctx, value, _) {
+        final (current, total) = value;
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Exportando PDF…'),
+              const SizedBox(height: 12),
+              LinearProgressIndicator(
+                value: total > 0 ? current / total : null,
+              ),
+              if (total > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    'Bloque $current de $total',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 

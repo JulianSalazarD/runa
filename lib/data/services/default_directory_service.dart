@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart'
-    show getApplicationDocumentsDirectory;
+    show getExternalStorageDirectory, getApplicationDocumentsDirectory;
 
 /// Thrown when the home directory cannot be resolved.
 final class DefaultDirectoryException implements Exception {
@@ -51,7 +51,17 @@ class DefaultDirectoryService {
       await dir.create(recursive: true);
       return dir;
     }
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (Platform.isAndroid) {
+      // Use external app-scoped storage so files are visible in the file
+      // manager under Android/data/<appId>/files/Runa.
+      // Falls back to internal app documents if external is unavailable.
+      final extDir = await getExternalStorageDirectory();
+      final base = extDir ?? await getApplicationDocumentsDirectory();
+      final dir = Directory(p.join(base.path, _dirName));
+      await dir.create(recursive: true);
+      return dir;
+    }
+    if (Platform.isIOS) {
       final docs = await getApplicationDocumentsDirectory();
       final dir = Directory(p.join(docs.path, _dirName));
       await dir.create(recursive: true);
