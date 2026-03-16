@@ -59,6 +59,18 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
   /// Render size captured from [LayoutBuilder].
   Size _size = Size.zero;
 
+  // Holds the parent scroll position while a pointer is active on the layer.
+  ScrollHoldController? _scrollHold;
+
+  void _holdScroll() {
+    _scrollHold = Scrollable.maybeOf(context)?.position.hold(() {});
+  }
+
+  void _releaseScrollHold() {
+    _scrollHold?.cancel();
+    _scrollHold = null;
+  }
+
   StrokePoint _makePoint(PointerEvent e) => StrokePoint(
         x: e.localPosition.dx,
         y: e.localPosition.dy,
@@ -67,6 +79,7 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
       );
 
   void _onPointerDown(PointerDownEvent e) {
+    _holdScroll();
     setState(() => _currentPoints = [_makePoint(e)]);
   }
 
@@ -75,6 +88,7 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
   }
 
   void _onPointerUp(PointerUpEvent e) {
+    _releaseScrollHold();
     final allPoints = [..._currentPoints, _makePoint(e)];
     setState(() => _currentPoints = []);
 
@@ -146,10 +160,16 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
             if (mounted) setState(() => _size = newSize);
           });
         }
-        return Listener(
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragStart: widget.readOnly ? null : (_) {},
+          onVerticalDragUpdate: widget.readOnly ? null : (_) {},
+          onVerticalDragEnd: widget.readOnly ? null : (_) {},
+          child: Listener(
           onPointerDown: widget.readOnly ? null : _onPointerDown,
           onPointerMove: widget.readOnly ? null : _onPointerMove,
           onPointerUp: widget.readOnly ? null : _onPointerUp,
+          onPointerCancel: widget.readOnly ? null : (_) => _releaseScrollHold(),
           child: CustomPaint(
             painter: _AnnotationPainter(
               strokes: widget.strokes,
@@ -159,7 +179,8 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
             ),
             size: Size.infinite,
           ),
-        );
+          ),  // Listener
+        );    // GestureDetector
       },
     );
   }

@@ -98,6 +98,10 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
 
   BoxConstraints _constraints = const BoxConstraints();
 
+  // Holds the parent scroll position while a pointer is active on the canvas,
+  // preventing the ReorderableListView from scrolling during drawing.
+  ScrollHoldController? _scrollHold;
+
   Size get _canvasSize =>
       Size(_constraints.maxWidth, widget.height);
 
@@ -136,7 +140,17 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   // Pointer dispatch
   // ---------------------------------------------------------------------------
 
+  void _holdScroll() {
+    _scrollHold = Scrollable.maybeOf(context)?.position.hold(() {});
+  }
+
+  void _releaseScrollHold() {
+    _scrollHold?.cancel();
+    _scrollHold = null;
+  }
+
   void _onPointerDown(PointerDownEvent e) {
+    _holdScroll();
     if (widget.selectionMode != null) {
       _onSelectionPointerDown(e.localPosition);
       return;
@@ -169,6 +183,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   void _onPointerUp(PointerUpEvent e) {
+    _releaseScrollHold();
     if (widget.selectionMode != null) {
       _onSelectionPointerUp(e.localPosition);
       return;
@@ -567,10 +582,20 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
       },
       child: MouseRegion(
         cursor: _cursor,
-        child: Listener(
+        child: GestureDetector(
+          // Compete in the gesture arena for vertical drags so the parent
+          // ReorderableListView cannot start a scroll while the user draws.
+          // Empty handlers are enough to claim the gesture and reject the
+          // parent's scroll recognizer.
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragStart: (_) {},
+          onVerticalDragUpdate: (_) {},
+          onVerticalDragEnd: (_) {},
+          child: Listener(
           onPointerDown: _onPointerDown,
           onPointerMove: _onPointerMove,
           onPointerUp: _onPointerUp,
+          onPointerCancel: (_) => _releaseScrollHold(),
           child: SizedBox(
             height: widget.height,
             child: ClipRect(
@@ -639,8 +664,9 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
               ),
             ),
           ),
-        ),
-      ),
+          ),  // Listener
+        ),    // GestureDetector
+      ),      // MouseRegion
     );
   }
 
