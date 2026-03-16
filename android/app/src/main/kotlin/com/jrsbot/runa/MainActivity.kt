@@ -1,4 +1,4 @@
-package com.example.runa
+package com.jrsbot.runa
 
 import io.flutter.embedding.android.FlutterActivity
 
