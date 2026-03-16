@@ -15,6 +15,39 @@ That's it. No installation required — the AppImage is self-contained.
 
 > **Optional:** integrate it with your desktop (launcher, file manager, etc.) using [AppImageLauncher](https://github.com/TheAssassin/AppImageLauncher).
 
+**Run it from anywhere with just `runa`**
+
+Move the AppImage to a location in your `PATH` and rename it:
+
+```bash
+# Option A — system-wide (requires sudo)
+sudo mv runa-0.1.0-x86_64.AppImage /usr/local/bin/runa
+sudo chmod +x /usr/local/bin/runa
+
+# Option B — current user only (no sudo needed)
+mkdir -p ~/.local/bin
+mv runa-0.1.0-x86_64.AppImage ~/.local/bin/runa
+chmod +x ~/.local/bin/runa
+```
+
+For option B, make sure `~/.local/bin` is in your `PATH`. Add it once for your shell:
+
+**bash / zsh** — add to `~/.bashrc`, `~/.zshrc` or `~/.profile`:
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+Then reload:
+```bash
+source ~/.bashrc   # or ~/.zshrc / ~/.profile
+```
+
+**fish** — run once, it persists automatically:
+```fish
+fish_add_path ~/.local/bin
+```
+
+After that, just type `runa` in any terminal to launch it.
+
 ---
 
 ### .deb (Debian, Ubuntu, Linux Mint, Pop!_OS…)
@@ -138,7 +171,3 @@ Runa uses `zenity` or `kdialog` for native file dialogs. Install one if you don'
 ```bash
 adb install runa-0.1.0-android.apk
 ```
-
-### Play Store (AAB)
-
-The `.aab` file (`runa-0.1.0-android.aab`) is for submitting to the Google Play Store. It cannot be installed directly on a device.

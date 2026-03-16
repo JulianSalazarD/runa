@@ -30,9 +30,8 @@ Pre-built binaries are available in the [`dist/`](dist/) folder:
 | Linux — rpm | `dist/linux/runa-0.1.0-1.x86_64.rpm` | Fedora, openSUSE, RHEL… |
 | Linux — tar.gz | `dist/linux/runa-0.1.0-linux-x64.tar.gz` | Manual / any distro |
 | Android APK | `dist/android/runa-0.1.0-android.apk` | Direct sideload install |
-| Android AAB | `dist/android/runa-0.1.0-android.aab` | For Play Store submission |
 
-For detailed installation instructions see **[INSTALL.md](INSTALL.md)**.
+For detailed installation instructions see **[INSTALL.md](INSTALL.md)**. All binaries are in [`dist/`](dist/).
 
 ## Building from source
 
@@ -57,7 +56,6 @@ flutter run -d android
 # Build release
 flutter build linux --release
 flutter build apk --release
-flutter build appbundle --release
 ```
 
 ### Regenerate code
