@@ -817,7 +817,7 @@ class _EditorToolbar extends StatelessWidget {
 // Block list
 // ---------------------------------------------------------------------------
 
-class _BlockList extends StatelessWidget {
+class _BlockList extends StatefulWidget {
   const _BlockList({
     required this.editorState,
     required this.notifier,
@@ -861,8 +861,21 @@ class _BlockList extends StatelessWidget {
   final double eraserRadius;
 
   @override
+  State<_BlockList> createState() => _BlockListState();
+}
+
+class _BlockListState extends State<_BlockList> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final blocks = editorState.blocks;
+    final blocks = widget.editorState.blocks;
 
     if (blocks.isEmpty) {
       return Center(
@@ -884,88 +897,86 @@ class _BlockList extends StatelessWidget {
       );
     }
 
-    // Each item in the ReorderableListView is a Column that contains:
-    //   • BlockChrome (with drag handle wired to ReorderableDragStartListener)
-    //   • _InsertGap  (insert a new block immediately after this one)
-    //
-    // onReorder adjusts newIndex for removal and delegates to moveBlock.
     void onReorder(int oldIndex, int newIndex) {
       if (newIndex > oldIndex) newIndex--;
-      notifier.moveBlock(blocks[oldIndex].id, newIndex);
+      widget.notifier.moveBlock(blocks[oldIndex].id, newIndex);
     }
 
-    return ReorderableListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      buildDefaultDragHandles: false,
-      onReorder: onReorder,
-      itemCount: blocks.length,
-      itemBuilder: (context, index) {
-        final block = blocks[index];
-        final isSelected = editorState.selectedBlockId == block.id;
-        // Auto-focus newly inserted empty MarkdownBlocks (selected + empty).
-        final autoFocus = isSelected &&
-            block is MarkdownBlock &&
-            block.content.isEmpty;
-        return Column(
-          key: ValueKey(block.id),
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            BlockChrome(
-              isSelected: isSelected,
-              // Only enable drag when there is more than one block.
-              dragIndex: blocks.length > 1 ? index : null,
-              onTap: () => notifier.setSelectedBlock(block.id),
-              onDelete: () =>
-                  _confirmAndDeleteBlock(context, block, notifier),
-              child: BlockWidget(
-                block: block,
-                documentPath: editorState.path,
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: true,
+      child: ReorderableListView.builder(
+        scrollController: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        buildDefaultDragHandles: false,
+        onReorder: onReorder,
+        itemCount: blocks.length,
+        itemBuilder: (context, index) {
+          final block = blocks[index];
+          final isSelected = widget.editorState.selectedBlockId == block.id;
+          final autoFocus = isSelected &&
+              block is MarkdownBlock &&
+              block.content.isEmpty;
+          return Column(
+            key: ValueKey(block.id),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              BlockChrome(
                 isSelected: isSelected,
-                onUpdate: notifier.updateBlock,
-                autoFocus: autoFocus,
-                onEnterAtEnd: () => notifier.addBlock(
+                dragIndex: blocks.length > 1 ? index : null,
+                onTap: () => widget.notifier.setSelectedBlock(block.id),
+                onDelete: () =>
+                    _confirmAndDeleteBlock(context, block, widget.notifier),
+                child: BlockWidget(
+                  block: block,
+                  documentPath: widget.editorState.path,
+                  isSelected: isSelected,
+                  onUpdate: widget.notifier.updateBlock,
+                  autoFocus: autoFocus,
+                  onEnterAtEnd: () => widget.notifier.addBlock(
+                    Block.markdown(id: const Uuid().v4(), content: ''),
+                    afterId: block.id,
+                  ),
+                  inkTool: widget.inkTool,
+                  inkColor: widget.inkColor,
+                  inkWidth: widget.inkWidth,
+                  textFontSize: widget.textFontSize,
+                  textBold: widget.textBold,
+                  textItalic: widget.textItalic,
+                  inkShapeType: widget.inkShapeType,
+                  inkSelectionMode: widget.inkSelectionMode,
+                  markdownFontFamily: widget.markdownFontFamily,
+                  markdownFontSize: widget.markdownFontSize,
+                  stylusOnly: widget.stylusOnly,
+                  eraserRadius: widget.eraserRadius,
+                ),
+              ),
+              _InsertGap(
+                onInsertMarkdown: () => widget.notifier.addBlock(
                   Block.markdown(id: const Uuid().v4(), content: ''),
                   afterId: block.id,
                 ),
-                inkTool: inkTool,
-                inkColor: inkColor,
-                inkWidth: inkWidth,
-                textFontSize: textFontSize,
-                textBold: textBold,
-                textItalic: textItalic,
-                inkShapeType: inkShapeType,
-                inkSelectionMode: inkSelectionMode,
-                markdownFontFamily: markdownFontFamily,
-                markdownFontSize: markdownFontSize,
-                stylusOnly: stylusOnly,
-                eraserRadius: eraserRadius,
+                onInsertInk: () {
+                  widget.notifier.addBlock(
+                    Block.ink(
+                      id: const Uuid().v4(),
+                      height: 200.0,
+                      background: widget.defaultInkBackground,
+                      backgroundColor: widget.defaultCanvasBackgroundHex,
+                      backgroundLineColor: widget.defaultLineColorHex,
+                    ),
+                    afterId: block.id,
+                  );
+                },
+                onInsertImage: () =>
+                    widget.onImportImage(afterBlockId: block.id),
+                onInsertPdf: () =>
+                    widget.onImportPdf(afterBlockId: block.id),
               ),
-            ),
-            _InsertGap(
-              onInsertMarkdown: () => notifier.addBlock(
-                Block.markdown(id: const Uuid().v4(), content: ''),
-                afterId: block.id,
-              ),
-              onInsertInk: () {
-                notifier.addBlock(
-                  Block.ink(
-                    id: const Uuid().v4(),
-                    height: 200.0,
-                    background: defaultInkBackground,
-                    backgroundColor: defaultCanvasBackgroundHex,
-                    backgroundLineColor: defaultLineColorHex,
-                  ),
-                  afterId: block.id,
-                );
-              },
-              onInsertImage: () =>
-                  onImportImage(afterBlockId: block.id),
-              onInsertPdf: () =>
-                  onImportPdf(afterBlockId: block.id),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }

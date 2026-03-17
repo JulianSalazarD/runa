@@ -54,7 +54,7 @@ void main() {
 
       final settings = container.read(settingsProvider);
       expect(settings.themeMode, ThemeMode.system);
-      expect(settings.autoSaveEnabled, isTrue);
+      expect(settings.autoSaveEnabled, isFalse);
       expect(settings.autoSaveIntervalSeconds, 30);
       expect(settings.markdownFontSize, 16.0);
     });

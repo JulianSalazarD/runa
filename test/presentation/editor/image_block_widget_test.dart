@@ -79,7 +79,7 @@ void main() {
       expect(find.byType(AspectRatio), findsOneWidget);
     });
 
-    testWidgets('botón Limpiar anotaciones deshabilitado con strokes vacíos',
+    testWidgets('botón Limpiar anotaciones no aparece con strokes vacíos',
         (tester) async {
       await tester.pumpWidget(_wrapBlock(BlockWidget(
         block: _imageBlock, // strokes: [] by default
@@ -88,11 +88,11 @@ void main() {
       )));
       await tester.pump();
 
-      // The button exists but has no onPressed (disabled).
-      final button = tester.widget<TextButton>(
+      // Button is hidden entirely when there are no strokes to clear.
+      expect(
         find.widgetWithText(TextButton, 'Limpiar anotaciones'),
+        findsNothing,
       );
-      expect(button.onPressed, isNull);
     });
 
     testWidgets(

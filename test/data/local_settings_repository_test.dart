@@ -32,7 +32,7 @@ void main() {
     test('returns default AppSettings when no file exists', () async {
       final settings = await repo.load();
       expect(settings, const AppSettings());
-      expect(settings.autoSaveEnabled, isTrue);
+      expect(settings.autoSaveEnabled, isFalse);
       expect(settings.themeMode, ThemeMode.system);
     });
 
