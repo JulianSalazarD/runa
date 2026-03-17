@@ -143,6 +143,20 @@ class InkToolbarWidget extends StatelessWidget {
               onTap: onToolChanged,
             ),
             _ToolButton(
+              icon: Icons.border_color,
+              label: 'Caligrafía',
+              tool: StrokeTool.fountainPen,
+              activeTool: activeTool,
+              onTap: onToolChanged,
+            ),
+            _ToolButton(
+              icon: Icons.drive_file_rename_outline,
+              label: 'Resaltador',
+              tool: StrokeTool.highlighter,
+              activeTool: activeTool,
+              onTap: onToolChanged,
+            ),
+            _ToolButton(
               icon: Icons.auto_fix_normal,
               label: 'Borrador',
               tool: StrokeTool.eraser,

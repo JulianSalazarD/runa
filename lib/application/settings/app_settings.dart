@@ -101,6 +101,9 @@ abstract class AppSettings with _$AppSettings {
     /// `false` on first launch → triggers the setup flow.
     @Default(false) bool workspaceConfigured,
 
+    /// Default eraser radius in logical pixels.
+    @Default(20.0) double defaultEraserRadius,
+
     /// When `true`, only stylus/pen input draws on ink canvases; touch
     /// events are ignored so the finger can scroll the document.
     /// Defaults to `false`; set to `true` automatically on Android first launch.

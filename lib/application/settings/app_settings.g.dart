@@ -38,6 +38,8 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
       (json['default_background_spacing'] as num?)?.toDouble() ?? 24.0,
   defaultWorkspacePath: json['default_workspace_path'] as String?,
   workspaceConfigured: json['workspace_configured'] as bool? ?? false,
+  defaultEraserRadius:
+      (json['default_eraser_radius'] as num?)?.toDouble() ?? 20.0,
   stylusOnlyMode: json['stylus_only_mode'] as bool? ?? false,
 );
 
@@ -62,6 +64,7 @@ Map<String, dynamic> _$AppSettingsToJson(
   'default_background_spacing': instance.defaultBackgroundSpacing,
   'default_workspace_path': instance.defaultWorkspacePath,
   'workspace_configured': instance.workspaceConfigured,
+  'default_eraser_radius': instance.defaultEraserRadius,
   'stylus_only_mode': instance.stylusOnlyMode,
 };
 

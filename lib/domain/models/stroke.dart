@@ -7,7 +7,7 @@ part 'stroke.g.dart';
 
 /// The tool that produced an ink stroke. Affects rendering style.
 @JsonEnum()
-enum StrokeTool { pen, pencil, marker, eraser, text }
+enum StrokeTool { pen, pencil, marker, eraser, text, fountainPen, highlighter }
 
 /// A single continuous ink stroke composed of [StrokePoint]s.
 @freezed

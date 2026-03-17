@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
@@ -61,6 +62,9 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
   /// In-progress stroke points in **pixel** space.
   List<StrokePoint> _currentPoints = [];
 
+  /// True when the current touch was identified as a palm on pointer-down.
+  bool _palmRejected = false;
+
   /// Render size captured from [LayoutBuilder].
   Size _size = Size.zero;
 
@@ -88,17 +92,30 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
 
   void _onPointerDown(PointerDownEvent e) {
     if (_isBlockedTouch(e)) return;
+    _palmRejected = e.kind == PointerDeviceKind.touch && e.radiusMajor > 15.0;
+    if (_palmRejected) return;
     _holdScroll();
     setState(() => _currentPoints = [_makePoint(e)]);
   }
 
   void _onPointerMove(PointerMoveEvent e) {
-    if (_isBlockedTouch(e)) return;
+    if (_isBlockedTouch(e) || _palmRejected) return;
+    if (_currentPoints.isNotEmpty) {
+      final last = _currentPoints.last;
+      final dx = e.localPosition.dx - last.x;
+      final dy = e.localPosition.dy - last.y;
+      if (dx * dx + dy * dy < 1.0) return;
+    }
     setState(() => _currentPoints = [..._currentPoints, _makePoint(e)]);
   }
 
   void _onPointerUp(PointerUpEvent e) {
     if (_isBlockedTouch(e)) return;
+    if (_palmRejected) {
+      _palmRejected = false;
+      _releaseScrollHold();
+      return;
+    }
     _releaseScrollHold();
     final allPoints = [..._currentPoints, _makePoint(e)];
     setState(() => _currentPoints = []);
@@ -114,7 +131,8 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
   /// [widget.strokes] via [widget.onStrokesChanged].
   void _commitStroke(List<StrokePoint> pixelPoints) {
     if (pixelPoints.isEmpty || _size == Size.zero) return;
-    final normalised = pixelPoints
+    final simplified = _douglasPeucker(pixelPoints, 0.5);
+    final normalised = simplified
         .map(
           (p) => p.copyWith(
             x: (_size.width > 0) ? p.x / _size.width : 0.0,
@@ -131,6 +149,45 @@ class _InkAnnotationLayerState extends State<InkAnnotationLayer> {
       points: normalised,
     );
     widget.onStrokesChanged([...widget.strokes, stroke]);
+  }
+
+  static List<StrokePoint> _douglasPeucker(
+      List<StrokePoint> pts, double epsilon) {
+    if (pts.length < 3) return pts;
+    double maxDist = 0;
+    int maxIdx = 0;
+    final first = pts.first;
+    final last = pts.last;
+    for (int i = 1; i < pts.length - 1; i++) {
+      final d = _perpDist(pts[i], first, last);
+      if (d > maxDist) {
+        maxDist = d;
+        maxIdx = i;
+      }
+    }
+    if (maxDist > epsilon) {
+      final left = _douglasPeucker(pts.sublist(0, maxIdx + 1), epsilon);
+      final right = _douglasPeucker(pts.sublist(maxIdx), epsilon);
+      return [...left.sublist(0, left.length - 1), ...right];
+    }
+    return [first, last];
+  }
+
+  static double _perpDist(StrokePoint p, StrokePoint a, StrokePoint b) {
+    final dx = b.x - a.x;
+    final dy = b.y - a.y;
+    final len2 = dx * dx + dy * dy;
+    if (len2 < 1e-10) {
+      final ex = p.x - a.x;
+      final ey = p.y - a.y;
+      return math.sqrt(ex * ex + ey * ey);
+    }
+    final t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+    final px = a.x + t * dx;
+    final py = a.y + t * dy;
+    final ex = p.x - px;
+    final ey = p.y - py;
+    return math.sqrt(ex * ex + ey * ey);
   }
 
   /// Erases any stroke whose normalised points (un-normalised to pixel space)
@@ -233,62 +290,280 @@ class _AnnotationPainter extends CustomPainter {
     final w = renderSize.width > 0 ? renderSize.width : size.width;
     final h = renderSize.height > 0 ? renderSize.height : size.height;
 
-    // Draw committed strokes (un-normalise to pixel coords for painting).
+    // Pass 1: highlighters render below all other strokes.
     for (final stroke in strokes) {
-      if (stroke.tool == StrokeTool.eraser) continue;
+      if (stroke.tool != StrokeTool.highlighter) continue;
       final pixelPoints = stroke.points
           .map((p) => p.copyWith(x: p.x * w, y: p.y * h))
           .toList();
-      final smoothed = smoother.smooth(pixelPoints);
+      final smoothed = smoother.smoothWithPressure(pixelPoints);
       if (smoothed.length < 2) continue;
-      canvas.drawPath(_buildPath(smoothed), _makePaint(stroke));
+      final color = _parseColor(stroke.color);
+      _drawSegments(canvas, smoothed,
+          color.withValues(alpha: color.a * 0.30), stroke.width * 5.0,
+          taper: false, pressureSensitive: false);
     }
 
-    // Draw in-progress stroke (raw pixel coords, no smoothing yet).
+    // Pass 2: all other strokes.
+    for (final stroke in strokes) {
+      if (stroke.tool == StrokeTool.eraser ||
+          stroke.tool == StrokeTool.highlighter) {
+        continue;
+      }
+      final pixelPoints = stroke.points
+          .map((p) => p.copyWith(x: p.x * w, y: p.y * h))
+          .toList();
+      final smoothed = smoother.smoothWithPressure(pixelPoints);
+      if (smoothed.length < 2) continue;
+      _drawStroke(canvas, smoothed, stroke);
+    }
+
     if (currentPoints.length >= 2 && activeTool != StrokeTool.eraser) {
-      final rawOffsets =
-          currentPoints.map((p) => ui.Offset(p.x, p.y)).toList();
-      final preview = Paint()
-        ..color = const Color(0xFF888888)
-        ..strokeWidth = 1.5
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..style = PaintingStyle.stroke;
-      canvas.drawPath(_buildPath(rawOffsets), preview);
+      final smoothed = smoother.smoothWithPressure(currentPoints);
+      if (smoothed.length >= 2) {
+        _drawSegments(canvas, smoothed, const Color(0xFF888888), 1.5,
+            taper: false, pressureSensitive: false);
+      }
     }
   }
 
-  Path _buildPath(List<ui.Offset> offsets) {
-    final path = Path()..moveTo(offsets.first.dx, offsets.first.dy);
-    for (final o in offsets.skip(1)) {
-      path.lineTo(o.dx, o.dy);
-    }
-    return path;
-  }
-
-  Paint _makePaint(Stroke stroke) {
+  void _drawStroke(Canvas canvas, List<SmoothedPoint> pts, Stroke stroke) {
     final color = _parseColor(stroke.color);
+    switch (stroke.tool) {
+      case StrokeTool.pen:
+        _drawRibbon(canvas, pts, color, stroke.width,
+            taper: true, pressureSensitive: true, velocitySensitive: true);
+      case StrokeTool.pencil:
+        _drawSegments(canvas, pts,
+            color.withValues(alpha: color.a * 0.65), stroke.width * 0.8,
+            taper: true, pressureSensitive: true, velocitySensitive: true,
+            grainSeed: stroke.id.hashCode);
+      case StrokeTool.marker:
+        _drawSegments(canvas, pts,
+            color.withValues(alpha: color.a * 0.25), stroke.width * 4.2,
+            taper: false, pressureSensitive: false);
+        _drawSegments(canvas, pts,
+            color.withValues(alpha: color.a * 0.4), stroke.width * 3,
+            taper: false, pressureSensitive: false);
+      case StrokeTool.fountainPen:
+        _drawFountainPen(canvas, pts, color, stroke.width, taper: true);
+      case StrokeTool.highlighter:
+      case StrokeTool.eraser:
+      case StrokeTool.text:
+        break;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ribbon polygon — filled outline for pen/pencil variable-width strokes
+  // ---------------------------------------------------------------------------
+
+  void _drawRibbon(
+    Canvas canvas,
+    List<SmoothedPoint> pts,
+    Color color,
+    double baseWidth, {
+    required bool taper,
+    required bool pressureSensitive,
+    bool velocitySensitive = false,
+  }) {
+    final n = pts.length;
+    if (n < 1) return;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final taperN = taper ? (n / 4).floor().clamp(1, 10) : 0;
+
+    final hw = List<double>.filled(n, 0);
+    final normals = List<ui.Offset>.filled(n, ui.Offset.zero);
+
+    for (int i = 0; i < n; i++) {
+      double tFactor = 1.0;
+      if (taperN > 0) {
+        final entry = i < taperN ? i / taperN : 1.0;
+        final exit = (n - 1 - i) < taperN ? (n - 1 - i) / taperN : 1.0;
+        tFactor = math.min(entry, exit);
+      }
+      final pFactor = pressureSensitive
+          ? 0.3 + 0.7 * math.pow(pts[i].pressure, 0.6)
+          : 1.0;
+      final vFactor =
+          velocitySensitive ? (1.0 - pts[i].velocity * 0.35) : 1.0;
+      hw[i] = (baseWidth * pFactor * vFactor * tFactor)
+              .clamp(0.3, baseWidth * 2.0) /
+          2;
+
+      final ui.Offset tangent;
+      if (i == 0) {
+        tangent = pts[1].offset - pts[0].offset;
+      } else if (i == n - 1) {
+        tangent = pts[n - 1].offset - pts[n - 2].offset;
+      } else {
+        tangent = pts[i + 1].offset - pts[i - 1].offset;
+      }
+      final tLen =
+          math.sqrt(tangent.dx * tangent.dx + tangent.dy * tangent.dy);
+      if (tLen < 1e-6) {
+        normals[i] = i > 0 ? normals[i - 1] : const ui.Offset(0, 1);
+      } else {
+        normals[i] = ui.Offset(-tangent.dy / tLen, tangent.dx / tLen);
+      }
+    }
+
+    if (n == 1) {
+      canvas.drawCircle(pts[0].offset, hw[0], paint);
+      return;
+    }
+
+    final left = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset + normals[i] * hw[i]);
+    final right = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset - normals[i] * hw[i]);
+
+    final path = Path()..moveTo(left[0].dx, left[0].dy);
+    for (int i = 1; i < n; i++) {
+      path.lineTo(left[i].dx, left[i].dy);
+    }
+    for (int i = n - 1; i >= 0; i--) {
+      path.lineTo(right[i].dx, right[i].dy);
+    }
+    path.close();
+
+    canvas.drawPath(path, paint);
+    canvas.drawCircle(pts[0].offset, hw[0], paint);
+    canvas.drawCircle(pts[n - 1].offset, hw[n - 1], paint);
+  }
+
+  void _drawSegments(
+    Canvas canvas,
+    List<SmoothedPoint> pts,
+    Color color,
+    double baseWidth, {
+    required bool taper,
+    required bool pressureSensitive,
+    bool velocitySensitive = false,
+    int? grainSeed,
+  }) {
+    final n = pts.length;
+    final taperN = taper ? (n / 4).floor().clamp(1, 10) : 0;
+    final rng = grainSeed != null ? math.Random(grainSeed) : null;
+
     final paint = Paint()
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
-    switch (stroke.tool) {
-      case StrokeTool.pen:
-        paint.color = color;
-        paint.strokeWidth = stroke.width;
-      case StrokeTool.pencil:
-        paint.color = color.withValues(alpha: color.a * 0.6);
-        paint.strokeWidth = stroke.width * 0.8;
-      case StrokeTool.marker:
-        paint.color = color.withValues(alpha: color.a * 0.4);
-        paint.strokeWidth = stroke.width * 3;
-      case StrokeTool.eraser:
-        break;
-      case StrokeTool.text:
-        break;
+    for (int i = 0; i < n - 1; i++) {
+      final p = pts[i];
+
+      double tFactor = 1.0;
+      if (taperN > 0) {
+        final entry = i < taperN ? i / taperN : 1.0;
+        final exit  = (n - 2 - i) < taperN ? (n - 2 - i) / taperN : 1.0;
+        tFactor = math.min(entry, exit);
+      }
+
+      final pFactor = pressureSensitive
+          ? 0.3 + 0.7 * math.pow(p.pressure, 0.6)
+          : 1.0;
+      final vFactor = velocitySensitive ? (1.0 - p.velocity * 0.35) : 1.0;
+      final gFactor = rng != null ? 0.85 + rng.nextDouble() * 0.15 : 1.0;
+
+      paint.color = color.withValues(alpha: color.a * gFactor);
+      paint.strokeWidth =
+          (baseWidth * pFactor * vFactor * tFactor).clamp(0.3, baseWidth * 2.0);
+      canvas.drawLine(p.offset, pts[i + 1].offset, paint);
     }
-    return paint;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fountain pen — angle-aware calligraphy width
+  // ---------------------------------------------------------------------------
+
+  static const _kNibAngle = math.pi / 4;
+  static const _kNibMinWidthFraction = 0.12;
+
+  void _drawFountainPen(
+    Canvas canvas,
+    List<SmoothedPoint> pts,
+    Color color,
+    double baseWidth, {
+    required bool taper,
+  }) {
+    final n = pts.length;
+    if (n < 1) return;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final taperN = taper ? (n / 4).floor().clamp(1, 10) : 0;
+    final hw = List<double>.filled(n, 0);
+    final normals = List<ui.Offset>.filled(n, ui.Offset.zero);
+
+    for (int i = 0; i < n; i++) {
+      double tFactor = 1.0;
+      if (taperN > 0) {
+        final entry = i < taperN ? i / taperN : 1.0;
+        final exit = (n - 1 - i) < taperN ? (n - 1 - i) / taperN : 1.0;
+        tFactor = math.min(entry, exit);
+      }
+
+      final ui.Offset tangent;
+      if (i == 0) {
+        tangent = pts[1].offset - pts[0].offset;
+      } else if (i == n - 1) {
+        tangent = pts[n - 1].offset - pts[n - 2].offset;
+      } else {
+        tangent = pts[i + 1].offset - pts[i - 1].offset;
+      }
+      final tLen =
+          math.sqrt(tangent.dx * tangent.dx + tangent.dy * tangent.dy);
+
+      double aFactor = _kNibMinWidthFraction;
+      if (tLen > 1e-6) {
+        final strokeAngle = math.atan2(tangent.dy, tangent.dx);
+        aFactor = _kNibMinWidthFraction +
+            (1.0 - _kNibMinWidthFraction) *
+                math.sin(strokeAngle - _kNibAngle).abs();
+      }
+
+      hw[i] =
+          (baseWidth * aFactor * tFactor).clamp(0.3, baseWidth * 2.0) / 2;
+
+      if (tLen < 1e-6) {
+        normals[i] = i > 0 ? normals[i - 1] : const ui.Offset(0, 1);
+      } else {
+        normals[i] = ui.Offset(-tangent.dy / tLen, tangent.dx / tLen);
+      }
+    }
+
+    if (n == 1) {
+      canvas.drawCircle(pts[0].offset, hw[0], paint);
+      return;
+    }
+
+    final left = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset + normals[i] * hw[i]);
+    final right = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset - normals[i] * hw[i]);
+
+    final path = Path()..moveTo(left[0].dx, left[0].dy);
+    for (int i = 1; i < n; i++) {
+      path.lineTo(left[i].dx, left[i].dy);
+    }
+    for (int i = n - 1; i >= 0; i--) {
+      path.lineTo(right[i].dx, right[i].dy);
+    }
+    path.close();
+
+    canvas.drawPath(path, paint);
+    canvas.drawCircle(pts[0].offset, hw[0], paint);
+    canvas.drawCircle(pts[n - 1].offset, hw[n - 1], paint);
   }
 
   static Color _parseColor(String hex) {

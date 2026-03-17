@@ -167,6 +167,19 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           _SettingsTile(
+            label:
+                'Radio del borrador (${settings.defaultEraserRadius.round()} px)',
+            child: Slider(
+              value: settings.defaultEraserRadius,
+              min: 5,
+              max: 50,
+              divisions: 9,
+              label: '${settings.defaultEraserRadius.round()} px',
+              onChanged: (v) =>
+                  notifier.update(settings.copyWith(defaultEraserRadius: v)),
+            ),
+          ),
+          _SettingsTile(
             label: 'Color de fondo del canvas',
             child: _NullableColorSwatchRow(
               colors: kCanvasColors,

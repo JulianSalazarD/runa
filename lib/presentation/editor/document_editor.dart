@@ -555,6 +555,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                     markdownFontFamily: ref.watch(settingsProvider).markdownFontFamily,
                     markdownFontSize: ref.watch(settingsProvider).markdownFontSize,
                     stylusOnly: ref.watch(settingsProvider).stylusOnlyMode,
+                    eraserRadius: ref.watch(settingsProvider).defaultEraserRadius,
                   ),
                 ),
               ],
@@ -836,6 +837,7 @@ class _BlockList extends StatelessWidget {
     this.markdownFontFamily,
     this.markdownFontSize,
     this.stylusOnly = false,
+    this.eraserRadius = 20.0,
   });
 
   final EditorState editorState;
@@ -856,6 +858,7 @@ class _BlockList extends StatelessWidget {
   final String? markdownFontFamily;
   final double? markdownFontSize;
   final bool stylusOnly;
+  final double eraserRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -935,6 +938,7 @@ class _BlockList extends StatelessWidget {
                 markdownFontFamily: markdownFontFamily,
                 markdownFontSize: markdownFontSize,
                 stylusOnly: stylusOnly,
+                eraserRadius: eraserRadius,
               ),
             ),
             _InsertGap(

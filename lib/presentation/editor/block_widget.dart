@@ -48,6 +48,7 @@ class BlockWidget extends StatelessWidget {
     this.markdownFontFamily,
     this.markdownFontSize,
     this.stylusOnly = false,
+    this.eraserRadius = 20.0,
   });
 
   final Block block;
@@ -57,6 +58,9 @@ class BlockWidget extends StatelessWidget {
 
   /// When `true`, ink annotation layers accept pointer input.
   final bool isSelected;
+
+  /// Eraser circle radius passed through to ink canvases.
+  final double eraserRadius;
 
   final ValueChanged<Block>? onUpdate;
   final VoidCallback? onEnterAtEnd;
@@ -110,6 +114,7 @@ class BlockWidget extends StatelessWidget {
           activeShapeType: inkShapeType,
           selectionMode: inkSelectionMode,
           stylusOnly: stylusOnly,
+          eraserRadius: eraserRadius,
         ),
       final ImageBlock b => _ImageBlockView(
           block: b,
@@ -269,6 +274,7 @@ class _InkBlockView extends StatefulWidget {
     this.activeShapeType,
     this.selectionMode,
     this.stylusOnly = false,
+    this.eraserRadius = 20.0,
   });
 
   final InkBlock block;
@@ -282,6 +288,7 @@ class _InkBlockView extends StatefulWidget {
   final ShapeType? activeShapeType;
   final SelectionMode? selectionMode;
   final bool stylusOnly;
+  final double eraserRadius;
 
   @override
   State<_InkBlockView> createState() => _InkBlockViewState();
@@ -325,6 +332,7 @@ class _InkBlockViewState extends State<_InkBlockView> {
           activeShapeType: widget.activeShapeType,
           selectionMode: widget.selectionMode,
           stylusOnly: widget.stylusOnly,
+          eraserRadius: widget.eraserRadius,
           onUpdate: (updated) => widget.onUpdate?.call(updated),
         ),
         _ResizeHandle(

@@ -36,6 +36,7 @@ class InkCanvasWidget extends StatefulWidget {
     this.activeShapeType,
     this.selectionMode,
     this.stylusOnly = false,
+    this.eraserRadius = 20.0,
     this.onUpdate,
   });
 
@@ -68,6 +69,9 @@ class InkCanvasWidget extends StatefulWidget {
   /// so the finger can scroll the parent list.
   final bool stylusOnly;
 
+  /// Eraser circle radius in logical pixels.
+  final double eraserRadius;
+
   /// Called when any element is committed, erased, moved, or deleted.
   final ValueChanged<InkBlock>? onUpdate;
 
@@ -77,10 +81,15 @@ class InkCanvasWidget extends StatefulWidget {
 
 class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   static const _uuid = Uuid();
-  static const _eraserRadius = 20.0;
 
   // Stroke tool state
   List<StrokePoint> _currentPoints = [];
+
+  // True when the current touch was identified as a palm on pointer-down.
+  bool _palmRejected = false;
+
+  // Eraser cursor position (null when eraser is not active or pointer is up).
+  Offset? _eraserPosition;
 
   // Shape tool state
   Offset? _shapeStart;
@@ -159,6 +168,10 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
 
   void _onPointerDown(PointerDownEvent e) {
     if (_isBlockedTouch(e)) return;
+    // Palm rejection: large-contact touch events are ignored.
+    _palmRejected = e.kind == ui.PointerDeviceKind.touch &&
+        e.radiusMajor > 15.0;
+    if (_palmRejected) return;
     _holdScroll();
     if (widget.selectionMode != null) {
       _onSelectionPointerDown(e.localPosition);
@@ -176,7 +189,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
   }
 
   void _onPointerMove(PointerMoveEvent e) {
-    if (_isBlockedTouch(e)) return;
+    if (_isBlockedTouch(e) || _palmRejected) return;
     if (widget.selectionMode != null) {
       _onSelectionPointerMove(e.localPosition);
       return;
@@ -189,11 +202,28 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
       return;
     }
     if (widget.activeTool == StrokeTool.text) return;
-    setState(() => _currentPoints = [..._currentPoints, _makePoint(e)]);
+    // Minimum distance filter: skip duplicate/near-duplicate points.
+    if (_currentPoints.isNotEmpty) {
+      final last = _currentPoints.last;
+      final dx = e.localPosition.dx - last.x;
+      final dy = e.localPosition.dy - last.y;
+      if (dx * dx + dy * dy < 1.0) return;
+    }
+    setState(() {
+      _currentPoints = [..._currentPoints, _makePoint(e)];
+      if (widget.activeTool == StrokeTool.eraser) {
+        _eraserPosition = e.localPosition;
+      }
+    });
   }
 
   void _onPointerUp(PointerUpEvent e) {
     if (_isBlockedTouch(e)) return;
+    if (_palmRejected) {
+      _palmRejected = false;
+      _releaseScrollHold();
+      return;
+    }
     _releaseScrollHold();
     if (widget.selectionMode != null) {
       _onSelectionPointerUp(e.localPosition);
@@ -218,6 +248,7 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
     }
     final allPoints = [..._currentPoints, _makePoint(e)];
     _currentPoints = [];
+    _eraserPosition = null;
     if (widget.activeTool == StrokeTool.eraser) {
       _handleErase(allPoints);
     } else {
@@ -432,37 +463,126 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
 
   void _commitStroke(List<StrokePoint> points) {
     if (points.isEmpty) return;
+    final simplified = _douglasPeucker(points, 0.5);
     final stroke = Stroke(
       id: _uuid.v4(),
       color: widget.activeColor,
       width: widget.activeWidth,
       tool: widget.activeTool,
-      points: points,
+      points: simplified,
     );
     widget.onUpdate?.call(
       widget.block.copyWith(strokes: [...widget.block.strokes, stroke]),
     );
   }
 
+  /// Douglas-Peucker polyline simplification.
+  /// Removes points that deviate less than [epsilon] px from the simplified line,
+  /// preserving start/end and perceptually important detail points.
+  static List<StrokePoint> _douglasPeucker(
+      List<StrokePoint> pts, double epsilon) {
+    if (pts.length < 3) return pts;
+    double maxDist = 0;
+    int maxIdx = 0;
+    final first = pts.first;
+    final last = pts.last;
+    for (int i = 1; i < pts.length - 1; i++) {
+      final d = _perpDist(pts[i], first, last);
+      if (d > maxDist) {
+        maxDist = d;
+        maxIdx = i;
+      }
+    }
+    if (maxDist > epsilon) {
+      final left = _douglasPeucker(pts.sublist(0, maxIdx + 1), epsilon);
+      final right = _douglasPeucker(pts.sublist(maxIdx), epsilon);
+      return [...left.sublist(0, left.length - 1), ...right];
+    }
+    return [first, last];
+  }
+
+  /// Perpendicular distance from [p] to the line defined by [a] and [b].
+  static double _perpDist(StrokePoint p, StrokePoint a, StrokePoint b) {
+    final dx = b.x - a.x;
+    final dy = b.y - a.y;
+    final len2 = dx * dx + dy * dy;
+    if (len2 < 1e-10) {
+      final ex = p.x - a.x;
+      final ey = p.y - a.y;
+      return math.sqrt(ex * ex + ey * ey);
+    }
+    final t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+    final px = a.x + t * dx;
+    final py = a.y + t * dy;
+    final ex = p.x - px;
+    final ey = p.y - py;
+    return math.sqrt(ex * ex + ey * ey);
+  }
+
   void _handleErase(List<StrokePoint> eraserPoints) {
-    final remaining = widget.block.strokes
-        .where((s) => !_intersectsEraser(s, eraserPoints))
-        .toList();
-    if (remaining.length != widget.block.strokes.length) {
-      widget.onUpdate?.call(widget.block.copyWith(strokes: remaining));
+    final newStrokes = _splitByEraser(
+        widget.block.strokes, eraserPoints, widget.eraserRadius);
+    // Only trigger update when something actually changed.
+    bool changed = newStrokes.length != widget.block.strokes.length;
+    if (!changed) {
+      for (int i = 0; i < newStrokes.length; i++) {
+        if (!identical(newStrokes[i], widget.block.strokes[i])) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (changed) {
+      widget.onUpdate?.call(widget.block.copyWith(strokes: newStrokes));
     }
   }
 
-  static bool _intersectsEraser(Stroke stroke, List<StrokePoint> eraser) {
-    const r2 = _eraserRadius * _eraserRadius;
-    for (final ep in eraser) {
+  /// Splits strokes point-by-point: erased points are discarded, the
+  /// surviving segments before and after the erased region each become
+  /// independent [Stroke]s.  A segment needs at least 2 points to survive.
+  static List<Stroke> _splitByEraser(
+    List<Stroke> strokes,
+    List<StrokePoint> eraserPoints,
+    double radius,
+  ) {
+    final r2 = radius * radius;
+    final result = <Stroke>[];
+
+    for (final stroke in strokes) {
+      var segment = <StrokePoint>[];
+      bool anySplit = false;
+
       for (final sp in stroke.points) {
-        final dx = sp.x - ep.x;
-        final dy = sp.y - ep.y;
-        if (dx * dx + dy * dy <= r2) return true;
+        bool erased = false;
+        for (final ep in eraserPoints) {
+          final dx = sp.x - ep.x;
+          final dy = sp.y - ep.y;
+          if (dx * dx + dy * dy <= r2) {
+            erased = true;
+            break;
+          }
+        }
+
+        if (erased) {
+          anySplit = true;
+          if (segment.length >= 2) {
+            result.add(stroke.copyWith(id: _uuid.v4(), points: segment));
+          }
+          segment = [];
+        } else {
+          segment.add(sp);
+        }
+      }
+
+      if (!anySplit) {
+        // Nothing was erased — keep the original object (preserves identity).
+        result.add(stroke);
+      } else if (segment.length >= 2) {
+        result.add(stroke.copyWith(id: _uuid.v4(), points: segment));
       }
     }
-    return false;
+
+    return result;
   }
 
   // ---------------------------------------------------------------------------
@@ -654,6 +774,8 @@ class _InkCanvasWidgetState extends State<InkCanvasWidget> {
                           strokes: widget.block.strokes,
                           currentPoints: _currentPoints,
                           activeTool: widget.activeTool,
+                          eraserPosition: _eraserPosition,
+                          eraserRadius: widget.eraserRadius,
                         ),
                         size: size,
                       ),
@@ -740,67 +862,313 @@ class InkPainter extends CustomPainter {
     required this.strokes,
     required this.currentPoints,
     required this.activeTool,
+    this.eraserPosition,
+    this.eraserRadius = 20.0,
     StrokeSmoother? smoother,
   }) : smoother = smoother ?? const StrokeSmoother();
 
   final List<Stroke> strokes;
   final List<StrokePoint> currentPoints;
   final StrokeTool activeTool;
+  final ui.Offset? eraserPosition;
+  final double eraserRadius;
   final StrokeSmoother smoother;
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Pass 1: highlighters render below all other strokes.
     for (final stroke in strokes) {
-      if (stroke.tool == StrokeTool.eraser) continue;
-      final smoothed = smoother.smooth(stroke.points);
+      if (stroke.tool != StrokeTool.highlighter) continue;
+      final smoothed = smoother.smoothWithPressure(stroke.points);
       if (smoothed.length < 2) continue;
-      canvas.drawPath(_buildPath(smoothed), _makePaint(stroke));
+      final color = _parseColor(stroke.color);
+      _drawSegments(canvas, smoothed,
+          color.withValues(alpha: color.a * 0.30), stroke.width * 5.0,
+          taper: false, pressureSensitive: false);
     }
 
+    // Pass 2: all other strokes.
+    for (final stroke in strokes) {
+      if (stroke.tool == StrokeTool.eraser ||
+          stroke.tool == StrokeTool.highlighter) {
+        continue;
+      }
+      final smoothed = smoother.smoothWithPressure(stroke.points);
+      if (smoothed.length < 2) continue;
+      _drawStroke(canvas, smoothed, stroke);
+    }
+
+    // In-progress preview: smooth the live points for a consistent look.
     if (currentPoints.length >= 2 && activeTool != StrokeTool.eraser) {
-      final rawOffsets =
-          currentPoints.map((p) => ui.Offset(p.x, p.y)).toList();
-      final preview = Paint()
-        ..color = const Color(0xFF888888)
-        ..strokeWidth = 1.5
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..style = PaintingStyle.stroke;
-      canvas.drawPath(_buildPath(rawOffsets), preview);
+      final smoothed = smoother.smoothWithPressure(currentPoints);
+      if (smoothed.length >= 2) {
+        const previewColor = Color(0xFF888888);
+        _drawSegments(canvas, smoothed, previewColor, 1.5,
+            taper: false, pressureSensitive: false);
+      }
     }
+
+    // Eraser cursor — drawn last so it's always on top.
+    _drawEraserCursor(canvas);
   }
 
-  Path _buildPath(List<ui.Offset> offsets) {
-    final path = Path()..moveTo(offsets.first.dx, offsets.first.dy);
-    for (final o in offsets.skip(1)) {
-      path.lineTo(o.dx, o.dy);
-    }
-    return path;
-  }
-
-  Paint _makePaint(Stroke stroke) {
+  /// Dispatches to the right drawing style per tool.
+  void _drawStroke(Canvas canvas, List<SmoothedPoint> pts, Stroke stroke) {
     final color = _parseColor(stroke.color);
+    switch (stroke.tool) {
+      case StrokeTool.pen:
+        _drawRibbon(canvas, pts, color, stroke.width,
+            taper: true, pressureSensitive: true, velocitySensitive: true);
+      case StrokeTool.pencil:
+        // Pencil: slightly transparent ribbon with opacity grain per segment.
+        _drawSegments(canvas, pts,
+            color.withValues(alpha: color.a * 0.65), stroke.width * 0.8,
+            taper: true, pressureSensitive: true, velocitySensitive: true,
+            grainSeed: stroke.id.hashCode);
+      case StrokeTool.marker:
+        // Two passes — feather edge then solid body.
+        _drawSegments(canvas, pts,
+            color.withValues(alpha: color.a * 0.25), stroke.width * 4.2,
+            taper: false, pressureSensitive: false);
+        _drawSegments(canvas, pts,
+            color.withValues(alpha: color.a * 0.4), stroke.width * 3,
+            taper: false, pressureSensitive: false);
+      case StrokeTool.fountainPen:
+        _drawFountainPen(canvas, pts, color, stroke.width, taper: true);
+      case StrokeTool.highlighter:
+      case StrokeTool.eraser:
+      case StrokeTool.text:
+        break;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ribbon polygon — filled outline for pen/pencil variable-width strokes
+  // ---------------------------------------------------------------------------
+
+  /// Builds a filled outline polygon (ribbon) from [pts] with variable width
+  /// driven by pressure, velocity, and taper.  Adds filled round caps at both
+  /// ends via [Canvas.drawCircle].
+  ///
+  /// This produces smooth width transitions at every point — equivalent to
+  /// what professional ink engines (Procreate, GoodNotes) use.
+  void _drawRibbon(
+    Canvas canvas,
+    List<SmoothedPoint> pts,
+    Color color,
+    double baseWidth, {
+    required bool taper,
+    required bool pressureSensitive,
+    bool velocitySensitive = false,
+  }) {
+    final n = pts.length;
+    if (n < 1) return;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final taperN = taper ? (n / 4).floor().clamp(1, 10) : 0;
+
+    // Pre-compute half-widths and perpendicular normals for each point.
+    final hw = List<double>.filled(n, 0);
+    final normals = List<ui.Offset>.filled(n, ui.Offset.zero);
+
+    for (int i = 0; i < n; i++) {
+      // Taper
+      double tFactor = 1.0;
+      if (taperN > 0) {
+        final entry = i < taperN ? i / taperN : 1.0;
+        final exit = (n - 1 - i) < taperN ? (n - 1 - i) / taperN : 1.0;
+        tFactor = math.min(entry, exit);
+      }
+      final pFactor = pressureSensitive
+          ? 0.3 + 0.7 * math.pow(pts[i].pressure, 0.6)
+          : 1.0;
+      final vFactor =
+          velocitySensitive ? (1.0 - pts[i].velocity * 0.35) : 1.0;
+      hw[i] = (baseWidth * pFactor * vFactor * tFactor)
+              .clamp(0.3, baseWidth * 2.0) /
+          2;
+
+      // Tangent via central difference; fall back to one-sided at endpoints.
+      final ui.Offset tangent;
+      if (i == 0) {
+        tangent = pts[1].offset - pts[0].offset;
+      } else if (i == n - 1) {
+        tangent = pts[n - 1].offset - pts[n - 2].offset;
+      } else {
+        tangent = pts[i + 1].offset - pts[i - 1].offset;
+      }
+      final tLen =
+          math.sqrt(tangent.dx * tangent.dx + tangent.dy * tangent.dy);
+      if (tLen < 1e-6) {
+        normals[i] = i > 0 ? normals[i - 1] : const ui.Offset(0, 1);
+      } else {
+        normals[i] = ui.Offset(-tangent.dy / tLen, tangent.dx / tLen);
+      }
+    }
+
+    if (n == 1) {
+      canvas.drawCircle(pts[0].offset, hw[0], paint);
+      return;
+    }
+
+    // Build left and right offset arrays.
+    final left = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset + normals[i] * hw[i]);
+    final right = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset - normals[i] * hw[i]);
+
+    // Ribbon: left side forward, right side backward.
+    final path = Path()..moveTo(left[0].dx, left[0].dy);
+    for (int i = 1; i < n; i++) {
+      path.lineTo(left[i].dx, left[i].dy);
+    }
+    for (int i = n - 1; i >= 0; i--) {
+      path.lineTo(right[i].dx, right[i].dy);
+    }
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    // Round caps at start and end.
+    canvas.drawCircle(pts[0].offset, hw[0], paint);
+    canvas.drawCircle(pts[n - 1].offset, hw[n - 1], paint);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Segment-based fallback (marker, preview)
+  // ---------------------------------------------------------------------------
+
+  /// Draws [pts] as per-segment lines.  Used for the marker tool (flat, blunt)
+  /// and the in-progress ghost preview.
+  void _drawSegments(
+    Canvas canvas,
+    List<SmoothedPoint> pts,
+    Color color,
+    double baseWidth, {
+    required bool taper,
+    required bool pressureSensitive,
+    bool velocitySensitive = false,
+    int? grainSeed,
+  }) {
+    final n = pts.length;
+    final taperN = taper ? (n / 4).floor().clamp(1, 10) : 0;
+    final rng = grainSeed != null ? math.Random(grainSeed) : null;
     final paint = Paint()
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
-    switch (stroke.tool) {
-      case StrokeTool.pen:
-        paint.color = color;
-        paint.strokeWidth = stroke.width;
-      case StrokeTool.pencil:
-        paint.color = color.withValues(alpha: color.a * 0.6);
-        paint.strokeWidth = stroke.width * 0.8;
-      case StrokeTool.marker:
-        paint.color = color.withValues(alpha: color.a * 0.4);
-        paint.strokeWidth = stroke.width * 3;
-      case StrokeTool.eraser:
-        break;
-      case StrokeTool.text:
-        break;
+    for (int i = 0; i < n - 1; i++) {
+      final p = pts[i];
+      double tFactor = 1.0;
+      if (taperN > 0) {
+        final entry = i < taperN ? i / taperN : 1.0;
+        final exit = (n - 2 - i) < taperN ? (n - 2 - i) / taperN : 1.0;
+        tFactor = math.min(entry, exit);
+      }
+      final pFactor =
+          pressureSensitive ? 0.3 + 0.7 * math.pow(p.pressure, 0.6) : 1.0;
+      final vFactor = velocitySensitive ? (1.0 - p.velocity * 0.35) : 1.0;
+      final gFactor = rng != null ? 0.85 + rng.nextDouble() * 0.15 : 1.0;
+      paint.color = color.withValues(alpha: color.a * gFactor);
+      paint.strokeWidth =
+          (baseWidth * pFactor * vFactor * tFactor).clamp(0.3, baseWidth * 2.0);
+      canvas.drawLine(p.offset, pts[i + 1].offset, paint);
     }
-    return paint;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fountain pen — angle-aware calligraphy width
+  // ---------------------------------------------------------------------------
+
+  /// Draws a calligraphy-style stroke whose width varies with stroke direction.
+  /// A virtual nib at [_kNibAngle] (45°) produces thick strokes perpendicular
+  /// to the nib and thin strokes parallel to it, just like a flat calligraphy pen.
+  static const _kNibAngle = math.pi / 4; // 45°
+  static const _kNibMinWidthFraction = 0.12;
+
+  void _drawFountainPen(
+    Canvas canvas,
+    List<SmoothedPoint> pts,
+    Color color,
+    double baseWidth, {
+    required bool taper,
+  }) {
+    final n = pts.length;
+    if (n < 1) return;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final taperN = taper ? (n / 4).floor().clamp(1, 10) : 0;
+    final hw = List<double>.filled(n, 0);
+    final normals = List<ui.Offset>.filled(n, ui.Offset.zero);
+
+    for (int i = 0; i < n; i++) {
+      double tFactor = 1.0;
+      if (taperN > 0) {
+        final entry = i < taperN ? i / taperN : 1.0;
+        final exit = (n - 1 - i) < taperN ? (n - 1 - i) / taperN : 1.0;
+        tFactor = math.min(entry, exit);
+      }
+
+      final ui.Offset tangent;
+      if (i == 0) {
+        tangent = pts[1].offset - pts[0].offset;
+      } else if (i == n - 1) {
+        tangent = pts[n - 1].offset - pts[n - 2].offset;
+      } else {
+        tangent = pts[i + 1].offset - pts[i - 1].offset;
+      }
+      final tLen =
+          math.sqrt(tangent.dx * tangent.dx + tangent.dy * tangent.dy);
+
+      double aFactor = _kNibMinWidthFraction;
+      if (tLen > 1e-6) {
+        final strokeAngle = math.atan2(tangent.dy, tangent.dx);
+        aFactor = _kNibMinWidthFraction +
+            (1.0 - _kNibMinWidthFraction) *
+                math.sin(strokeAngle - _kNibAngle).abs();
+      }
+
+      hw[i] =
+          (baseWidth * aFactor * tFactor).clamp(0.3, baseWidth * 2.0) / 2;
+
+      if (tLen < 1e-6) {
+        normals[i] = i > 0 ? normals[i - 1] : const ui.Offset(0, 1);
+      } else {
+        normals[i] = ui.Offset(-tangent.dy / tLen, tangent.dx / tLen);
+      }
+    }
+
+    if (n == 1) {
+      canvas.drawCircle(pts[0].offset, hw[0], paint);
+      return;
+    }
+
+    final left = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset + normals[i] * hw[i]);
+    final right = List<ui.Offset>.generate(
+        n, (i) => pts[i].offset - normals[i] * hw[i]);
+
+    final path = Path()..moveTo(left[0].dx, left[0].dy);
+    for (int i = 1; i < n; i++) {
+      path.lineTo(left[i].dx, left[i].dy);
+    }
+    for (int i = n - 1; i >= 0; i--) {
+      path.lineTo(right[i].dx, right[i].dy);
+    }
+    path.close();
+
+    canvas.drawPath(path, paint);
+    canvas.drawCircle(pts[0].offset, hw[0], paint);
+    canvas.drawCircle(pts[n - 1].offset, hw[n - 1], paint);
   }
 
   static Color _parseColor(String hex) {
@@ -812,7 +1180,22 @@ class InkPainter extends CustomPainter {
     return Color.fromARGB(a, r, g, b);
   }
 
+  void _drawEraserCursor(Canvas canvas) {
+    if (eraserPosition == null) return;
+    final fill = Paint()
+      ..color = const Color(0x33FFFFFF)
+      ..style = PaintingStyle.fill;
+    final border = Paint()
+      ..color = const Color(0xFF888888)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawCircle(eraserPosition!, eraserRadius, fill);
+    canvas.drawCircle(eraserPosition!, eraserRadius, border);
+  }
+
   @override
   bool shouldRepaint(InkPainter old) =>
-      old.strokes != strokes || old.currentPoints != currentPoints;
+      old.strokes != strokes ||
+      old.currentPoints != currentPoints ||
+      old.eraserPosition != eraserPosition;
 }

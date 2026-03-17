@@ -30,4 +30,6 @@ const _$StrokeToolEnumMap = {
   StrokeTool.marker: 'marker',
   StrokeTool.eraser: 'eraser',
   StrokeTool.text: 'text',
+  StrokeTool.fountainPen: 'fountainPen',
+  StrokeTool.highlighter: 'highlighter',
 };
