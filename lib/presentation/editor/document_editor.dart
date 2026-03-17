@@ -454,6 +454,7 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                       id: _uuid.v4(),
                       height: 200.0,
                       background: s.defaultInkBackground,
+                      backgroundSpacing: s.defaultBackgroundSpacing,
                       backgroundColor: s.defaultCanvasBackground != null
                           ? _colorToHex(s.defaultCanvasBackground!)
                           : null,

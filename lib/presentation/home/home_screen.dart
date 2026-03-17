@@ -143,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         child: Focus(
           autofocus: true,
-          child: Scaffold(body: body),
+          child: Scaffold(body: SafeArea(child: body)),
         ),
       ),
     );

@@ -154,6 +154,19 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           _SettingsTile(
+            label:
+                'Espaciado del fondo (${settings.defaultBackgroundSpacing.round()} px)',
+            child: Slider(
+              value: settings.defaultBackgroundSpacing,
+              min: 8,
+              max: 64,
+              divisions: 14,
+              label: '${settings.defaultBackgroundSpacing.round()} px',
+              onChanged: (v) => notifier
+                  .update(settings.copyWith(defaultBackgroundSpacing: v)),
+            ),
+          ),
+          _SettingsTile(
             label: 'Color de fondo del canvas',
             child: _NullableColorSwatchRow(
               colors: kCanvasColors,

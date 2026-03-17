@@ -82,13 +82,17 @@ abstract class AppSettings with _$AppSettings {
     @_NullableColorConverter() Color? defaultLineColor,
 
     /// Whether auto-save is enabled.
-    @Default(true) bool autoSaveEnabled,
+    @Default(false) bool autoSaveEnabled,
 
     /// Auto-save interval in seconds (ignored when [autoSaveEnabled] is false).
     @Default(30) int autoSaveIntervalSeconds,
 
     /// Default background pattern for new ink canvas blocks.
     @Default(InkBackground.plain) InkBackground defaultInkBackground,
+
+    /// Default spacing in logical pixels between background lines/grid for
+    /// new ink canvas blocks.
+    @Default(24.0) double defaultBackgroundSpacing,
 
     /// Default workspace directory path. `null` → ~/Runa.
     String? defaultWorkspacePath,

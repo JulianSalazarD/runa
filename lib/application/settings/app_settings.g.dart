@@ -25,7 +25,7 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   defaultLineColor: const _NullableColorConverter().fromJson(
     (json['default_line_color'] as num?)?.toInt(),
   ),
-  autoSaveEnabled: json['auto_save_enabled'] as bool? ?? true,
+  autoSaveEnabled: json['auto_save_enabled'] as bool? ?? false,
   autoSaveIntervalSeconds:
       (json['auto_save_interval_seconds'] as num?)?.toInt() ?? 30,
   defaultInkBackground:
@@ -34,6 +34,8 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
         json['default_ink_background'],
       ) ??
       InkBackground.plain,
+  defaultBackgroundSpacing:
+      (json['default_background_spacing'] as num?)?.toDouble() ?? 24.0,
   defaultWorkspacePath: json['default_workspace_path'] as String?,
   workspaceConfigured: json['workspace_configured'] as bool? ?? false,
   stylusOnlyMode: json['stylus_only_mode'] as bool? ?? false,
@@ -57,6 +59,7 @@ Map<String, dynamic> _$AppSettingsToJson(
   'auto_save_interval_seconds': instance.autoSaveIntervalSeconds,
   'default_ink_background':
       _$InkBackgroundEnumMap[instance.defaultInkBackground]!,
+  'default_background_spacing': instance.defaultBackgroundSpacing,
   'default_workspace_path': instance.defaultWorkspacePath,
   'workspace_configured': instance.workspaceConfigured,
   'stylus_only_mode': instance.stylusOnlyMode,
