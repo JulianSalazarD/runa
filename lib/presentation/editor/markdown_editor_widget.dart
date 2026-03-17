@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,9 +58,10 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialContent);
-    _focusNode = FocusNode()
-      ..addListener(_onFocusChange)
-      ..onKeyEvent = _handleKeyEvent;
+    _focusNode = FocusNode()..addListener(_onFocusChange);
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      _focusNode.onKeyEvent = _handleKeyEvent;
+    }
   }
 
   @override
@@ -178,6 +180,8 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget> {
         focusNode: _focusNode,
         onChanged: _onTextChanged,
         autofocus: widget.autoFocus,
+        autocorrect: false,
+        enableSuggestions: false,
         minLines: 1,
         maxLines: null,
         style: TextStyle(

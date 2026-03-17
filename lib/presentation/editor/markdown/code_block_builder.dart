@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
@@ -177,7 +179,7 @@ class _CodeBlockWidgetState extends State<_CodeBlockWidget> {
               // Code body
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: hasLanguage
+                child: hasLanguage && !Platform.isAndroid
                     ? HighlightView(
                         widget.code,
                         language: widget.language!,
