@@ -12,7 +12,6 @@ void main() {
         fontSize: 20.0,
         color: '#FF0000FF',
         bold: true,
-        italic: false,
       );
       final json = el.toJson();
       final restored = TextElement.fromJson(json);

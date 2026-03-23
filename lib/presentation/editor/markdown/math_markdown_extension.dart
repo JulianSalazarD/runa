@@ -17,6 +17,8 @@ import 'package:markdown/markdown.dart' as md;
 /// The expression is stored as an element attribute (not text content) to
 /// avoid flutter_markdown pushing a stale `_inlines` entry during build.
 class InlineMathSyntax extends md.InlineSyntax {
+
+  InlineMathSyntax() : super(_pattern);
   // Matches either:
   //   $<expr>$       — non-escaped dollar, non-empty content, closing $
   //   \(<expr>\)     — \( ... \)
@@ -25,8 +27,6 @@ class InlineMathSyntax extends md.InlineSyntax {
   static const _pattern = r'(?<!\\)\$([^\$\n]+?)\$'
       r'|'
       r'\\\((.+?)\\\)';
-
-  InlineMathSyntax() : super(_pattern);
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {
@@ -53,11 +53,11 @@ class InlineMathSyntax extends md.InlineSyntax {
 /// avoid flutter_markdown pushing an inline element onto `_inlines` during
 /// the text-node visit of a block element, which would leave the stack dirty.
 class BlockMathSyntax extends md.BlockSyntax {
+
+  const BlockMathSyntax();
   static final _startPattern = RegExp(r'^\s*(\$\$|\\\[)\s*$');
   static final _endDollar = RegExp(r'^\s*\$\$\s*$');
   static final _endBracket = RegExp(r'^\s*\\\]\s*$');
-
-  const BlockMathSyntax();
 
   @override
   RegExp get pattern => _startPattern;
@@ -178,7 +178,6 @@ class _BlockMathWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final mathWidget = Math.tex(
       expr,
-      mathStyle: MathStyle.display,
       onErrorFallback: (_) => const SizedBox.shrink(),
     );
 

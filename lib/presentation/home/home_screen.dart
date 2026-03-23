@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-
 import 'package:runa/application/application.dart';
+import 'package:runa/main.dart' show initialArgsProvider;
 import 'package:runa/presentation/home/sidebar/name_input_dialog.dart';
 
 import '../editor/document_editor.dart';
@@ -85,6 +85,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(settingsProvider.notifier).initialize(),
       ]);
       if (!mounted) return;
+
+      final args = ref.read(initialArgsProvider);
+      if (args.isNotEmpty && Directory(args.first).existsSync()) {
+        await ref.read(workspaceProvider.notifier).openDirectory(args.first);
+        return;
+      }
+
       final settings = ref.read(settingsProvider);
       if (!settings.workspaceConfigured) {
         await runInitialSetup(context, ref);

@@ -68,10 +68,10 @@ class _FakeRecentFilesService implements RecentFilesService {
 }
 
 class _FakeFileSystemService implements FileSystemService {
-  final Map<String, List<DirectoryItem>> _dirs;
-  final List<String> createdDirectories = [];
 
   _FakeFileSystemService([this._dirs = const {}]);
+  final Map<String, List<DirectoryItem>> _dirs;
+  final List<String> createdDirectories = [];
 
   @override
   Future<List<DirectoryItem>> listDirectory(String path) async =>

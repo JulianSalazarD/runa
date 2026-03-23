@@ -23,8 +23,6 @@ TextElement _text(String id, double x, double y) => TextElement(
       content: 'Hi',
       x: x,
       y: y,
-      fontSize: 16.0,
-      color: '#000000FF',
     );
 
 ShapeElement _shape(String id, double x1, double y1, double x2, double y2) =>
@@ -35,9 +33,6 @@ ShapeElement _shape(String id, double x1, double y1, double x2, double y2) =>
       y1: y1,
       x2: x2,
       y2: y2,
-      color: '#000000FF',
-      strokeWidth: 2.0,
-      filled: false,
     );
 
 InkBlock _block({

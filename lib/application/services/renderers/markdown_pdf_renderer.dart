@@ -11,8 +11,8 @@ import 'package:runa/application/services/math_rasterizer.dart';
 /// Matches inline math `$...$` or `\(...\)` and emits a `math-inline` element
 /// whose `expr` attribute holds the TeX expression.
 class _InlineMathMdSyntax extends md.InlineSyntax {
-  static const _pat = r'(?<!\\)\$([^\$\n]+?)\$|\\\((.+?)\\\)';
   _InlineMathMdSyntax() : super(_pat);
+  static const _pat = r'(?<!\\)\$([^\$\n]+?)\$|\\\((.+?)\\\)';
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {

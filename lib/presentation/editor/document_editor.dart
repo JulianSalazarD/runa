@@ -533,10 +533,8 @@ class _DocumentEditorState extends ConsumerState<DocumentEditor> {
                   child: _BlockList(
                     editorState: editorState,
                     notifier: notifier,
-                    onImportImage: ({String? afterBlockId}) =>
-                        _importImage(afterBlockId: afterBlockId),
-                    onImportPdf: ({String? afterBlockId}) =>
-                        _importPdf(afterBlockId: afterBlockId),
+                    onImportImage: _importImage,
+                    onImportPdf: _importPdf,
                     inkTool: _inkTool,
                     inkColor: _inkColor,
                     inkWidth: _inkWidth,

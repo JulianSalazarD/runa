@@ -132,7 +132,7 @@ void main() {
     test('3-line selection: all lines indented at line start', () {
       const text = 'line1\nline2\nline3';
       // Select from start of line1 to end of line3
-      final result = applyIndent(_value(text, start: 0, end: 17));
+      final result = applyIndent(_value(text, end: 17));
       expect(result.text, '  line1\n  line2\n  line3');
     });
 
@@ -177,21 +177,21 @@ void main() {
   group('applyIndent — Shift+Tab (non-collapsed, multiline)', () {
     test('2-line selection: both lines unindented', () {
       const text = '  alpha\n  beta';
-      final result = applyIndent(_value(text, start: 0, end: 14),
+      final result = applyIndent(_value(text, end: 14),
           unindent: true);
       expect(result.text, 'alpha\nbeta');
     });
 
     test('line with only 1 space: removes just 1', () {
       const text = ' line1\n  line2';
-      final result = applyIndent(_value(text, start: 0, end: 14),
+      final result = applyIndent(_value(text, end: 14),
           unindent: true);
       expect(result.text, 'line1\nline2');
     });
 
     test('line with no spaces: left unchanged, others unindented', () {
       const text = '  line1\nline2';
-      final result = applyIndent(_value(text, start: 0, end: 13),
+      final result = applyIndent(_value(text, end: 13),
           unindent: true);
       expect(result.text, 'line1\nline2');
     });

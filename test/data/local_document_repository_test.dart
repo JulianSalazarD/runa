@@ -16,8 +16,8 @@ Document _doc({
   return Document(
     version: '0.1',
     id: id,
-    createdAt: DateTime.utc(2024, 1),
-    updatedAt: DateTime.utc(2024, 1),
+    createdAt: DateTime.utc(2024),
+    updatedAt: DateTime.utc(2024),
     blocks: blocks,
   );
 }

@@ -8,8 +8,8 @@ Document _buildDocument({List<Block> blocks = const []}) {
   return Document(
     version: '0.1',
     id: '00000000-0000-0000-0000-000000000001',
-    createdAt: DateTime.utc(2024, 1),
-    updatedAt: DateTime.utc(2024, 1),
+    createdAt: DateTime.utc(2024),
+    updatedAt: DateTime.utc(2024),
     blocks: blocks,
   );
 }
@@ -101,7 +101,7 @@ void main() {
 
       expect(doc.version, '0.1');
       expect(doc.id, '00000000-0000-0000-0000-000000000001');
-      expect(doc.createdAt, DateTime.utc(2024, 1));
+      expect(doc.createdAt, DateTime.utc(2024));
       expect(doc.blocks, isEmpty);
     });
 

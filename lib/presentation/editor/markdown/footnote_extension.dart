@@ -30,9 +30,9 @@ class FootnoteRegistry {
 /// The expression is stored as an attribute (not text content) so that
 /// flutter_markdown's `_inlines` stack is not left dirty.
 class FootnoteInlineSyntax extends md.InlineSyntax {
-  static const _pat = r'\[\^([^\]\n]+)\]';
 
   FootnoteInlineSyntax() : super(_pat);
+  static const _pat = r'\[\^([^\]\n]+)\]';
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {

@@ -86,7 +86,7 @@ void main() {
     });
 
     test('persists autoSaveEnabled = false', () async {
-      await repo.save(const AppSettings(autoSaveEnabled: false));
+      await repo.save(const AppSettings());
       final loaded = await repo.load();
       expect(loaded.autoSaveEnabled, isFalse);
     });

@@ -36,12 +36,12 @@ const _imageBlock = ImageBlock(
 
 // A stroke with normalised coordinates roughly at the centre of a 300×150
 // render area (x=0.5, y=0.5) — used in eraser tests.
-Stroke _centreStroke() => Stroke(
+Stroke _centreStroke() => const Stroke(
       id: 's1',
       color: '#000000FF',
       width: 3.0,
       tool: StrokeTool.pen,
-      points: const [
+      points: [
         StrokePoint(x: 0.5, y: 0.5, pressure: 1.0, timestamp: 0),
         StrokePoint(x: 0.51, y: 0.51, pressure: 1.0, timestamp: 10),
       ],
@@ -66,7 +66,7 @@ void main() {
       //     exception.
       //  2. The AspectRatio + Stack structure (image layer + annotation layer)
       //     is present in the tree, confirming _ImageBlockView rendered.
-      await tester.pumpWidget(_wrapBlock(BlockWidget(
+      await tester.pumpWidget(_wrapBlock(const BlockWidget(
         block: _imageBlock,
         documentPath: '/tmp/test.runa',
         isSelected: true,
@@ -81,7 +81,7 @@ void main() {
 
     testWidgets('botón Limpiar anotaciones no aparece con strokes vacíos',
         (tester) async {
-      await tester.pumpWidget(_wrapBlock(BlockWidget(
+      await tester.pumpWidget(_wrapBlock(const BlockWidget(
         block: _imageBlock, // strokes: [] by default
         documentPath: '/tmp/test.runa',
         isSelected: true,
@@ -119,7 +119,7 @@ void main() {
 
     testWidgets('InkAnnotationLayer se renderiza dentro de ImageBlock',
         (tester) async {
-      await tester.pumpWidget(_wrapBlock(BlockWidget(
+      await tester.pumpWidget(_wrapBlock(const BlockWidget(
         block: _imageBlock,
         documentPath: '/tmp/test.runa',
         isSelected: true,

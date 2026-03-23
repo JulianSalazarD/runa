@@ -6,14 +6,19 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:runa/application/application.dart';
 import 'package:runa/presentation/presentation.dart';
 
-void main() async {
+final initialArgsProvider = Provider<List<String>>((ref) => const []);
+
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // pdfrx requires a cache directory before opening any PDF.
   final tempDir = await getTemporaryDirectory();
   Pdfrx.getCacheDirectory = () => Future.value(tempDir.path);
 
-  runApp(const ProviderScope(child: RunaApp()));
+  runApp(ProviderScope(
+    overrides: [initialArgsProvider.overrideWithValue(args)],
+    child: const RunaApp(),
+  ));
 }
 
 class RunaApp extends ConsumerWidget {

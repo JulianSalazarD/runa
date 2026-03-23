@@ -57,7 +57,7 @@ class SettingsScreen extends ConsumerWidget {
           // ---------------------------------------------------------------
           // Apariencia
           // ---------------------------------------------------------------
-          _SectionHeader('Apariencia'),
+          const _SectionHeader('Apariencia'),
           _SettingsTile(
             label: 'Tema',
             child: SegmentedButton<ThemeMode>(
@@ -88,7 +88,7 @@ class SettingsScreen extends ConsumerWidget {
           // ---------------------------------------------------------------
           // Markdown
           // ---------------------------------------------------------------
-          _SectionHeader('Markdown'),
+          const _SectionHeader('Markdown'),
           _SettingsTile(
             label: 'Fuente',
             child: DropdownButton<String>(
@@ -122,7 +122,7 @@ class SettingsScreen extends ConsumerWidget {
           // ---------------------------------------------------------------
           // Canvas de escritura
           // ---------------------------------------------------------------
-          _SectionHeader('Canvas de escritura'),
+          const _SectionHeader('Canvas de escritura'),
           _SettingsTile(
             label: 'Color del lápiz',
             child: _ColorSwatchRow(
@@ -210,7 +210,7 @@ class SettingsScreen extends ConsumerWidget {
           // ---------------------------------------------------------------
           // Workspace
           // ---------------------------------------------------------------
-          _SectionHeader('Workspace'),
+          const _SectionHeader('Workspace'),
           SwitchListTile(
             title: const Text('Auto-guardado'),
             subtitle: const Text('Guardar automáticamente al editar'),

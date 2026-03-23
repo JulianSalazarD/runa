@@ -94,8 +94,8 @@ void main() {
       final doc = Document(
         version: '0.1',
         id: '00000000-0000-0000-0000-000000000001',
-        createdAt: DateTime.utc(2024, 1),
-        updatedAt: DateTime.utc(2024, 1),
+        createdAt: DateTime.utc(2024),
+        updatedAt: DateTime.utc(2024),
         blocks: const [],
       );
       await repo.save(doc, p.join(dir.path, 'my_notes.runa'));

@@ -44,7 +44,7 @@ void main() {
         x2: 1.0,
         y2: 1.0,
       );
-      const a = ShapePainter(shapes: [s1], previewShape: null);
+      const a = ShapePainter(shapes: [s1]);
       const b = ShapePainter(shapes: [s1], previewShape: preview);
       expect(a.shouldRepaint(b), isTrue);
     });

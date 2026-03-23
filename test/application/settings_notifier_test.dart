@@ -67,7 +67,7 @@ void main() {
   group('initialize', () {
     test('loads settings from repository into state', () async {
       final repo = FakeSettingsRepository();
-      repo.seed(const AppSettings(themeMode: ThemeMode.dark, autoSaveEnabled: false));
+      repo.seed(const AppSettings(themeMode: ThemeMode.dark));
       final container = _makeContainer(repo);
       addTearDown(container.dispose);
 

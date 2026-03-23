@@ -175,7 +175,7 @@ void main() {
     });
 
     test('inserta después de afterBlockId cuando se especifica', () async {
-      final mdBlock = Block.markdown(id: 'md-1', content: 'hola');
+      const mdBlock = Block.markdown(id: 'md-1', content: 'hola');
       notifier.addBlock(mdBlock);
 
       await notifier.importImage('/external/foto.png', afterBlockId: 'md-1');
